@@ -1,10 +1,18 @@
 #compiler
 CC=g++
-#directories
+#include directories
+IMGUI_DIR=./vendor/imgui
+#project include dir
 INCLUDE=./include
+INCLUDE+=$(IMGUI_DIR)
+INCLUDE+=$(IMGUI_DIR)/backends
+#project src dir
 SRC=./src
+SRC_DIRS=$(SRC)
+SRC_DIRS+=$(IMGUI_DIR)
+SRC_BACKEND=$(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
 # libs
-LIBS=-lSDL2 -lSDL2_ttf -lSDL2_image -lSDL2_mixer -ldl
+LIBS=-lGL -ldl `sdl2-config --libs`
 # standard
 STD=-std=c++17
 #warnings
@@ -16,47 +24,64 @@ DEPFLAGS=-MP -MD
 #debug flag
 DEBUGFLAG=-g
 #all flags exept debug flag
-CFLAGS=$(foreach D, $(INCLUDE), -I$(D)) $(STD) $(WARN) $(DEPFLAGS)
-CPPFILES=$(foreach D, $(SRC), $(wildcard $(D)/*.cpp))
+CFLAGS=$(foreach D, $(INCLUDE), -I$(D)) $(STD) $(WARN) $(DEPFLAGS) `sdl2-config --cflags`
+CPPFILES=$(foreach D, $(SRC_DIRS), $(wildcard $(D)/*.cpp))
+CPPFILES+=$(SRC_BACKEND)
 
-# object files
-#relase
-OBJECTSFILESR=$(patsubst $(SRC)%.cpp,$(RELASE)%.o, $(CPPFILES))
-DEPFILESR=$(patsubst $(SRC)%.cpp,$(RELASE)%.d, $(CPPFILES))
+#obj and dep
+OBJS=$(addsuffix .o, $(basename $(notdir $(CPPFILES))))
+DEPS=$(addsuffix .d, $(basename $(notdir $(CPPFILES))))
 
-#debug
-OBJECTSFILESD=$(patsubst $(SRC)%.cpp,$(DEBUG)%.o, $(CPPFILES))
-DEPFILESD=$(patsubst $(SRC)%.cpp,$(DEBUG)%.d, $(CPPFILES))
+#relase obj and dep
+OBJSR=$(addprefix $(RELASE), $(OBJS))
+DEPSR=$(addprefix $(RELASE), $(DEPS))
+
+#debug obj and dep
+OBJSD=$(addprefix $(DEBUG), $(OBJS))
+DEPSD=$(addprefix $(DEBUG), $(DEPS))
 
 #output locations
 OUT=/prog
-DEBUG=./bin/debug
-RELASE=./bin/relase
+DEBUG=./bin/debug/
+RELASE=./bin/relase/
 
 all: $(RELASE)
 
-$(RELASE): $(OBJECTSFILESR)
+$(RELASE): $(OBJSR)
 	$(CC) -o $@$(OUT) $^ $(LIBS)
-	
-$(RELASE)%.o:$(SRC)%.cpp
+
+$(RELASE)%.o:$(SRC)/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(RELASE)%.o:$(IMGUI_DIR)/%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(RELASE)%.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 
 debug: $(DEBUG)
 
-$(DEBUG): $(OBJECTSFILESD)
+$(DEBUG): $(OBJSD)
 	$(CC) $(DEBUGFLAG) -o $@$(OUT) $^ $(LIBS)
 
-$(DEBUG)%.o:$(SRC)%.cpp
+$(DEBUG)%.o:$(SRC)/%.cpp
+	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
+
+$(DEBUG)%.o:$(IMGUI_DIR)/%.cpp
+	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
+
+$(DEBUG)%.o:$(IMGUI_DIR)/backends/%.cpp
 	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
 
 clean:
-	rm -rf $(RELASE)$(OUT) $(DEBUG)$(OUT) $(OBJECTSFILESR) $(DEPFILESR) $(OBJECTSFILESD) $(DEPFILESD)
+	rm -rf $(RELASE)$(OUT) $(DEBUG)$(OUT) $(OBJSR) $(DEPSR) $(OBJSD) $(DEPSD)
 
 cleanRelase:
-	rm -rf $(RELASE)$(OUT) $(OBJECTSFILESR) $(DEPFILESR)
+	rm -rf $(RELASE)$(OUT) $(OBJSR) $(DEPSR)
 
 cleanDebug:
-	rm -rf $(DEBUG)$(OUT) $(OBJECTSFILESD) $(DEPFILESD)
+	rm -rf $(DEBUG)$(OUT) $(OBJSD) $(DEPSD)
 
 diff:
 	@git status
