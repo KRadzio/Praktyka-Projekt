@@ -87,5 +87,5 @@ diff:
 	@git status
 	@git diff --stat
 
--include $(DEPFILESR)
--include $(DEPFILESD)
+-include $(DEPSR)
+-include $(DEPSD)
