@@ -12,7 +12,7 @@ SRC_DIRS=$(SRC)
 SRC_DIRS+=$(IMGUI_DIR)
 SRC_BACKEND=$(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
 # libs
-LIBS=-lGL -ldl `sdl2-config --libs`
+LIBS=-lGL -ldl `sdl2-config --libs` `pkg-config --cflags --libs opencv`
 # standard
 STD=-std=c++17
 #warnings
