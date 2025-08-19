@@ -78,6 +78,8 @@ int App::MainLoop()
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    int currWidth;
+
     // Main loop
     bool done = false;
     while (!done)
@@ -107,6 +109,71 @@ int App::MainLoop()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        ImGui::BeginMainMenuBar();
+
+        if (ImGui::BeginMenu("Plik"))
+        {
+            ImGui::MenuItem("Zapisz");
+            ImGui::MenuItem("Wczytaj");
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Pomoc"))
+        {
+            ImGui::MenuItem("O programie");
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+        ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));
+        SDL_GetWindowSize(window, &currWidth, NULL);
+        ImGui::SetNextWindowSize(ImVec2(currWidth, 40));
+        ImGui::Begin("Algorytmy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Button("Algorytm1");
+        ImGui::SameLine();
+        ImGui::Button("Algorytm2");
+        ImGui::SameLine();
+        ImGui::Button("Algorytm3");
+        ImGui::End();
+
+        float currH = ImGui::GetFrameHeight() + 40;
+        ImGui::SetNextWindowPos(ImVec2(0, currH));
+        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, 460));
+        ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove);
+        ImGui::End();
+
+        ImGui::SetNextWindowPos(ImVec2(currWidth / 2, currH));
+        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, 460));
+        ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove);
+        ImGui::End();
+
+        currH += 460;
+
+        ImGui::SetNextWindowPos(ImVec2(0, currH));
+        ImGui::SetNextWindowSize(ImVec2(currWidth, 200));
+        ImGui::Begin("Histogramy", NULL, ImGuiWindowFlags_NoResize);
+        ImGui::End();
+
+
+        // to subcomponents
+        // ImGui::SetNextWindowSize(ImVec2(256, 200));
+        // // ImGui::SetNextWindowPos(ImVec2(300, 300));
+        // ImGui::Begin("Histogram wejsciowy", NULL, ImGuiWindowFlags_NoResize);
+        // ImGui::Button("Button1");
+        // ImGui::End();
+
+        // ImGui::SetNextWindowSize(ImVec2(256, 200));
+        // // ImGui::SetNextWindowPos(ImVec2(566, 300));
+        // ImGui::Begin("Funkcja transformacji", NULL, ImGuiWindowFlags_NoResize);
+        // ImGui::Button("Button2");
+        // ImGui::End();
+
+        // ImGui::SetNextWindowSize(ImVec2(256, 200));
+        // // ImGui::SetNextWindowPos(ImVec2(832, 300));
+        // ImGui::Begin("Histogram wyjsciowy", NULL, ImGuiWindowFlags_NoResize);
+        // ImGui::Button("Button3");
+        // ImGui::End();
+
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
@@ -117,39 +184,6 @@ int App::MainLoop()
             static int counter = 0;
 
             // set the pos elewhere, the size is fixed thou
-            ImGui::SetNextWindowSize(ImVec2(256, 200));
-            // ImGui::SetNextWindowPos(ImVec2(300, 300));
-            ImGui::Begin("Histogram wejsciowy", NULL, ImGuiWindowFlags_NoResize);
-            ImGui::Button("Button1");
-            ImGui::End();
-
-            ImGui::SetNextWindowSize(ImVec2(256, 200));
-            // ImGui::SetNextWindowPos(ImVec2(566, 300));
-            ImGui::Begin("Funkcja transformacji", NULL, ImGuiWindowFlags_NoResize);
-            ImGui::Button("Button2");
-            ImGui::End();
-
-            ImGui::SetNextWindowSize(ImVec2(256, 200));
-            // ImGui::SetNextWindowPos(ImVec2(832, 300));
-            ImGui::Begin("Histogram wyjsciowy", NULL, ImGuiWindowFlags_NoResize);
-            ImGui::Button("Button3");
-            ImGui::End();
-
-            ImGui::SetNextWindowSize(ImVec2(500, 500));
-            ImGui::Begin("Obraz wejsciowy");
-            ImGui::End();
-
-            ImGui::SetNextWindowSize(ImVec2(500, 500));
-            ImGui::Begin("Obraz wyjsciowy");
-            ImGui::End();
-
-            ImGui::Begin("Menu");
-            ImGui::Button("Algorytm1");
-            ImGui::SameLine();
-            ImGui::Button("Algorytm2");
-            ImGui::SameLine();
-            ImGui::Button("Algorytm3");
-            ImGui::End();
 
             ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 
