@@ -1,0 +1,5 @@
+#ifndef IMAGE_OPERATIONS_HPP
+#define IMAGE_OPERATIONS_HPP
+
+
+#endif
