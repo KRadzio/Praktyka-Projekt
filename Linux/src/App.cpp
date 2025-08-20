@@ -82,6 +82,14 @@ int App::MainLoop()
     int currHeight;
     bool showAl1 = false;
 
+    SDL_Surface *surface = SDL_LoadBMP("./Fish.bmp");
+    SDL_Texture *tx = SDL_CreateTextureFromSurface(renderer, surface);
+    int texW = surface->w;
+    int texH = surface->h;
+    SDL_FreeSurface(surface);
+
+    float arr[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+
     // Main loop
     bool done = false;
     while (!done)
@@ -137,23 +145,21 @@ int App::MainLoop()
         SDL_GetWindowSize(window, &currWidth, &currHeight);
         ImGui::SetNextWindowSize(ImVec2(currWidth, 40));
         ImGui::Begin("Algorytmy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
-        if(ImGui::Button("Algorytm1"))
+        if (ImGui::Button("Algorytm1"))
         {
             showAl1 = !showAl1;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Algorytm2"))
+        if (ImGui::Button("Algorytm2"))
         {
-
         }
         ImGui::SameLine();
-        if(ImGui::Button("Algorytm3"))
+        if (ImGui::Button("Algorytm3"))
         {
-
         }
         ImGui::End();
 
-        if(showAl1)
+        if (showAl1)
         {
             ImGui::SetNextWindowSize(ImVec2(200, 200));
             ImGui::Begin("Parametry");
@@ -162,16 +168,18 @@ int App::MainLoop()
 
         float h = ImGui::GetFrameHeight() + 40;
         ImGui::SetNextWindowPos(ImVec2(0, h));
-        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight-319));
+        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight - 319));
         ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove);
+        ImGui::Image((ImTextureRef)tx, ImVec2(texW, texH));
         ImGui::End();
 
         ImGui::SetNextWindowPos(ImVec2(currWidth / 2, h));
-        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight-319));
+        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight - 319));
         ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove);
+        ImGui::Image((ImTextureRef)tx, ImVec2(texW, texH));
         ImGui::End();
 
-        h += currHeight-319;
+        h += currHeight - 319;
 
         ImGui::SetNextWindowPos(ImVec2(0, h));
         ImGui::SetNextWindowSize(ImVec2(currWidth, 260));
@@ -180,37 +188,20 @@ int App::MainLoop()
         float freeSpace = currWidth - 3 * histogramWindowWidth;
         int borderOffset = 20;
         freeSpace -= 2 * borderOffset;
-        
+
         ImGui::SameLine(borderOffset);
         ImGui::BeginChild("Histogram wejsciowy", ImVec2(histogramWindowWidth, 220), ImGuiChildFlags_Borders);
+        ImGui::PlotHistogram("Histogram wejsciowy", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 10.0f, ImVec2(256, 200));
         ImGui::EndChild();
         ImGui::SameLine(histogramWindowWidth + borderOffset + freeSpace / 2);
         ImGui::BeginChild("Funkcja transformacji", ImVec2(histogramWindowWidth, 220), ImGuiChildFlags_Borders);
+        ImGui::PlotLines("Funkcja", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 10.0f, ImVec2(256, 200));
         ImGui::EndChild();
         ImGui::SameLine(histogramWindowWidth * 2 + borderOffset + freeSpace);
         ImGui::BeginChild("Histogram wyjsciowy", ImVec2(histogramWindowWidth, 220), ImGuiChildFlags_Borders);
+        ImGui::PlotHistogram("Histogram wejsciowy", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 10.0f, ImVec2(256, 200));
         ImGui::EndChild();
         ImGui::End();
-
-
-        // to subcomponents
-        // ImGui::SetNextWindowSize(ImVec2(256, 200));
-        // // ImGui::SetNextWindowPos(ImVec2(300, 300));
-        // ImGui::Begin("Histogram wejsciowy", NULL, ImGuiWindowFlags_NoResize);
-        // ImGui::Button("Button1");
-        // ImGui::End();
-
-        // ImGui::SetNextWindowSize(ImVec2(256, 200));
-        // // ImGui::SetNextWindowPos(ImVec2(566, 300));
-        // ImGui::Begin("Funkcja transformacji", NULL, ImGuiWindowFlags_NoResize);
-        // ImGui::Button("Button2");
-        // ImGui::End();
-
-        // ImGui::SetNextWindowSize(ImVec2(256, 200));
-        // // ImGui::SetNextWindowPos(ImVec2(832, 300));
-        // ImGui::Begin("Histogram wyjsciowy", NULL, ImGuiWindowFlags_NoResize);
-        // ImGui::Button("Button3");
-        // ImGui::End();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
@@ -265,6 +256,7 @@ int App::MainLoop()
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
+    SDL_DestroyTexture(tx);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
