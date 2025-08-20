@@ -490,3 +490,5 @@ Linux/bin/relase/imgui.o
 Linux/bin/relase/main.d
 Linux/bin/relase/main.o
 Linux/bin/relase/prog
+/WindowsVS22/.vs/WindowsVS22
+/WindowsVS22/WindowsVS22/x64/Debug
