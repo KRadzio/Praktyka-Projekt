@@ -20,7 +20,7 @@ int App::MainLoop()
     // Create window with SDL_Renderer graphics context
     float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window *window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * main_scale), (int)(720 * main_scale), window_flags);
+    SDL_Window *window = SDL_CreateWindow("Praktyka letnia WETI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * main_scale), (int)(720 * main_scale), window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -79,6 +79,8 @@ int App::MainLoop()
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     int currWidth;
+    int currHeight;
+    bool showAl1 = false;
 
     // Main loop
     bool done = false;
@@ -118,6 +120,12 @@ int App::MainLoop()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Ustawienia"))
+        {
+            ImGui::MenuItem("Przewijanie");
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Pomoc"))
         {
             ImGui::MenuItem("O programie");
@@ -126,32 +134,62 @@ int App::MainLoop()
 
         ImGui::EndMainMenuBar();
         ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));
-        SDL_GetWindowSize(window, &currWidth, NULL);
+        SDL_GetWindowSize(window, &currWidth, &currHeight);
         ImGui::SetNextWindowSize(ImVec2(currWidth, 40));
         ImGui::Begin("Algorytmy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
-        ImGui::Button("Algorytm1");
+        if(ImGui::Button("Algorytm1"))
+        {
+            showAl1 = !showAl1;
+        }
         ImGui::SameLine();
-        ImGui::Button("Algorytm2");
+        if(ImGui::Button("Algorytm2"))
+        {
+
+        }
         ImGui::SameLine();
-        ImGui::Button("Algorytm3");
+        if(ImGui::Button("Algorytm3"))
+        {
+
+        }
         ImGui::End();
 
-        float currH = ImGui::GetFrameHeight() + 40;
-        ImGui::SetNextWindowPos(ImVec2(0, currH));
-        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, 460));
+        if(showAl1)
+        {
+            ImGui::SetNextWindowSize(ImVec2(200, 200));
+            ImGui::Begin("Parametry");
+            ImGui::End();
+        }
+
+        float h = ImGui::GetFrameHeight() + 40;
+        ImGui::SetNextWindowPos(ImVec2(0, h));
+        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight-319));
         ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove);
         ImGui::End();
 
-        ImGui::SetNextWindowPos(ImVec2(currWidth / 2, currH));
-        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, 460));
+        ImGui::SetNextWindowPos(ImVec2(currWidth / 2, h));
+        ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight-319));
         ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove);
         ImGui::End();
 
-        currH += 460;
+        h += currHeight-319;
 
-        ImGui::SetNextWindowPos(ImVec2(0, currH));
-        ImGui::SetNextWindowSize(ImVec2(currWidth, 200));
+        ImGui::SetNextWindowPos(ImVec2(0, h));
+        ImGui::SetNextWindowSize(ImVec2(currWidth, 260));
         ImGui::Begin("Histogramy", NULL, ImGuiWindowFlags_NoResize);
+        int histogramWindowWidth = 276;
+        float freeSpace = currWidth - 3 * histogramWindowWidth;
+        int borderOffset = 20;
+        freeSpace -= 2 * borderOffset;
+        
+        ImGui::SameLine(borderOffset);
+        ImGui::BeginChild("Histogram wejsciowy", ImVec2(histogramWindowWidth, 220), ImGuiChildFlags_Borders);
+        ImGui::EndChild();
+        ImGui::SameLine(histogramWindowWidth + borderOffset + freeSpace / 2);
+        ImGui::BeginChild("Funkcja transformacji", ImVec2(histogramWindowWidth, 220), ImGuiChildFlags_Borders);
+        ImGui::EndChild();
+        ImGui::SameLine(histogramWindowWidth * 2 + borderOffset + freeSpace);
+        ImGui::BeginChild("Histogram wyjsciowy", ImVec2(histogramWindowWidth, 220), ImGuiChildFlags_Borders);
+        ImGui::EndChild();
         ImGui::End();
 
 
