@@ -22,6 +22,9 @@ int main(int argc, char **argv)
     // destroyWindow("Display Image");
 
    
-    int returnCode = App::GetInstance().MainLoop();
+    int returnCode = App::GetInstance().Init();
+    if(returnCode == -1)
+        return returnCode;
+    returnCode = App::GetInstance().MainLoop();
     return returnCode;
 }
