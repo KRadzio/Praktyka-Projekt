@@ -55,6 +55,12 @@ int App::Init()
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    for (int i = 0; i < 256; i++)
+    {
+        lightValuesI[i] = 0;
+        lightValuesO[i] = 0;
+    }
+
     return 0;
 }
 
@@ -86,16 +92,27 @@ int App::MainLoop()
     texH = surface->h;
 
     SDL_LockSurface(surface);
-
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
     for (int i = 0; i < texW; i++)
     {
         for (int j = 0; j < texH; j++)
         {
-            // BGR
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = -surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+            int brightness = (b + g + r) / 3;
+            lightValuesI[brightness]++;
+
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -b;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -g;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = -r;
+
+            b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            brightness = (b + g + r) / 3;
+            lightValuesO[brightness]++;
         }
     }
     // SDL_memset(surface->pixels, 255, surface->h * surface->pitch);
@@ -298,6 +315,8 @@ void App::DrawPictureSpace()
 void App::DrawHistogramsAndFunctions(float arr[], int vc)
 {
     float h = ImGui::GetFrameHeight() + ALG_BAR_H + (currHeight - MENU_ALG_HIST_H);
+    float maxO = *(std::max_element(lightValuesO, lightValuesO + 255));
+    float maxI = *(std::max_element(lightValuesI, lightValuesI + 255));
 
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2(currWidth, HIST_BAR_HEIGHT));
@@ -308,7 +327,7 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     ImGui::SameLine(BORDER_OFFSET);
     ImGui::BeginChild("Histogram wejsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Historgram wejsciowy");
-    ImGui::PlotHistogram("##", arr, vc, 0, NULL, 0.0f, 10.0f, ImVec2(HIST_W, HIST_H));
+    ImGui::PlotHistogram("##", lightValuesI, 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
@@ -318,7 +337,7 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);
     ImGui::BeginChild("Histogram wyjsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Historgram wyjsciowy");
-    ImGui::PlotHistogram("##", arr, vc, 0, NULL, 0.0f, 10.0f, ImVec2(HIST_W, HIST_H));
+    ImGui::PlotHistogram("##", lightValuesO, 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     ImGui::End();
 }

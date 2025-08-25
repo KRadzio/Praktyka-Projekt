@@ -57,6 +57,8 @@ private:
     SDL_Texture *txO = nullptr;
     int texW = 0;
     int texH = 0;
+    float lightValuesI[256];
+    float lightValuesO[256];
 
     // Scale
     float mainScale;
