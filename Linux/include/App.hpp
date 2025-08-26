@@ -47,6 +47,9 @@ private:
     void DrawPictureSpace();
     void DrawHistogramsAndFunctions(float arr[], int vc);
     void Render();
+    void CreateNegative();
+    void BrightenImage();
+    void ClearOutputImage();
 
 private:
     // App state
@@ -58,6 +61,7 @@ private:
     bool runLoop = true;
 
     // Tmp
+    int value = 0;
 
     // Abstracy image as class
     // Move transformations to Algorithms

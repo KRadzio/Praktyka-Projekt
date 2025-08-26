@@ -111,27 +111,10 @@ int App::MainLoop()
             valuesBI[b]++;
             valuesGI[g]++;
             valuesRI[r]++;
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = -r;
-
-            b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            brightness = (b + g + r) / 3;
-            lightValuesO[brightness]++;
-
-            valuesBO[b]++;
-            valuesGO[g]++;
-            valuesRO[r]++;
         }
     }
     // SDL_memset(surface->pixels, 255, surface->h * surface->pitch);
     SDL_UnlockSurface(surface);
-
-    txO = SDL_CreateTextureFromSurface(renderer, surface);
 
     float arr[] = {1.0, 2.0, 3.0, 4.0, 5.0};
 
@@ -213,6 +196,7 @@ void App::Cleanup()
     ImGui::DestroyContext();
 
     SDL_FreeSurface(surface);
+    SDL_FreeSurface(surfaceO);
     SDL_DestroyTexture(tx);
     SDL_DestroyTexture(txO);
     SDL_DestroyRenderer(renderer);
@@ -290,10 +274,12 @@ void App::DrawAlgorihmsBar()
     ImGui::SameLine();
     if (ImGui::Button("Negatyw"))
     {
+        CreateNegative();
     }
     ImGui::SameLine();
     if (ImGui::Button("Rozjasnij"))
     {
+        BrightenImage();
     }
     ImGui::End();
 
@@ -301,6 +287,7 @@ void App::DrawAlgorihmsBar()
     {
         ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
         ImGui::Begin("Parametry");
+        ImGui::InputInt("O ile rozjasnic?", &value);
         ImGui::End();
     }
 }
@@ -319,9 +306,12 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2, h));
     ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
-    ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
-    ImGui::Image((ImTextureRef)txO, ImVec2(texW, texH));
+    if (txO != nullptr)
+    {
+        ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
+        ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
+        ImGui::Image((ImTextureRef)txO, ImVec2(texW, texH));
+    }
     ImGui::End();
 }
 
@@ -394,4 +384,106 @@ void App::Render()
     SDL_RenderClear(renderer);
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
+}
+
+void App::CreateNegative()
+{
+    ClearOutputImage();
+    surfaceO = SDL_DuplicateSurface(surface);
+
+    SDL_LockSurface(surfaceO);
+    uint8_t *surfacePixels = (uint8_t *)surfaceO->pixels;
+    for (int i = 0; i < texW; i++)
+    {
+        for (int j = 0; j < texH; j++)
+        {
+            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -b;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -g;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = -r;
+
+            b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            int brightness = (b + g + r) / 3;
+            lightValuesO[brightness]++;
+            valuesBO[b]++;
+            valuesGO[g]++;
+            valuesRO[r]++;
+        }
+    }
+    SDL_UnlockSurface(surfaceO);
+
+    txO = SDL_CreateTextureFromSurface(renderer, surfaceO);
+}
+
+void App::BrightenImage()
+{
+    ClearOutputImage();
+    surfaceO = SDL_DuplicateSurface(surface);
+
+    SDL_LockSurface(surfaceO);
+    uint8_t *surfacePixels = (uint8_t *)surfaceO->pixels;
+    for (int i = 0; i < texW; i++)
+    {
+        for (int j = 0; j < texH; j++)
+        {
+            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            if (b + value > 255)
+                b = 255;
+            else if (b + value < 0)
+                b = 0;
+            else
+                b += value;
+
+            if (g + value > 255)
+                g = 255;
+            else if (g + value < 0)
+                g = 0;
+            else
+                g += value;
+
+            if (r + value > 255)
+                r = 255;
+            else if (r + value < 0)
+                r = 0;
+            else
+                r += value;
+
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
+
+            int brightness = (b + g + r) / 3;
+            lightValuesO[brightness]++;
+            valuesBO[b]++;
+            valuesGO[g]++;
+            valuesRO[r]++;
+        }
+    }
+    SDL_UnlockSurface(surfaceO);
+
+    txO = SDL_CreateTextureFromSurface(renderer, surfaceO);
+}
+
+void App::ClearOutputImage()
+{
+    SDL_FreeSurface(surfaceO);
+    SDL_DestroyTexture(txO);
+    surfaceO = nullptr;
+    txO = nullptr;
+    for (int i = 0; i < 256; i++)
+    {
+        lightValuesO[i] = 0;
+        valuesBO[i] = 0;
+        valuesGO[i] = 0;
+        valuesRO[i] = 0;
+    }
 }
