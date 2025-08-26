@@ -59,6 +59,12 @@ int App::Init()
     {
         lightValuesI[i] = 0;
         lightValuesO[i] = 0;
+        valuesBI[i] = 0;
+        valuesBO[i] = 0;
+        valuesGI[i] = 0;
+        valuesGO[i] = 0;
+        valuesRI[i] = 0;
+        valuesRO[i] = 0;
     }
 
     return 0;
@@ -102,6 +108,9 @@ int App::MainLoop()
             uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
             int brightness = (b + g + r) / 3;
             lightValuesI[brightness]++;
+            valuesBI[b]++;
+            valuesGI[g]++;
+            valuesRI[r]++;
 
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -b;
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -g;
@@ -113,6 +122,10 @@ int App::MainLoop()
 
             brightness = (b + g + r) / 3;
             lightValuesO[brightness]++;
+
+            valuesBO[b]++;
+            valuesGO[g]++;
+            valuesRO[r]++;
         }
     }
     // SDL_memset(surface->pixels, 255, surface->h * surface->pitch);
@@ -270,16 +283,16 @@ void App::DrawAlgorihmsBar()
     SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
     ImGui::SetNextWindowSize(ImVec2(currWidth, ALG_BAR_H));
     ImGui::Begin("Algorytmy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-    if (ImGui::Button("Algorytm1"))
+    if (ImGui::Button("Tmp"))
     {
         showAl1 = !showAl1;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Algorytm2"))
+    if (ImGui::Button("Negatyw"))
     {
     }
     ImGui::SameLine();
-    if (ImGui::Button("Algorytm3"))
+    if (ImGui::Button("Rozjasnij"))
     {
     }
     ImGui::End();
@@ -324,20 +337,51 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     float freeSpace = currWidth - 3 * HIST_WINDOW_W;
     freeSpace -= 2 * BORDER_OFFSET;
 
+    // in
     ImGui::SameLine(BORDER_OFFSET);
     ImGui::BeginChild("Histogram wejsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
-    ImGui::Text("Historgram wejsciowy");
-    ImGui::PlotHistogram("##", lightValuesI, 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
+    ImGui::Text("Obraz wejsciowy");
+    ImGui::RadioButton("Jasnosc", &modeI, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("R", &modeI, 1);
+    ImGui::SameLine();
+    ImGui::RadioButton("G", &modeI, 2);
+    ImGui::SameLine();
+    ImGui::RadioButton("B", &modeI, 3);
+    if (modeI == Brightnes)
+        ImGui::PlotHistogram("##", lightValuesI, 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
+    if (modeI == R)
+        ImGui::PlotHistogram("##", valuesRI, 256, 0, NULL, 0.0f, *(std::max_element(valuesRI, valuesRI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+    if (modeI == G)
+        ImGui::PlotHistogram("##", valuesGI, 256, 0, NULL, 0.0f, *(std::max_element(valuesGI, valuesGI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+    if (modeI == B)
+        ImGui::PlotHistogram("##", valuesBI, 256, 0, NULL, 0.0f, *(std::max_element(valuesBI, valuesBI + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
+    // func
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Funkcja");
     ImGui::PlotLines("##", arr, vc, 0, NULL, 0.0f, 10.0f, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
+    // out
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);
     ImGui::BeginChild("Histogram wyjsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
-    ImGui::Text("Historgram wyjsciowy");
-    ImGui::PlotHistogram("##", lightValuesO, 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
+    ImGui::Text("Obraz wyjsciowy");
+    ImGui::RadioButton("Jasnosc", &modeO, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("R", &modeO, 1);
+    ImGui::SameLine();
+    ImGui::RadioButton("G", &modeO, 2);
+    ImGui::SameLine();
+    ImGui::RadioButton("B", &modeO, 3);
+    if (modeO == Brightnes)
+        ImGui::PlotHistogram("##", lightValuesO, 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
+    if (modeO == R)
+        ImGui::PlotHistogram("##", valuesRO, 256, 0, NULL, 0.0f, *(std::max_element(valuesRO, valuesRO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+    if (modeO == G)
+        ImGui::PlotHistogram("##", valuesGO, 256, 0, NULL, 0.0f, *(std::max_element(valuesGO, valuesGO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+    if (modeO == B)
+        ImGui::PlotHistogram("##", valuesBO, 256, 0, NULL, 0.0f, *(std::max_element(valuesBO, valuesBO + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     ImGui::End();
 }
