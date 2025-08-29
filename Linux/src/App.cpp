@@ -267,44 +267,75 @@ void App::DrawAlgorihmsBar()
     SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
     ImGui::SetNextWindowSize(ImVec2(currWidth, ALG_BAR_H));
     ImGui::Begin("Algorytmy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-    if (ImGui::Button("Tmp"))
-    {
-        showAl1 = !showAl1;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Negatyw"))
-    {
-        CreateNegative();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Rozjasnij"))
-    {
-        BrightenImage();
-    }
-    ImGui::End();
 
-    if (showAl1)
-    {
-        ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
-        ImGui::Begin("Parametry");
-        ImGui::InputInt("O ile rozjasnic?", &value);
-        ImGui::End();
-    }
+    if (ImGui::RadioButton("Negatyw", &algS, 1))
+        algName = "Negatyw";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Rozjasnij", &algS, 2))
+        algName = "Rozjasnij";
+    ImGui::End();
 }
 
 void App::DrawPictureSpace()
 {
     float h = ImGui::GetFrameHeight() + ALG_BAR_H;
     ImGui::SetNextWindowPos(ImVec2(0, h));
-    ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight - MENU_ALG_HIST_H));
+    ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
     ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
     ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
     ImGui::Image((ImTextureRef)tx, ImVec2(texW, texH));
     ImGui::End();
 
-    ImGui::SetNextWindowPos(ImVec2(currWidth / 2, h));
-    ImGui::SetNextWindowSize(ImVec2(currWidth / 2, currHeight - MENU_ALG_HIST_H));
+    ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
+    ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
+    ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Text("Wybrany algorytm:");
+    ImGui::Text(algName.c_str());
+
+    ImGui::SeparatorText("Rozpocznij/Przerwij");
+    if (ImGui::Button("Przetworz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        switch (algS)
+        {
+        case None:
+            std::cout << "Nothing happend\n";
+            break;
+        case Negative:
+            CreateNegative();
+            break;
+        case Brighten:
+            BrightenImage();
+            break;
+        default:
+            break;
+        }
+    }
+
+    ImGui::Button("Zatrzymaj przetwarzanie", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H));
+
+    ImGui::SeparatorText("Opcje");
+    if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        showAl1 = !showAl1;
+    }
+    ImGui::SeparatorText("Reset");
+    if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        showAl1 = false;
+        algS = None;
+        algName = "Brak wybranego algorytmu";
+        ClearOutputImage();
+    }
+    if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        value = 0;
+    }
+
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
+    ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
     if (txO != nullptr)
     {
@@ -313,6 +344,33 @@ void App::DrawPictureSpace()
         ImGui::Image((ImTextureRef)txO, ImVec2(texW, texH));
     }
     ImGui::End();
+
+    if (showAl1)
+    {
+        switch (algS)
+        {
+        case None:
+            ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
+            ImGui::Begin("Parametry");
+            ImGui::Text("Nie wybrano algorytmu");
+            ImGui::End();
+            break;
+        case Negative:
+            ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
+            ImGui::Begin("Parametry");
+            ImGui::Text("Brak parametrów do tego algorytmu");
+            ImGui::End();
+            break;
+        case Brighten:
+            ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
+            ImGui::Begin("Parametry");
+            ImGui::InputInt("O ile rozjasnic?", &value);
+            ImGui::End();
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void App::DrawHistogramsAndFunctions(float arr[], int vc)
@@ -476,7 +534,8 @@ void App::BrightenImage()
 void App::ClearOutputImage()
 {
     SDL_FreeSurface(surfaceO);
-    SDL_DestroyTexture(txO);
+    if (txO != nullptr)
+        SDL_DestroyTexture(txO);
     surfaceO = nullptr;
     txO = nullptr;
     for (int i = 0; i < 256; i++)
