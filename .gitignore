@@ -525,3 +525,6 @@ Linux/bin/debug/main.o
 Linux/bin/debug/prog
 Linux/bin/relase/Image.d
 Linux/bin/relase/Image.o
+imgui.ini
+.vscode/c_cpp_properties.json
+.vscode/settings.json
