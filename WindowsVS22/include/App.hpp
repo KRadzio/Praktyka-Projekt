@@ -5,7 +5,10 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 #include <stdio.h>
+#include <filesystem>
+#include <thread>
 #include <SDL.h>
+#include <SDL_image.h>
 #include <opencv2/opencv.hpp>
 
 #define ALG_BAR_H 40
@@ -17,6 +20,10 @@
 #define BORDER_OFFSET 20
 #define HIST_W 256
 #define HIST_H 200
+#define MIDDLE_W 200
+#define MIDDLE_BUTTON_W 180
+#define MIDDLE_BUTTON_H 30
+#define CANCEL_BUTTON_W 120
 
 class App
 {
@@ -27,6 +34,13 @@ public:
         R,
         G,
         B
+    };
+
+    enum AlgSelected
+    {
+        None,
+        Negative,
+        Brighten
     };
 
 public:
@@ -59,6 +73,9 @@ private:
     int currHeight = 720;
     bool showAl1 = false;
     bool runLoop = true;
+    std::string algName = "Brak wybranego algorytmu";
+    std::string selectedDirPath = "./";
+    std::vector<std::filesystem::directory_entry> dir;
 
     // Tmp
     int value = 0;
@@ -67,6 +84,9 @@ private:
     // Move transformations to Algorithms
     // Loading files in file loader
     // Gui class may not be needed
+
+    int algS = None;
+    bool p = false;
 
     // Image Flags
     int modeI = Brightnes;
