@@ -17,6 +17,12 @@ int App::Init()
         printf("Error: %s\n", SDL_GetError());
         return -1;
     }
+    if (!IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG | IMG_INIT_WEBP))
+    {
+        printf("Error: %s\n", IMG_GetError());
+        return -1;
+    }
+
     mainScale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
     windowFlags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     mainWindow = SDL_CreateWindow("Praktyka letnia WETI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * mainScale), (int)(720 * mainScale), windowFlags);
@@ -66,6 +72,9 @@ int App::Init()
         valuesRI[i] = 0;
         valuesRO[i] = 0;
     }
+
+    for (const auto &entry : std::filesystem::directory_iterator(selectedDirPath))
+        dir.emplace(dir.end(), entry);
 
     return 0;
 }
@@ -201,6 +210,7 @@ void App::Cleanup()
     SDL_DestroyTexture(txO);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
+    IMG_Quit();
     SDL_Quit();
 }
 
@@ -231,12 +241,12 @@ int App::HandleEvents()
 void App::DrawMenuBar()
 {
     ImGui::BeginMainMenuBar();
-
     if (ImGui::BeginMenu("Plik"))
     {
         ImGui::MenuItem("Zapisz");
         ImGui::MenuItem("Zapisz jako");
-        ImGui::MenuItem("Wczytaj");
+        if (ImGui::MenuItem("Wczytaj"))
+            p = true;
         ImGui::Separator();
         ImGui::MenuItem("Wyjdz bez zapisu");
         ImGui::EndMenu();
@@ -259,6 +269,27 @@ void App::DrawMenuBar()
     }
 
     ImGui::EndMainMenuBar();
+
+    if (p)
+    {
+        ImGui::OpenPopup("WczytajPlik");
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            // this has to be maped in some way
+            for (auto it = dir.begin(); it < dir.end(); it++)
+                ImGui::Selectable(it.operator->()->path().c_str());
+
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                p = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
 }
 
 void App::DrawAlgorihmsBar()
@@ -316,13 +347,36 @@ void App::DrawPictureSpace()
 
     ImGui::SeparatorText("Opcje");
     if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+        ImGui::OpenPopup("Parametry");
+
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::BeginPopupModal("Parametry", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        showAl1 = !showAl1;
+        switch (algS)
+        {
+        case None:
+            ImGui::Text("Nie wybrano algorytmu");
+            break;
+        case Negative:
+            ImGui::Text("Brak parametrów do tego algorytmu");
+            break;
+        case Brighten:
+            ImGui::InputInt("O ile rozjasnic?", &value);
+            break;
+        }
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
+
     ImGui::SeparatorText("Reset");
     if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
-        showAl1 = false;
         algS = None;
         algName = "Brak wybranego algorytmu";
         ClearOutputImage();
@@ -344,33 +398,6 @@ void App::DrawPictureSpace()
         ImGui::Image((ImTextureRef)txO, ImVec2(texW, texH));
     }
     ImGui::End();
-
-    if (showAl1)
-    {
-        switch (algS)
-        {
-        case None:
-            ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
-            ImGui::Begin("Parametry");
-            ImGui::Text("Nie wybrano algorytmu");
-            ImGui::End();
-            break;
-        case Negative:
-            ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
-            ImGui::Begin("Parametry");
-            ImGui::Text("Brak parametrów do tego algorytmu");
-            ImGui::End();
-            break;
-        case Brighten:
-            ImGui::SetNextWindowSize(ImVec2(POPUP_SIZE, POPUP_SIZE));
-            ImGui::Begin("Parametry");
-            ImGui::InputInt("O ile rozjasnic?", &value);
-            ImGui::End();
-            break;
-        default:
-            break;
-        }
-    }
 }
 
 void App::DrawHistogramsAndFunctions(float arr[], int vc)

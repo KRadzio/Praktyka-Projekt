@@ -10,7 +10,7 @@ SRC=./src
 SRC_DIRS=$(SRC)
 SRC_DIRS+=$(IMGUI_DIR)
 # libs
-LIBS=-ldl `sdl2-config --libs` `pkg-config --cflags --libs opencv`
+LIBS=-ldl -lSDL2_image `sdl2-config --libs` `pkg-config --cflags --libs opencv`
 # standard
 STD=-std=c++17
 #warnings
@@ -22,7 +22,7 @@ DEPFLAGS=-MP -MD
 #debug flag
 DEBUGFLAG=-g
 #all flags exept debug flag
-CFLAGS=$(foreach D, $(INCLUDE), -I$(D)) $(STD) $(WARN) $(DEPFLAGS) `sdl2-config --cflags`
+CFLAGS=$(foreach D, $(INCLUDE), -I$(D)) $(STD) $(WARN) $(DEPFLAGS) `sdl2-config --cflags` 
 CPPFILES=$(foreach D, $(SRC_DIRS), $(wildcard $(D)/*.cpp))
 CPPFILES+=$(SRC_BACKEND)
 
