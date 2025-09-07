@@ -61,21 +61,10 @@ int App::Init()
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    for (int i = 0; i < 256; i++)
-    {
-        lightValuesI[i] = 0;
-        lightValuesO[i] = 0;
-        valuesBI[i] = 0;
-        valuesBO[i] = 0;
-        valuesGI[i] = 0;
-        valuesGO[i] = 0;
-        valuesRI[i] = 0;
-        valuesRO[i] = 0;
-    }
+    selectedDirPath = std::filesystem::current_path();
 
     for (const auto &entry : std::filesystem::directory_iterator(selectedDirPath))
         dir.emplace(dir.end(), entry);
-
     return 0;
 }
 
@@ -97,33 +86,7 @@ int App::Init()
 
 int App::MainLoop()
 {
-
-    // Our state
-
-    // tmp
-    surface = SDL_LoadBMP("./Fish.bmp");
-    tx = SDL_CreateTextureFromSurface(renderer, surface);
-    texW = surface->w;
-    texH = surface->h;
-
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < texW; i++)
-    {
-        for (int j = 0; j < texH; j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-            int brightness = (b + g + r) / 3;
-            lightValuesI[brightness]++;
-            valuesBI[b]++;
-            valuesGI[g]++;
-            valuesRI[r]++;
-        }
-    }
-    // SDL_memset(surface->pixels, 255, surface->h * surface->pitch);
-    SDL_UnlockSurface(surface);
+    inputImage.SetSourceImage("./Fish.bmp", renderer);
 
     float arr[] = {1.0, 2.0, 3.0, 4.0, 5.0};
 
@@ -203,11 +166,6 @@ void App::Cleanup()
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-
-    SDL_FreeSurface(surface);
-    SDL_FreeSurface(surfaceO);
-    SDL_DestroyTexture(tx);
-    SDL_DestroyTexture(txO);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
     IMG_Quit();
@@ -273,6 +231,7 @@ void App::DrawMenuBar()
     if (p)
     {
         ImGui::OpenPopup("WczytajPlik");
+        ImGui::SetNextWindowSize(ImVec2(0, 300));
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -281,6 +240,27 @@ void App::DrawMenuBar()
             for (auto it = dir.begin(); it < dir.end(); it++)
                 ImGui::Selectable(it.operator->()->path().c_str());
 
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                auto it = selectedDirPath.length();
+                it--;
+                for (int i = it; i >= 0; i--)
+                {
+                    if (selectedDirPath[i] == '/')
+                    {
+                        it = i;
+                        break;
+                    }
+                }
+                // root
+                if(it == 0)
+                    it++;
+                selectedDirPath = selectedDirPath.substr(0, it);
+                dir.clear();
+                for (const auto &entry : std::filesystem::directory_iterator(selectedDirPath))
+                    dir.emplace(dir.end(), entry);
+            }
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
             {
@@ -313,9 +293,9 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
-    ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
-    ImGui::Image((ImTextureRef)tx, ImVec2(texW, texH));
+    ImGui::SameLine((ImGui::GetWindowWidth() - inputImage.GetWidth()) / 2);
+    ImGui::SetCursorPosY((ImGui::GetWindowHeight() - inputImage.GetHeight()) / 2);
+    ImGui::Image((ImTextureRef)inputImage.GetTexture(), ImVec2(inputImage.GetWidth(), inputImage.GetHeight()));
     ImGui::End();
 
     ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
@@ -379,7 +359,7 @@ void App::DrawPictureSpace()
     {
         algS = None;
         algName = "Brak wybranego algorytmu";
-        ClearOutputImage();
+        outputImage = Image();
     }
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
@@ -391,11 +371,11 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    if (txO != nullptr)
+    if (!outputImage.NoTexture())
     {
-        ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
-        ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
-        ImGui::Image((ImTextureRef)txO, ImVec2(texW, texH));
+        ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
+        ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
+        ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
     }
     ImGui::End();
 }
@@ -403,8 +383,8 @@ void App::DrawPictureSpace()
 void App::DrawHistogramsAndFunctions(float arr[], int vc)
 {
     float h = ImGui::GetFrameHeight() + ALG_BAR_H + (currHeight - MENU_ALG_HIST_H);
-    float maxO = *(std::max_element(lightValuesO, lightValuesO + 255));
-    float maxI = *(std::max_element(lightValuesI, lightValuesI + 255));
+    float maxO = *(std::max_element(outputImage.GetLightValues(), outputImage.GetLightValues() + 255));
+    float maxI = *(std::max_element(inputImage.GetLightValues(), inputImage.GetLightValues() + 255));
 
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2(currWidth, HIST_BAR_HEIGHT));
@@ -424,13 +404,13 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeI, 3);
     if (modeI == Brightnes)
-        ImGui::PlotHistogram("##", lightValuesI, 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == R)
-        ImGui::PlotHistogram("##", valuesRI, 256, 0, NULL, 0.0f, *(std::max_element(valuesRI, valuesRI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetRValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetRValues(), inputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == G)
-        ImGui::PlotHistogram("##", valuesGI, 256, 0, NULL, 0.0f, *(std::max_element(valuesGI, valuesGI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetGValues(), inputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == B)
-        ImGui::PlotHistogram("##", valuesBI, 256, 0, NULL, 0.0f, *(std::max_element(valuesBI, valuesBI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetBValues(), inputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     // func
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
@@ -450,13 +430,13 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeO, 3);
     if (modeO == Brightnes)
-        ImGui::PlotHistogram("##", lightValuesO, 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == R)
-        ImGui::PlotHistogram("##", valuesRO, 256, 0, NULL, 0.0f, *(std::max_element(valuesRO, valuesRO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetRValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetRValues(), outputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == G)
-        ImGui::PlotHistogram("##", valuesGO, 256, 0, NULL, 0.0f, *(std::max_element(valuesGO, valuesGO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetGValues(), outputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == B)
-        ImGui::PlotHistogram("##", valuesBO, 256, 0, NULL, 0.0f, *(std::max_element(valuesBO, valuesBO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetBValues(), outputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     ImGui::End();
 }
@@ -473,14 +453,14 @@ void App::Render()
 
 void App::CreateNegative()
 {
-    ClearOutputImage();
-    surfaceO = SDL_DuplicateSurface(surface);
+    outputImage = inputImage;
+    SDL_Surface* surface = outputImage.GetSurface();
 
-    SDL_LockSurface(surfaceO);
-    uint8_t *surfacePixels = (uint8_t *)surfaceO->pixels;
-    for (int i = 0; i < texW; i++)
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < outputImage.GetWidth(); i++)
     {
-        for (int j = 0; j < texH; j++)
+        for (int j = 0; j < outputImage.GetHeight(); j++)
         {
             uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
             uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
@@ -494,28 +474,23 @@ void App::CreateNegative()
             g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
             r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
 
-            int brightness = (b + g + r) / 3;
-            lightValuesO[brightness]++;
-            valuesBO[b]++;
-            valuesGO[g]++;
-            valuesRO[r]++;
         }
     }
-    SDL_UnlockSurface(surfaceO);
-
-    txO = SDL_CreateTextureFromSurface(renderer, surfaceO);
+    SDL_UnlockSurface(surface);
+    outputImage.RefreshPixelValuesArrays();
+    outputImage.RefreshTexture(renderer);
 }
 
 void App::BrightenImage()
 {
-    ClearOutputImage();
-    surfaceO = SDL_DuplicateSurface(surface);
+    outputImage = inputImage;
+    SDL_Surface* surface = outputImage.GetSurface();
 
-    SDL_LockSurface(surfaceO);
-    uint8_t *surfacePixels = (uint8_t *)surfaceO->pixels;
-    for (int i = 0; i < texW; i++)
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < outputImage.GetWidth(); i++)
     {
-        for (int j = 0; j < texH; j++)
+        for (int j = 0; j < outputImage.GetHeight(); j++)
         {
             uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
             uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
@@ -545,31 +520,10 @@ void App::BrightenImage()
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
-
-            int brightness = (b + g + r) / 3;
-            lightValuesO[brightness]++;
-            valuesBO[b]++;
-            valuesGO[g]++;
-            valuesRO[r]++;
         }
     }
-    SDL_UnlockSurface(surfaceO);
+    SDL_UnlockSurface(surface);
 
-    txO = SDL_CreateTextureFromSurface(renderer, surfaceO);
-}
-
-void App::ClearOutputImage()
-{
-    SDL_FreeSurface(surfaceO);
-    if (txO != nullptr)
-        SDL_DestroyTexture(txO);
-    surfaceO = nullptr;
-    txO = nullptr;
-    for (int i = 0; i < 256; i++)
-    {
-        lightValuesO[i] = 0;
-        valuesBO[i] = 0;
-        valuesGO[i] = 0;
-        valuesRO[i] = 0;
-    }
+    outputImage.RefreshPixelValuesArrays();
+    outputImage.RefreshTexture(renderer);
 }

@@ -1,15 +1,19 @@
 #ifndef APP_HPP
 #define APP_HPP
 
-#include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h"
-#include <stdio.h>
+#include <iostream>
 #include <filesystem>
+#include <algorithm>
+#include <vector>
 #include <thread>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <opencv2/opencv.hpp>
+
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
+
+#include "Image.hpp"
 
 #define ALG_BAR_H 40
 #define POPUP_SIZE 200
@@ -63,7 +67,6 @@ private:
     void Render();
     void CreateNegative();
     void BrightenImage();
-    void ClearOutputImage();
 
 private:
     // App state
@@ -71,16 +74,15 @@ private:
     bool show_another_window = false;
     int currWidth = 1280;
     int currHeight = 720;
-    bool showAl1 = false;
     bool runLoop = true;
+    // to file loader
     std::string algName = "Brak wybranego algorytmu";
-    std::string selectedDirPath = "./";
+    std::string selectedDirPath;
     std::vector<std::filesystem::directory_entry> dir;
 
     // Tmp
     int value = 0;
 
-    // Abstracy image as class
     // Move transformations to Algorithms
     // Loading files in file loader
     // Gui class may not be needed
@@ -93,20 +95,8 @@ private:
     int modeO = Brightnes;
 
     // Image
-    SDL_Surface *surface = nullptr;
-    SDL_Surface *surfaceO = nullptr;
-    SDL_Texture *tx = nullptr;
-    SDL_Texture *txO = nullptr;
-    int texW = 0;
-    int texH = 0;
-    float lightValuesI[256];
-    float lightValuesO[256];
-    float valuesRI[256];
-    float valuesGI[256];
-    float valuesBI[256];
-    float valuesRO[256];
-    float valuesGO[256];
-    float valuesBO[256];
+    Image inputImage;
+    Image outputImage;
 
     // Scale
     float mainScale;

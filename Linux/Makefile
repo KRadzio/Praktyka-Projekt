@@ -10,7 +10,8 @@ SRC=./src
 SRC_DIRS=$(SRC)
 SRC_DIRS+=$(IMGUI_DIR)
 # libs
-LIBS=-ldl -lSDL2_image `sdl2-config --libs` `pkg-config --cflags --libs opencv`
+# `pkg-config --cflags --libs opencv` (if opencv)
+LIBS=-ldl -lSDL2_image `sdl2-config --libs`
 # standard
 STD=-std=c++17
 #warnings
