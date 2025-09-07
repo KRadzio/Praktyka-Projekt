@@ -60,11 +60,6 @@ int App::Init()
     ImGui_ImplSDLRenderer2_Init(renderer);
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-    selectedDirPath = std::filesystem::current_path();
-
-    for (const auto &entry : std::filesystem::directory_iterator(selectedDirPath))
-        dir.emplace(dir.end(), entry);
     return 0;
 }
 
@@ -204,7 +199,7 @@ void App::DrawMenuBar()
         ImGui::MenuItem("Zapisz");
         ImGui::MenuItem("Zapisz jako");
         if (ImGui::MenuItem("Wczytaj"))
-            p = true;
+            loadPopupActive = true;
         ImGui::Separator();
         ImGui::MenuItem("Wyjdz bez zapisu");
         ImGui::EndMenu();
@@ -228,43 +223,36 @@ void App::DrawMenuBar()
 
     ImGui::EndMainMenuBar();
 
-    if (p)
+    if (loadPopupActive)
     {
-        ImGui::OpenPopup("WczytajPlik");
-        ImGui::SetNextWindowSize(ImVec2(0, 300));
+        ImGui::OpenPopup("WczytajPlik", ImGuiPopupFlags_NoReopen);
+        ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::BeginPopupModal("WczytajPlik"))
         {
             // this has to be maped in some way
+            auto dir = FileSelector::GetInstance().GetCurrDir();
+            auto map = FileSelector::GetInstance().GetDirMaped();
             for (auto it = dir.begin(); it < dir.end(); it++)
-                ImGui::Selectable(it.operator->()->path().c_str());
+                if (ImGui::Selectable(it.operator->()->path().c_str(), map[it.operator->()->path()], ImGuiSelectableFlags_NoAutoClosePopups))
+                    if (FileSelector::GetInstance().SelectEntry(it.operator->()->path()) == FileEntry)
+                    {
+                        inputImage.SetSourceImage(it.operator->()->path(), renderer);
+                        outputImage.ClearImage();
+                        loadPopupActive = false;
+                        ImGui::CloseCurrentPopup();
+                    }
 
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
             {
-                auto it = selectedDirPath.length();
-                it--;
-                for (int i = it; i >= 0; i--)
-                {
-                    if (selectedDirPath[i] == '/')
-                    {
-                        it = i;
-                        break;
-                    }
-                }
-                // root
-                if(it == 0)
-                    it++;
-                selectedDirPath = selectedDirPath.substr(0, it);
-                dir.clear();
-                for (const auto &entry : std::filesystem::directory_iterator(selectedDirPath))
-                    dir.emplace(dir.end(), entry);
+                FileSelector::GetInstance().GoUpADirectory();
             }
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
             {
-                p = false;
+                loadPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -454,7 +442,7 @@ void App::Render()
 void App::CreateNegative()
 {
     outputImage = inputImage;
-    SDL_Surface* surface = outputImage.GetSurface();
+    SDL_Surface *surface = outputImage.GetSurface();
 
     SDL_LockSurface(surface);
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
@@ -473,7 +461,6 @@ void App::CreateNegative()
             b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
             g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
             r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
         }
     }
     SDL_UnlockSurface(surface);
@@ -484,7 +471,7 @@ void App::CreateNegative()
 void App::BrightenImage()
 {
     outputImage = inputImage;
-    SDL_Surface* surface = outputImage.GetSurface();
+    SDL_Surface *surface = outputImage.GetSurface();
 
     SDL_LockSurface(surface);
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;

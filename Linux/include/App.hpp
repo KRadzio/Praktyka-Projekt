@@ -2,9 +2,7 @@
 #define APP_HPP
 
 #include <iostream>
-#include <filesystem>
 #include <algorithm>
-#include <vector>
 #include <thread>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -14,6 +12,7 @@
 #include "imgui_impl_sdlrenderer2.h"
 
 #include "Image.hpp"
+#include "FileSelector.hpp"
 
 #define ALG_BAR_H 40
 #define POPUP_SIZE 200
@@ -28,25 +27,26 @@
 #define MIDDLE_BUTTON_W 180
 #define MIDDLE_BUTTON_H 30
 #define CANCEL_BUTTON_W 120
+#define FILE_POPUP_WIDTH 600
+#define FILE_POPUP_HEIGHT 300
+
+enum HistMode
+{
+    Brightnes,
+    R,
+    G,
+    B
+};
+
+enum AlgSelected
+{
+    None,
+    Negative,
+    Brighten
+};
 
 class App
 {
-public:
-    enum HistMode
-    {
-        Brightnes,
-        R,
-        G,
-        B
-    };
-
-    enum AlgSelected
-    {
-        None,
-        Negative,
-        Brighten
-    };
-
 public:
     static App &GetInstance();
     int Init();
@@ -56,7 +56,6 @@ private:
     App();
     ~App();
 
-    // helper functions
 private:
     void Cleanup();
     int HandleEvents();
@@ -69,30 +68,36 @@ private:
     void BrightenImage();
 
 private:
-    // App state
+    // App
+    // flags
     bool show_demo_window = true;
     bool show_another_window = false;
+    bool runLoop = true;
+    bool loadPopupActive = false;
+
+    // image flags
+    int modeI = Brightnes;
+    int modeO = Brightnes;
+
+    // window
     int currWidth = 1280;
     int currHeight = 720;
-    bool runLoop = true;
-    // to file loader
+
+    // algorithm state
     std::string algName = "Brak wybranego algorytmu";
-    std::string selectedDirPath;
-    std::vector<std::filesystem::directory_entry> dir;
+    int algS = None;
+
+    // selected state
+
+    // add same condition to displaing on input image
+    // display an error when invalid file is loaded
+    // add a menu for saving
+    // improve the ui for load/save
+    // move algs to algorithms
+    // change the way params are handled
 
     // Tmp
     int value = 0;
-
-    // Move transformations to Algorithms
-    // Loading files in file loader
-    // Gui class may not be needed
-
-    int algS = None;
-    bool p = false;
-
-    // Image Flags
-    int modeI = Brightnes;
-    int modeO = Brightnes;
 
     // Image
     Image inputImage;

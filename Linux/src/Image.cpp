@@ -44,7 +44,7 @@ Image::~Image()
 void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
 {
     ClearImage();
-    surface = SDL_LoadBMP(filename.c_str());
+    surface = IMG_Load(filename.c_str());
     if (surface == nullptr)
     {
         printf("%s\n", SDL_GetError());

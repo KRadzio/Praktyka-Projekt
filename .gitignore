@@ -528,3 +528,7 @@ Linux/bin/relase/Image.o
 imgui.ini
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+Linux/bin/debug/FileSelector.d
+Linux/bin/debug/FileSelector.o
+Linux/bin/relase/FileSelector.d
+Linux/bin/relase/FileSelector.o

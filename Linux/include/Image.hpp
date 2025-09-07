@@ -4,6 +4,7 @@
 #include <string>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define MAX_VAL 256
 
