@@ -41,6 +41,46 @@ Image::~Image()
         SDL_DestroyTexture(texture);
 }
 
+void Image::SaveImage()
+{
+    if (surface == nullptr)
+        printf("Can not save \n");
+    else
+    {
+        int pos = 0;
+        for (int i = sourceImageName.length(); i >= 0; i--)
+            if (sourceImageName[i] == '.')
+            {
+                pos = i;
+                break;
+            }
+        std::string newFileName = sourceImageName.substr(0, pos) + "Copy" + sourceImageName.substr(pos);
+        IMG_SavePNG(surface, newFileName.c_str());
+    }
+}
+
+void Image::SaveImageAs(std::string filename)
+{
+    if (surface == nullptr)
+        printf("Can not save \n");
+    else
+    {
+        sourceImageName = filename;
+        IMG_SavePNG(surface, sourceImageName.c_str());
+    }
+}
+
+void Image::SaveImageAs(std::string path, char* filename)
+{
+    if (surface == nullptr)
+        printf("Can not save \n");
+    else
+    {
+        sourceImageName = path + '/' + filename + ".png";
+        IMG_SavePNG(surface, sourceImageName.c_str());
+    }
+}
+
 void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
 {
     ClearImage();

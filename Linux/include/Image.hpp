@@ -26,7 +26,11 @@ public:
     inline float *GetRValues() { return valuesR; }
     inline float *GetGValues() { return valuesG; }
     inline float *GetBValues() { return valuesB; }
+    inline std::string& GetImageName() { return sourceImageName;}
 
+    void SaveImage();
+    void SaveImageAs(std::string filename);
+    void SaveImageAs(std::string path, char* filename);
     void SetSourceImage(std::string filename, SDL_Renderer* renderer);
     void ClearImage();
 

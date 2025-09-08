@@ -196,8 +196,11 @@ void App::DrawMenuBar()
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("Plik"))
     {
-        ImGui::MenuItem("Zapisz");
-        ImGui::MenuItem("Zapisz jako");
+        if (!outputImage.NoSurface())
+            if (ImGui::MenuItem("Zapisz"))
+                outputImage.SaveImage();
+        if (ImGui::MenuItem("Zapisz jako"))
+            saveAsPopupActive = true;
         if (ImGui::MenuItem("Wczytaj"))
             loadPopupActive = true;
         ImGui::Separator();
@@ -232,18 +235,31 @@ void App::DrawMenuBar()
         if (ImGui::BeginPopupModal("WczytajPlik"))
         {
             // this has to be maped in some way
-            auto dir = FileSelector::GetInstance().GetCurrDir();
+            auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
             auto map = FileSelector::GetInstance().GetDirMaped();
-            for (auto it = dir.begin(); it < dir.end(); it++)
-                if (ImGui::Selectable(it.operator->()->path().c_str(), map[it.operator->()->path()], ImGuiSelectableFlags_NoAutoClosePopups))
-                    if (FileSelector::GetInstance().SelectEntry(it.operator->()->path()) == FileEntry)
+            for (auto name : dir)
+                if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
+                    if (FileSelector::GetInstance().SelectEntry(name) == FileEntry)
                     {
-                        inputImage.SetSourceImage(it.operator->()->path(), renderer);
+                        inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer);
                         outputImage.ClearImage();
                         loadPopupActive = false;
                         ImGui::CloseCurrentPopup();
                     }
 
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Otworz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                if (FileSelector::GetInstance().SelectCurrEntry() == FileEntry)
+                {
+                    inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer);
+                    outputImage.ClearImage();
+                    loadPopupActive = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                else if (FileSelector::GetInstance().SelectCurrEntry() == DirEntry)
+                    FileSelector::GetInstance().GoUpADirectory();
+            }
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
             {
@@ -253,6 +269,66 @@ void App::DrawMenuBar()
             if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
             {
                 loadPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    if (saveAsPopupActive)
+    {
+        // add file name input file
+        ImGui::OpenPopup("ZapiszPlik", ImGuiPopupFlags_NoReopen);
+        ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("ZapiszPlik"))
+        {
+            // this has to be maped in some way
+            auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
+            auto map = FileSelector::GetInstance().GetDirMaped();
+            for (auto name : dir)
+                if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
+                    if (FileSelector::GetInstance().SelectEntry(name) == FileEntry)
+                    {
+                        // do you want to overrinde the file?
+                        outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
+                        saveAsPopupActive = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+
+            ImGui::Text("Nazwa pliku");
+            ImGui::InputText("##", fileNameBuff, 64);
+
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff);
+                saveAsPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                if (FileSelector::GetInstance().SelectCurrEntry() == FileEntry)
+                {
+                    // do you want to overrinde the file?
+                    outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
+                    saveAsPopupActive = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                else if (FileSelector::GetInstance().SelectCurrEntry() == DirEntry)
+                    FileSelector::GetInstance().GoUpADirectory();
+            }
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                FileSelector::GetInstance().GoUpADirectory();
+            }
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                saveAsPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -272,6 +348,9 @@ void App::DrawAlgorihmsBar()
     ImGui::SameLine();
     if (ImGui::RadioButton("Rozjasnij", &algS, 2))
         algName = "Rozjasnij";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Kontrast", &algS, 3))
+        algName = "Kontrast";
     ImGui::End();
 }
 
@@ -306,10 +385,13 @@ void App::DrawPictureSpace()
             std::cout << "Nothing happend\n";
             break;
         case Negative:
-            CreateNegative();
+            Algorithms::CreateNegative(inputImage, outputImage, renderer);
             break;
         case Brighten:
-            BrightenImage();
+            Algorithms::BrightenImage(inputImage, outputImage, renderer, value);
+            break;
+        case Contrast:
+            Algorithms::Contrast(inputImage, outputImage, renderer, contrast);
             break;
         default:
             break;
@@ -338,6 +420,8 @@ void App::DrawPictureSpace()
         case Brighten:
             ImGui::InputInt("O ile rozjasnic?", &value);
             break;
+        case Contrast:
+            ImGui::SliderFloat("O ile zmienic", &contrast, 0.1, 5.0);
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -357,6 +441,7 @@ void App::DrawPictureSpace()
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         value = 0;
+        contrast = 1.0;
     }
 
     ImGui::End();
@@ -444,92 +529,4 @@ void App::Render()
     SDL_RenderClear(renderer);
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
-}
-
-void App::CreateNegative()
-{
-    if (inputImage.NoSurface())
-    {
-        std::cout << "No image loaded\n";
-        return;
-    }
-
-    outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
-
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < outputImage.GetWidth(); i++)
-    {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = -r;
-
-            b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-        }
-    }
-    SDL_UnlockSurface(surface);
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
-}
-
-void App::BrightenImage()
-{
-    if (inputImage.NoSurface())
-    {
-        std::cout << "No image loaded\n";
-        return;
-    }
-    
-    outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
-
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < outputImage.GetWidth(); i++)
-    {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            if (b + value > 255)
-                b = 255;
-            else if (b + value < 0)
-                b = 0;
-            else
-                b += value;
-
-            if (g + value > 255)
-                g = 255;
-            else if (g + value < 0)
-                g = 0;
-            else
-                g += value;
-
-            if (r + value > 255)
-                r = 255;
-            else if (r + value < 0)
-                r = 0;
-            else
-                r += value;
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
-        }
-    }
-    SDL_UnlockSurface(surface);
-
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
 }

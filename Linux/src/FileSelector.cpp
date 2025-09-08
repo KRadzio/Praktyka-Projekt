@@ -6,7 +6,18 @@ FileSelector::FileSelector()
     for (const auto &entry : std::filesystem::directory_iterator(currDirPath))
     {
         currDir.emplace(currDir.end(), entry);
-        dirMaped.emplace(std::pair<std::string, bool>(entry.path(), false));
+        std::string tmp = entry.path();
+        int pos = 0;
+        for (int i = tmp.length(); i >= 0; i--)
+            if (tmp[i] == '/')
+            {
+                pos = i;
+                break;
+            }
+
+        tmp = tmp.substr(pos);
+        currDirEntryNames.emplace(currDirEntryNames.end(), tmp);
+        dirMaped.emplace(std::pair<std::string, bool>(tmp, false));
     }
 }
 
@@ -40,13 +51,33 @@ int FileSelector::SelectEntry(std::string entryname)
     else
     {
         dirMaped[currEntrySelected] = false;
-        if (std::filesystem::is_directory(entryname))
+        if (std::filesystem::is_directory(currDirPath + '/' + entryname))
         {
-            currDirPath = entryname;
+            currDirPath += '/' + entryname;
             RefreshCurrDir();
             return DirEntry;
         }
-        else if(std::filesystem::is_regular_file(entryname))
+        else if (std::filesystem::is_regular_file(currDirPath + '/' + entryname))
+            return FileEntry;
+        return Ignore;
+    }
+}
+
+int FileSelector::SelectCurrEntry()
+{
+    // empty
+    if (currEntrySelected == "")
+        return Ignore;
+
+    else
+    {
+        if (std::filesystem::is_directory(currDirPath + '/' + currEntrySelected))
+        {
+            currDirPath += '/' + currEntrySelected;
+            RefreshCurrDir();
+            return DirEntry;
+        }
+        else if (std::filesystem::is_regular_file(currDirPath + '/' + currEntrySelected))
             return FileEntry;
         return Ignore;
     }
@@ -54,20 +85,17 @@ int FileSelector::SelectEntry(std::string entryname)
 
 void FileSelector::GoUpADirectory()
 {
-    auto it = currDirPath.length();
-    it--;
-    for (int i = it; i >= 0; i--)
-    {
+    int pos = 0;
+    for (int i = currDirPath.length(); i >= 0; i--)
         if (currDirPath[i] == '/')
         {
-            it = i;
+            pos = i;
             break;
         }
-    }
     // root
-    if (it == 0)
-        it++;
-    currDirPath = currDirPath.substr(0, it);
+    if (pos == 0)
+        pos++;
+    currDirPath = currDirPath.substr(0, pos);
     RefreshCurrDir();
 }
 
@@ -75,10 +103,22 @@ void FileSelector::RefreshCurrDir()
 {
     currEntrySelected = "";
     currDir.clear();
+    currDirEntryNames.clear();
     dirMaped.clear();
     for (const auto &entry : std::filesystem::directory_iterator(currDirPath))
     {
         currDir.emplace(currDir.end(), entry);
-        dirMaped.emplace(std::pair<std::string, bool>(entry.path(), false));
+        std::string tmp = entry.path();
+        int pos = 0;
+        for (int i = tmp.length(); i >= 0; i--)
+            if (tmp[i] == '/')
+            {
+                pos = i;
+                break;
+            }
+
+        tmp = tmp.substr(pos);
+        currDirEntryNames.emplace(currDirEntryNames.end(), tmp);
+        dirMaped.emplace(std::pair<std::string, bool>(tmp, false));
     }
 }
