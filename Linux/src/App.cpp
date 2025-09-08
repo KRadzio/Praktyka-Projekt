@@ -281,9 +281,14 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    ImGui::SameLine((ImGui::GetWindowWidth() - inputImage.GetWidth()) / 2);
-    ImGui::SetCursorPosY((ImGui::GetWindowHeight() - inputImage.GetHeight()) / 2);
-    ImGui::Image((ImTextureRef)inputImage.GetTexture(), ImVec2(inputImage.GetWidth(), inputImage.GetHeight()));
+    if (!inputImage.NoTexture())
+    {
+        if (inputImage.GetWidth() < ImGui::GetWindowWidth())
+            ImGui::SameLine((ImGui::GetWindowWidth() - inputImage.GetWidth()) / 2);
+        if (inputImage.GetHeight() < ImGui::GetWindowHeight())
+            ImGui::SetCursorPosY((ImGui::GetWindowHeight() - inputImage.GetHeight()) / 2);
+        ImGui::Image((ImTextureRef)inputImage.GetTexture(), ImVec2(inputImage.GetWidth(), inputImage.GetHeight()));
+    }
     ImGui::End();
 
     ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
@@ -361,8 +366,10 @@ void App::DrawPictureSpace()
     ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
     if (!outputImage.NoTexture())
     {
-        ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
-        ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
+        if (outputImage.GetWidth() < ImGui::GetWindowWidth())
+            ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
+        if (outputImage.GetHeight() < ImGui::GetWindowHeight())
+            ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
         ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
     }
     ImGui::End();
@@ -441,6 +448,12 @@ void App::Render()
 
 void App::CreateNegative()
 {
+    if (inputImage.NoSurface())
+    {
+        std::cout << "No image loaded\n";
+        return;
+    }
+
     outputImage = inputImage;
     SDL_Surface *surface = outputImage.GetSurface();
 
@@ -470,6 +483,12 @@ void App::CreateNegative()
 
 void App::BrightenImage()
 {
+    if (inputImage.NoSurface())
+    {
+        std::cout << "No image loaded\n";
+        return;
+    }
+    
     outputImage = inputImage;
     SDL_Surface *surface = outputImage.GetSurface();
 

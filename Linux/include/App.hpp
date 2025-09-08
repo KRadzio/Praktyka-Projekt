@@ -89,7 +89,6 @@ private:
 
     // selected state
 
-    // add same condition to displaing on input image
     // display an error when invalid file is loaded
     // add a menu for saving
     // improve the ui for load/save
