@@ -51,13 +51,13 @@ int FileSelector::SelectEntry(std::string entryname)
     else
     {
         dirMaped[currEntrySelected] = false;
-        if (std::filesystem::is_directory(currDirPath + '/' + entryname))
+        if (std::filesystem::is_directory(currDirPath + entryname))
         {
-            currDirPath += '/' + entryname;
+            currDirPath += entryname;
             RefreshCurrDir();
             return DirEntry;
         }
-        else if (std::filesystem::is_regular_file(currDirPath + '/' + entryname))
+        else if (std::filesystem::is_regular_file(currDirPath + entryname))
             return FileEntry;
         return Ignore;
     }
@@ -71,13 +71,13 @@ int FileSelector::SelectCurrEntry()
 
     else
     {
-        if (std::filesystem::is_directory(currDirPath + '/' + currEntrySelected))
+        if (std::filesystem::is_directory(currDirPath + currEntrySelected))
         {
-            currDirPath += '/' + currEntrySelected;
+            currDirPath += currEntrySelected;
             RefreshCurrDir();
             return DirEntry;
         }
-        else if (std::filesystem::is_regular_file(currDirPath + '/' + currEntrySelected))
+        else if (std::filesystem::is_regular_file(currDirPath + currEntrySelected))
             return FileEntry;
         return Ignore;
     }

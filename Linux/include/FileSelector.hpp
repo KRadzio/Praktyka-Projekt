@@ -6,16 +6,17 @@
 #include <map>
 #include <vector>
 
-enum EntryType
-{
-    Error = -1,
-    Ignore,
-    FileEntry,
-    DirEntry
-};
-
 class FileSelector
 {
+public:
+    enum EntryType
+    {
+        Error = -1,
+        Ignore,
+        FileEntry,
+        DirEntry
+    };
+
 public:
     static FileSelector &GetInstance();
     inline std::string GetCurrPath() { return currDirPath; }

@@ -186,7 +186,7 @@ void App::DrawMenuBar()
         ImGui::Separator();
         ImGui::MenuItem("Skroty klawiszowe");
         ImGui::Separator();
-        if(ImGui::MenuItem("Pokaz ImGui Demo",NULL, show_demo_window))
+        if (ImGui::MenuItem("Pokaz ImGui Demo", NULL, show_demo_window))
             show_demo_window = !show_demo_window;
         ImGui::EndMenu();
     }
@@ -199,32 +199,36 @@ void App::DrawMenuBar()
         ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("WczytajPlik"))
+        if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
             // this has to be maped in some way
             auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
             auto map = FileSelector::GetInstance().GetDirMaped();
+            ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::Text(FileSelector::GetInstance().GetCurrPath().c_str());
+            ImGui::Separator();
             for (auto name : dir)
                 if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
-                    if (FileSelector::GetInstance().SelectEntry(name) == FileEntry)
+                    if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
                     {
                         inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer);
                         outputImage.ClearImage();
                         loadPopupActive = false;
                         ImGui::CloseCurrentPopup();
                     }
-
+            ImGui::EndChild();
+            ImGui::Separator();
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("Otworz", ImVec2(CANCEL_BUTTON_W, 0)))
             {
-                if (FileSelector::GetInstance().SelectCurrEntry() == FileEntry)
+                if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 {
                     inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer);
                     outputImage.ClearImage();
                     loadPopupActive = false;
                     ImGui::CloseCurrentPopup();
                 }
-                else if (FileSelector::GetInstance().SelectCurrEntry() == DirEntry)
+                else if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::DirEntry)
                     FileSelector::GetInstance().GoUpADirectory();
             }
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -246,53 +250,71 @@ void App::DrawMenuBar()
     {
         // add file name input file
         ImGui::OpenPopup("ZapiszPlik", ImGuiPopupFlags_NoReopen);
-        ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
+        ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, SAVE_POPUP_HEIGHT));
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("ZapiszPlik"))
+        if (ImGui::BeginPopupModal("ZapiszPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
             // this has to be maped in some way
             auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
             auto map = FileSelector::GetInstance().GetDirMaped();
+            ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::Text(FileSelector::GetInstance().GetCurrPath().c_str());
+            ImGui::Separator();
             for (auto name : dir)
                 if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
-                    if (FileSelector::GetInstance().SelectEntry(name) == FileEntry)
+                    if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
                     {
                         // do you want to overrinde the file?
                         outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
                         saveAsPopupActive = false;
                         ImGui::CloseCurrentPopup();
                     }
+            ImGui::EndChild();
+
+            ImGui::Separator();
 
             ImGui::Text("Nazwa pliku");
-            ImGui::InputText("##", fileNameBuff, 64);
+            ImGui::InputText("wpisz", fileNameBuff, 64);
 
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            const char* ext[] = {"PNG", "JPG"};
+            ImGui::Text("Rozszerzenie");
+            ImGui::Combo("wybierz", &currExt, ext, IM_ARRAYSIZE(ext));
+
+            ImGui::Text("Zapisz - jezeli chcemy nadac nazwe");
+            ImGui::Text("Wybierz jezeli chcemy wybrac \n istniejacy plik lub folder");
+            ImGui::Separator();
+            ImGui::Text("UWAGA NIE MA OSTRZERZENIA\n O NADPISANIU PLIKU (jeszcze)");
+            ImGui::Separator();
+
+            int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W - 20) / 2;
+
+            ImGui::SetCursorPosX(offset);
             if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
             {
-                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff);
+                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExt);
                 saveAsPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
             if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W, 0)))
             {
-                if (FileSelector::GetInstance().SelectCurrEntry() == FileEntry)
+                if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 {
                     // do you want to overrinde the file?
                     outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
                     saveAsPopupActive = false;
                     ImGui::CloseCurrentPopup();
                 }
-                else if (FileSelector::GetInstance().SelectCurrEntry() == DirEntry)
+                else if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::DirEntry)
                     FileSelector::GetInstance().GoUpADirectory();
             }
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            ImGui::SetCursorPosX(offset);
             if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
             {
                 FileSelector::GetInstance().GoUpADirectory();
             }
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
             if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
             {
                 saveAsPopupActive = false;

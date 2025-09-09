@@ -29,34 +29,38 @@
 #define MIDDLE_BUTTON_H 30
 #define CANCEL_BUTTON_W 120
 #define FILE_POPUP_WIDTH 300
-#define FILE_POPUP_HEIGHT 300
-
-enum HistMode
-{
-    Brightnes,
-    R,
-    G,
-    B
-};
-
-enum DistMode
-{
-    InputDist,
-    OutputDist
-};
-
-enum AlgSelected
-{
-    None,
-    Negative,
-    Brighten,
-    Contrast,
-    Exponentiation,
-    LeveledHistogram
-};
+#define FILE_POPUP_HEIGHT 310
+#define SAVE_POPUP_HEIGHT 450
+#define DIR_LIST_WIDTH 290
+#define DIR_LIST_HEIGHT 200
 
 class App
 {
+public:
+    enum HistMode
+    {
+        Brightnes,
+        R,
+        G,
+        B
+    };
+
+    enum DistMode
+    {
+        InputDist,
+        OutputDist
+    };
+
+    enum AlgSelected
+    {
+        None,
+        Negative,
+        Brighten,
+        Contrast,
+        Exponentiation,
+        LeveledHistogram
+    };
+
 public:
     static App &GetInstance();
     int Init();
@@ -97,11 +101,12 @@ private:
     int algS = None;
 
     char fileNameBuff[64];
+    int currExt = 0;
 
     // display an error when invalid file is loaded (make an erroe popup)
     // display a warning popup if overriding files, and if quiting without saving
-    // improve the ui for load/save (partial)
-    // improve saving image
+    // improve saving image (remember to fix the problem with overwritting the image)
+    // change the image coping to not restet the filename if needed
     // add other things that may be needed in image
     // change the way params are handled
     // if App is to long spit it

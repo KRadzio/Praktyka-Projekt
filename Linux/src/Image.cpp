@@ -28,6 +28,7 @@ Image &Image::operator=(const Image &other)
         distributor[i] = other.distributor[i];
     }
     sourceImageName = other.sourceImageName;
+    ext = other.ext;
     return *this;
 }
 
@@ -49,15 +50,22 @@ void Image::SaveImage()
         printf("Can not save \n");
     else
     {
-        int pos = 0;
-        for (int i = sourceImageName.length(); i >= 0; i--)
-            if (sourceImageName[i] == '.')
-            {
-                pos = i;
-                break;
-            }
-        std::string newFileName = sourceImageName.substr(0, pos) + "Copy" + sourceImageName.substr(pos);
-        IMG_SavePNG(surface, newFileName.c_str());
+        if (ext == PNG)
+        {
+            std::string newFileName = sourceImageName + ".png";
+            IMG_SavePNG(surface, newFileName.c_str());
+        }
+        else if (ext == JPG)
+        {
+            std::string newFileName = sourceImageName + ".jpg";
+            IMG_SaveJPG(surface, newFileName.c_str(), 100);
+        }
+        // default to png
+        else
+        {
+            std::string newFileName = sourceImageName + ".png";
+            IMG_SavePNG(surface, newFileName.c_str());
+        }
     }
 }
 
@@ -67,19 +75,63 @@ void Image::SaveImageAs(std::string filename)
         printf("Can not save \n");
     else
     {
-        sourceImageName = filename;
-        IMG_SavePNG(surface, sourceImageName.c_str());
+        int pos = 0;
+        for (int i = filename.length() - 1; i >= 0; i--)
+            if (filename[i] == '.')
+            {
+                pos = i;
+                break;
+            }
+        std::string extS = filename.substr(pos);
+        sourceImageName = filename.substr(0,pos);
+        if (extS == ".png")
+        {
+            ext = PNG;
+            std::string newFileName = sourceImageName + ".png";
+            IMG_SavePNG(surface, newFileName.c_str());
+        }
+        else if (extS == ".jpg" || extS == "jpeg")
+        {
+            ext = JPG;
+            std::string newFileName = sourceImageName + ".jpg";
+            IMG_SaveJPG(surface, newFileName.c_str(), 100);
+        }
+        // default to png
+        else
+        {
+            ext = PNG;
+            std::string newFileName = sourceImageName + ".png";
+            IMG_SavePNG(surface, newFileName.c_str());
+        }
     }
 }
 
-void Image::SaveImageAs(std::string path, char *filename)
+void Image::SaveImageAs(std::string path, char *filename, int extension)
 {
     if (surface == nullptr)
         printf("Can not save \n");
     else
     {
-        sourceImageName = path + '/' + filename + ".png";
-        IMG_SavePNG(surface, sourceImageName.c_str());
+        sourceImageName = path + '/' + filename;
+        if (extension == PNG)
+        {
+            ext = PNG;
+            std::string newFileName = sourceImageName + ".png";
+            IMG_SavePNG(surface, newFileName.c_str());
+        }
+        else if (extension == JPG)
+        {
+            ext = JPG;
+            std::string newFileName = sourceImageName + ".jpg";
+            IMG_SaveJPG(surface, newFileName.c_str(), 100);
+        }
+        // default to png
+        else
+        {
+            ext = PNG;
+            std::string newFileName = sourceImageName + ".png";
+            IMG_SavePNG(surface, newFileName.c_str());
+        }
     }
 }
 
@@ -102,7 +154,22 @@ void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
     }
     else
     {
-        sourceImageName = filename;
+        int pos = 0;
+        for (int i = filename.length() - 1; i >= 0; i--)
+            if (filename[i] == '.')
+            {
+                pos = i;
+                break;
+            }
+        std::string extS = filename.substr(pos);
+        sourceImageName = filename.substr(0,pos);
+        if (extS == ".png")
+            ext = PNG;
+        else if (extS == ".jpg" || extS == "jpeg")
+            ext = JPG;
+        // default to png
+        else
+            ext = PNG;
         texture = SDL_CreateTextureFromSurface(renderer, surface);
         // handle it in some way
         if (texture == nullptr)
@@ -131,6 +198,7 @@ void Image::ClearImage()
     width = 0;
     height = 0;
     sourceImageName = "";
+    ext = UNKNOWN;
 }
 
 void Image::RefreshPixelValuesArrays()
@@ -168,7 +236,7 @@ void Image::RefreshPixelValuesArrays()
         distributor[i] = lightValues[i] / (width * height);
         distributor[i] += distributor[i - 1];
     }
-    for(int i=0; i< MAX_VAL; i++)
+    for (int i = 0; i < MAX_VAL; i++)
         distributor[i] *= 255;
 }
 
@@ -211,4 +279,7 @@ void Image::Copy(Image &other)
         distributor[i] = other.distributor[i];
     }
     sourceImageName = other.sourceImageName;
+    ext = other.ext;
 }
+
+

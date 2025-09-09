@@ -18,9 +18,17 @@ public:
         uint8_t r;
     };
 
+    enum Extension
+    {
+        UNKNOWN = -1,
+        PNG,
+        JPG
+    };
+
 public:
     Image();
     // the texture is not copied so use RefreshTexture after this one
+    // IT CHANGES THE FILEPATH
     Image &operator=(const Image &other);
     Image(std::string filename, SDL_Renderer *renderer);
     ~Image();
@@ -37,9 +45,11 @@ public:
     inline float *GetDistributor() { return distributor; }
     inline std::string &GetImageName() { return sourceImageName; }
 
+    // if save as was not used, it will save it as <filaname>.png
+    // IT CAN SAVE AS EXISTING IMAGE
     void SaveImage();
     void SaveImageAs(std::string filename);
-    void SaveImageAs(std::string path, char *filename);
+    void SaveImageAs(std::string path, char *filename, int extension);
     void SetSourceImage(std::string filename, SDL_Renderer *renderer);
     void ClearImage();
 
@@ -68,6 +78,7 @@ private:
     float valuesB[MAX_VAL];
     float distributor[MAX_VAL];
     std::string sourceImageName = "";
+    Extension ext = UNKNOWN;
 };
 
 #endif
