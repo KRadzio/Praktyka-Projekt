@@ -11,10 +11,18 @@
 class Image
 {
 public:
+    struct Pixel
+    {
+        uint8_t b;
+        uint8_t g;
+        uint8_t r;
+    };
+
+public:
     Image();
     // the texture is not copied so use RefreshTexture after this one
     Image &operator=(const Image &other);
-    Image(std::string filename, SDL_Renderer* renderer);
+    Image(std::string filename, SDL_Renderer *renderer);
     ~Image();
 
 public:
@@ -26,25 +34,28 @@ public:
     inline float *GetRValues() { return valuesR; }
     inline float *GetGValues() { return valuesG; }
     inline float *GetBValues() { return valuesB; }
-    inline std::string& GetImageName() { return sourceImageName;}
+    inline float *GetDistributor() { return distributor; }
+    inline std::string &GetImageName() { return sourceImageName; }
 
     void SaveImage();
     void SaveImageAs(std::string filename);
-    void SaveImageAs(std::string path, char* filename);
-    void SetSourceImage(std::string filename, SDL_Renderer* renderer);
+    void SaveImageAs(std::string path, char *filename);
+    void SetSourceImage(std::string filename, SDL_Renderer *renderer);
     void ClearImage();
 
-    inline bool NoSurface() {return surface == nullptr;}
-    inline bool NoTexture() {return texture == nullptr;}
+    inline bool NoSurface() { return surface == nullptr; }
+    inline bool NoTexture() { return texture == nullptr; }
 
     void RefreshPixelValuesArrays();
-    void RefreshTexture(SDL_Renderer* renderer);
+    void RefreshTexture(SDL_Renderer *renderer);
 
-    // think about this one
-    // void CopySurface(SDL_Surface* newSurface);
+    Pixel GetPixel(int x, int y);
+    void SetPixel(int x, int y, Pixel pix);
 
-    // test this one also
-    // Image Copy();
+    inline void LockImage() {SDL_LockSurface(surface);}
+    inline void UnlockImage() {SDL_UnlockSurface(surface);}
+
+    void Copy(Image& other);
 
 private:
     SDL_Surface *surface = nullptr;
@@ -55,6 +66,7 @@ private:
     float valuesR[MAX_VAL];
     float valuesG[MAX_VAL];
     float valuesB[MAX_VAL];
+    float distributor[MAX_VAL];
     std::string sourceImageName = "";
 };
 

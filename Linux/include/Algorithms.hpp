@@ -13,6 +13,10 @@ namespace Algorithms
 
     int Contrast(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float value);
 
+    int Exponentiation(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float alfa);
+
+    int LevelHistogram(Image &inputImage, Image &outputImage, SDL_Renderer *renderer);
+
 }
 
 #endif

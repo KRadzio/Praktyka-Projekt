@@ -83,8 +83,6 @@ int App::MainLoop()
 {
     inputImage.SetSourceImage("./Fish.bmp", renderer);
 
-    float arr[] = {1.0, 2.0, 3.0, 4.0, 5.0};
-
     while (runLoop)
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -108,7 +106,7 @@ int App::MainLoop()
         DrawAlgorihmsBar();
 
         DrawPictureSpace();
-        DrawHistogramsAndFunctions(arr, IM_ARRAYSIZE(arr));
+        DrawHistogramsAndFunctions();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
@@ -204,7 +202,8 @@ void App::DrawMenuBar()
         if (ImGui::MenuItem("Wczytaj"))
             loadPopupActive = true;
         ImGui::Separator();
-        ImGui::MenuItem("Wyjdz bez zapisu");
+        if (ImGui::MenuItem("Wyjdz"))
+            runLoop = false;
         ImGui::EndMenu();
     }
 
@@ -351,6 +350,12 @@ void App::DrawAlgorihmsBar()
     ImGui::SameLine();
     if (ImGui::RadioButton("Kontrast", &algS, 3))
         algName = "Kontrast";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Potegowanie", &algS, 4))
+        algName = "Potegowanie";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Wyrownanie histogramu", &algS, 5))
+        algName = "Wyrownanie histogramu";
     ImGui::End();
 }
 
@@ -393,6 +398,12 @@ void App::DrawPictureSpace()
         case Contrast:
             Algorithms::Contrast(inputImage, outputImage, renderer, contrast);
             break;
+        case Exponentiation:
+            Algorithms::Exponentiation(inputImage, outputImage, renderer, alfa);
+            break;
+        case LeveledHistogram:
+            Algorithms::LevelHistogram(inputImage, outputImage, renderer);
+            break;
         default:
             break;
         }
@@ -418,13 +429,20 @@ void App::DrawPictureSpace()
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Brighten:
-            ImGui::InputInt("O ile rozjasnic?", &value);
+            ImGui::SliderInt("O ile rozjasnic?", &value, -255, 255);
             break;
         case Contrast:
             ImGui::SliderFloat("O ile zmienic", &contrast, 0.1, 5.0);
+            break;
+        case Exponentiation:
+            ImGui::SliderFloat("Alfa", &alfa, 0.1, 3.0);
+            break;
+        case LeveledHistogram:
+            ImGui::Text("Brak parametrów do tego algorytmu");
+            break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Powrot", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
@@ -442,6 +460,7 @@ void App::DrawPictureSpace()
     {
         value = 0;
         contrast = 1.0;
+        alfa = 0.0;
     }
 
     ImGui::End();
@@ -460,7 +479,7 @@ void App::DrawPictureSpace()
     ImGui::End();
 }
 
-void App::DrawHistogramsAndFunctions(float arr[], int vc)
+void App::DrawHistogramsAndFunctions()
 {
     float h = ImGui::GetFrameHeight() + ALG_BAR_H + (currHeight - MENU_ALG_HIST_H);
     float maxO = *(std::max_element(outputImage.GetLightValues(), outputImage.GetLightValues() + 255));
@@ -495,8 +514,14 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     // func
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
-    ImGui::Text("Funkcja");
-    ImGui::PlotLines("##", arr, vc, 0, NULL, 0.0f, 10.0f, ImVec2(HIST_W, HIST_H));
+    ImGui::Text("Dystrybuanta Obrazu");
+    ImGui::RadioButton("Wejsciowego", &modeD, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Wyjsciowego", &modeD, 1);
+    if (modeD == InputDist)
+        ImGui::PlotLines("##", inputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
+    if (modeD == OutputDist)
+        ImGui::PlotLines("##", outputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     // out
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);

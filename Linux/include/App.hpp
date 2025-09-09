@@ -39,12 +39,20 @@ enum HistMode
     B
 };
 
+enum DistMode
+{
+    InputDist,
+    OutputDist
+};
+
 enum AlgSelected
 {
     None,
     Negative,
     Brighten,
-    Contrast
+    Contrast,
+    Exponentiation,
+    LeveledHistogram
 };
 
 class App
@@ -64,7 +72,7 @@ private:
     void DrawMenuBar();
     void DrawAlgorihmsBar();
     void DrawPictureSpace();
-    void DrawHistogramsAndFunctions(float arr[], int vc);
+    void DrawHistogramsAndFunctions();
     void Render();
 
 private:
@@ -76,9 +84,10 @@ private:
     bool loadPopupActive = false;
     bool saveAsPopupActive = false;
 
-    // image flags
+    // image histograms and plot flags
     int modeI = Brightnes;
     int modeO = Brightnes;
+    int modeD = InputDist;
 
     // window
     int currWidth = 1280;
@@ -94,16 +103,14 @@ private:
     // display a warning popup if overriding files, and if quiting without saving
     // improve the ui for load/save (partial)
     // improve saving image
-    // add Get/Set Pixel to image
-    // add Lock/Unlock to image
     // add other things that may be needed in image
     // change the way params are handled
-    // map the algs (switch case is not bad but not grat also)
     // if App.cpp is to long move part of the gui stuff to Gui.hpp and Gui.cpp
 
     // Tmp
     int value = 0;
     float contrast = 1.0;
+    float alfa = 0.0;
 
     // Image
     Image inputImage;

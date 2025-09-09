@@ -144,3 +144,76 @@ int Algorithms::Contrast(Image &inputImage, Image &outputImage, SDL_Renderer *re
     outputImage.RefreshTexture(renderer);
     return 0;
 }
+
+int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float alfa)
+{
+    if (inputImage.NoSurface())
+        return -1;
+
+    int tab[256];
+    for (int i = 0; i < 256; i++)
+        tab[i] = 255.0 * pow((float)i / 255.0, alfa);
+
+    outputImage = inputImage;
+    SDL_Surface *surface = outputImage.GetSurface();
+
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < outputImage.GetWidth(); i++)
+    {
+        for (int j = 0; j < outputImage.GetHeight(); j++)
+        {
+            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            b = tab[b];
+            g = tab[g];
+            r = tab[r];
+
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
+        }
+    }
+    SDL_UnlockSurface(surface);
+
+    outputImage.RefreshPixelValuesArrays();
+    outputImage.RefreshTexture(renderer);
+    return 0;
+}
+
+int Algorithms::LevelHistogram(Image &inputImage, Image &outputImage, SDL_Renderer *renderer)
+{
+    if (inputImage.NoSurface())
+        return -1;
+
+    outputImage = inputImage;
+    SDL_Surface *surface = outputImage.GetSurface();
+    float* dist = outputImage.GetDistributor();
+
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < outputImage.GetWidth(); i++)
+    {
+        for (int j = 0; j < outputImage.GetHeight(); j++)
+        {
+            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            b = dist[b];
+            g = dist[g];
+            r = dist[r];
+
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
+        }
+    }
+    SDL_UnlockSurface(surface);
+
+    outputImage.RefreshPixelValuesArrays();
+    outputImage.RefreshTexture(renderer);
+    return 0;
+}
