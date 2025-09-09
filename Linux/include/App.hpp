@@ -78,8 +78,7 @@ private:
 private:
     // App
     // flags
-    bool show_demo_window = true;
-    bool show_another_window = false;
+    bool show_demo_window = false;
     bool runLoop = true;
     bool loadPopupActive = false;
     bool saveAsPopupActive = false;
@@ -105,7 +104,7 @@ private:
     // improve saving image
     // add other things that may be needed in image
     // change the way params are handled
-    // if App.cpp is to long move part of the gui stuff to Gui.hpp and Gui.cpp
+    // if App is to long spit it
 
     // Tmp
     int value = 0;
