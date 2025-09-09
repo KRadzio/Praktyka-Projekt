@@ -161,15 +161,15 @@ void Image::RefreshPixelValuesArrays()
             valuesR[r]++;
         }
     }
+    SDL_UnlockSurface(surface);
     distributor[0] = lightValues[0] / (width * height);
-    distributor[0] *= 255;
     for (int i = 1; i < MAX_VAL; i++)
     {
         distributor[i] = lightValues[i] / (width * height);
-        distributor[i] *= 255;
         distributor[i] += distributor[i - 1];
     }
-    SDL_UnlockSurface(surface);
+    for(int i=0; i< MAX_VAL; i++)
+        distributor[i] *= 255;
 }
 
 void Image::RefreshTexture(SDL_Renderer *renderer)

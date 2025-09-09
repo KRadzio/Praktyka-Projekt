@@ -110,7 +110,7 @@ private:
     // Tmp
     int value = 0;
     float contrast = 1.0;
-    float alfa = 0.0;
+    float alfa = 1.0;
 
     // Image
     Image inputImage;

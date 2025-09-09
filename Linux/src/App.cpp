@@ -409,8 +409,6 @@ void App::DrawPictureSpace()
         }
     }
 
-    ImGui::Button("Zatrzymaj przetwarzanie", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H));
-
     ImGui::SeparatorText("Opcje");
     if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
         ImGui::OpenPopup("Parametry");
@@ -454,13 +452,13 @@ void App::DrawPictureSpace()
     {
         algS = None;
         algName = "Brak wybranego algorytmu";
-        outputImage = Image();
+        outputImage.ClearImage();
     }
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         value = 0;
         contrast = 1.0;
-        alfa = 0.0;
+        alfa = 1.0;
     }
 
     ImGui::End();
