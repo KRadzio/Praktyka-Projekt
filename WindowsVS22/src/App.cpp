@@ -240,7 +240,7 @@ void App::DrawMenuBar()
                 if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 {
                     if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer) == -1)
-                    { 
+                    {
                         errorPopupActive = true;
                         outputImage.ClearImage();
                     }
@@ -476,6 +476,7 @@ void App::DrawAlgorihmsBar()
 
 void App::DrawPictureSpace()
 {
+    int outputCode = 0;
     float h = ImGui::GetFrameHeight() + ALG_BAR_H;
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
@@ -505,23 +506,25 @@ void App::DrawPictureSpace()
             std::cout << "Nothing happend\n";
             break;
         case Negative:
-            Algorithms::CreateNegative(inputImage, outputImage, renderer);
+            outputCode = Algorithms::CreateNegative(inputImage, outputImage, renderer);
             break;
         case Brighten:
-            Algorithms::BrightenImage(inputImage, outputImage, renderer, value);
+            outputCode = Algorithms::BrightenImage(inputImage, outputImage, renderer, value);
             break;
         case Contrast:
-            Algorithms::Contrast(inputImage, outputImage, renderer, contrast);
+            outputCode = Algorithms::Contrast(inputImage, outputImage, renderer, contrast);
             break;
         case Exponentiation:
-            Algorithms::Exponentiation(inputImage, outputImage, renderer, alfa);
+            outputCode = Algorithms::Exponentiation(inputImage, outputImage, renderer, alfa);
             break;
         case LeveledHistogram:
-            Algorithms::LevelHistogram(inputImage, outputImage, renderer);
+            outputCode = Algorithms::LevelHistogram(inputImage, outputImage, renderer);
             break;
         default:
             break;
         }
+        if (outputCode == -1)
+            errorPopupAlgActive = true;
     }
 
     ImGui::SeparatorText("Opcje");
@@ -590,6 +593,24 @@ void App::DrawPictureSpace()
         ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
     }
     ImGui::End();
+
+    if (errorPopupAlgActive)
+    {
+        ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Text("Brak obrazu");
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                errorPopupAlgActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
 }
 
 void App::DrawHistogramsAndFunctions()

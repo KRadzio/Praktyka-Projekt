@@ -4,7 +4,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
-#include <stdio.h>
+#include <iostream>
 #include <filesystem>
 #include <thread>
 #include <SDL.h>
@@ -86,6 +86,7 @@ private:
     bool loadPopupActive = false;
     bool saveAsPopupActive = false;
     bool errorPopupActive = false;
+    bool errorPopupAlgActive = false;
     bool warningPopupActive = false;
     bool customName = false;
 
