@@ -29,6 +29,15 @@ FileSelector &FileSelector::GetInstance()
     return *instance;
 }
 
+void FileSelector::DeselectCurrEntry()
+{
+    if (currEntrySelected != "")
+    {
+        dirMaped[currEntrySelected] = false;
+        currEntrySelected = "";
+    }
+}
+
 int FileSelector::SelectEntry(std::string entryname)
 {
     // empty

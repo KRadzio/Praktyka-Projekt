@@ -22,7 +22,8 @@ public:
     {
         UNKNOWN = -1,
         PNG,
-        JPG
+        JPG,
+        BMP
     };
 
 public:
@@ -43,14 +44,15 @@ public:
     inline float *GetGValues() { return valuesG; }
     inline float *GetBValues() { return valuesB; }
     inline float *GetDistributor() { return distributor; }
-    inline std::string &GetImageName() { return sourceImageName; }
+    inline std::string GetImageName() { return sourceImageName; }
+    std::string GetExtension();
 
     // if save as was not used, it will save it as <filaname>.png
     // IT CAN SAVE AS EXISTING IMAGE
     void SaveImage();
     void SaveImageAs(std::string filename);
     void SaveImageAs(std::string path, char *filename, int extension);
-    void SetSourceImage(std::string filename, SDL_Renderer *renderer);
+    int SetSourceImage(std::string filename, SDL_Renderer *renderer);
     void ClearImage();
 
     inline bool NoSurface() { return surface == nullptr; }

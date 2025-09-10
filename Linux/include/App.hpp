@@ -86,6 +86,9 @@ private:
     bool runLoop = true;
     bool loadPopupActive = false;
     bool saveAsPopupActive = false;
+    bool errorPopupActive = false;
+    bool warningPopupActive = false;
+    bool customName = false;
 
     // image histograms and plot flags
     int modeI = Brightnes;
@@ -102,14 +105,6 @@ private:
 
     char fileNameBuff[64];
     int currExt = 0;
-
-    // display an error when invalid file is loaded (make an erroe popup)
-    // display a warning popup if overriding files, and if quiting without saving
-    // improve saving image (remember to fix the problem with overwritting the image)
-    // change the image coping to not restet the filename if needed
-    // add other things that may be needed in image
-    // change the way params are handled
-    // if App is to long spit it
 
     // Tmp
     int value = 0;

@@ -44,6 +44,19 @@ Image::~Image()
         SDL_DestroyTexture(texture);
 }
 
+std::string Image::GetExtension()
+{
+    if (ext == PNG)
+        return ".png";
+    else if (ext == JPG)
+        return ".jpg";
+    else if (ext == BMP)
+        return ".bmp";
+    // default to png
+    else
+        return ".png";
+}
+
 void Image::SaveImage()
 {
     if (surface == nullptr)
@@ -59,6 +72,11 @@ void Image::SaveImage()
         {
             std::string newFileName = sourceImageName + ".jpg";
             IMG_SaveJPG(surface, newFileName.c_str(), 100);
+        }
+        else if (ext == BMP)
+        {
+            std::string newFileName = sourceImageName + ".bmp";
+            SDL_SaveBMP(surface, newFileName.c_str());
         }
         // default to png
         else
@@ -83,7 +101,7 @@ void Image::SaveImageAs(std::string filename)
                 break;
             }
         std::string extS = filename.substr(pos);
-        sourceImageName = filename.substr(0,pos);
+        sourceImageName = filename.substr(0, pos);
         if (extS == ".png")
         {
             ext = PNG;
@@ -95,6 +113,12 @@ void Image::SaveImageAs(std::string filename)
             ext = JPG;
             std::string newFileName = sourceImageName + ".jpg";
             IMG_SaveJPG(surface, newFileName.c_str(), 100);
+        }
+        else if(extS == ".bmp")
+        {
+            ext = BMP;
+            std::string newFileName = sourceImageName + ".bmp";
+            SDL_SaveBMP(surface, newFileName.c_str());
         }
         // default to png
         else
@@ -125,6 +149,12 @@ void Image::SaveImageAs(std::string path, char *filename, int extension)
             std::string newFileName = sourceImageName + ".jpg";
             IMG_SaveJPG(surface, newFileName.c_str(), 100);
         }
+        else if (extension == BMP)
+        {
+            ext = BMP;
+            std::string newFileName = sourceImageName + ".bmp";
+            SDL_SaveBMP(surface, newFileName.c_str());
+        }
         // default to png
         else
         {
@@ -135,13 +165,13 @@ void Image::SaveImageAs(std::string path, char *filename, int extension)
     }
 }
 
-void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
+int Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
 {
     ClearImage();
     surface = IMG_Load(filename.c_str());
     if (surface == nullptr)
     {
-        printf("%s\n", SDL_GetError());
+        // printf("%s\n", SDL_GetError());
         // make a call to display a gui error later
         for (int i = 0; i < MAX_VAL; i++)
         {
@@ -151,6 +181,7 @@ void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
             valuesB[i] = 0;
             distributor[i] = 0;
         }
+        return -1;
     }
     else
     {
@@ -162,11 +193,13 @@ void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
                 break;
             }
         std::string extS = filename.substr(pos);
-        sourceImageName = filename.substr(0,pos);
+        sourceImageName = filename.substr(0, pos);
         if (extS == ".png")
             ext = PNG;
         else if (extS == ".jpg" || extS == "jpeg")
             ext = JPG;
+        else if (extS == ".bmp")
+            ext = BMP;
         // default to png
         else
             ext = PNG;
@@ -177,6 +210,7 @@ void Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
         width = surface->w;
         height = surface->h;
         RefreshPixelValuesArrays();
+        return 0;
     }
 }
 
@@ -281,5 +315,3 @@ void Image::Copy(Image &other)
     sourceImageName = other.sourceImageName;
     ext = other.ext;
 }
-
-
