@@ -9,7 +9,10 @@
 #include <thread>
 #include <SDL.h>
 #include <SDL_image.h>
-#include <opencv2/opencv.hpp>
+
+#include "Image.hpp"
+#include "FileSelector.hpp"
+#include "Algorithms.hpp"
 
 #define ALG_BAR_H 40
 #define POPUP_SIZE 200
@@ -24,6 +27,11 @@
 #define MIDDLE_BUTTON_W 180
 #define MIDDLE_BUTTON_H 30
 #define CANCEL_BUTTON_W 120
+#define FILE_POPUP_WIDTH 300
+#define FILE_POPUP_HEIGHT 310
+#define SAVE_POPUP_HEIGHT 450
+#define DIR_LIST_WIDTH 290
+#define DIR_LIST_HEIGHT 200
 
 class App
 {
@@ -36,11 +44,20 @@ public:
         B
     };
 
+    enum DistMode
+    {
+        InputDist,
+        OutputDist
+    };
+
     enum AlgSelected
     {
         None,
         Negative,
-        Brighten
+        Brighten,
+        Contrast,
+        Exponentiation,
+        LeveledHistogram
     };
 
 public:
@@ -52,61 +69,50 @@ private:
     App();
     ~App();
 
-    // helper functions
 private:
     void Cleanup();
     int HandleEvents();
     void DrawMenuBar();
     void DrawAlgorihmsBar();
     void DrawPictureSpace();
-    void DrawHistogramsAndFunctions(float arr[], int vc);
+    void DrawHistogramsAndFunctions();
     void Render();
-    void CreateNegative();
-    void BrightenImage();
-    void ClearOutputImage();
 
 private:
-    // App state
-    bool show_demo_window = true;
-    bool show_another_window = false;
+    // App
+    // flags
+    bool show_demo_window = false;
+    bool runLoop = true;
+    bool loadPopupActive = false;
+    bool saveAsPopupActive = false;
+    bool errorPopupActive = false;
+    bool warningPopupActive = false;
+    bool customName = false;
+
+    // image histograms and plot flags
+    int modeI = Brightnes;
+    int modeO = Brightnes;
+    int modeD = InputDist;
+
+    // window
     int currWidth = 1280;
     int currHeight = 720;
-    bool showAl1 = false;
-    bool runLoop = true;
+
+    // algorithm state
     std::string algName = "Brak wybranego algorytmu";
-    std::string selectedDirPath = "./";
-    std::vector<std::filesystem::directory_entry> dir;
+    int algS = None;
+
+    char fileNameBuff[64];
+    int currExt = 0;
 
     // Tmp
     int value = 0;
-
-    // Abstracy image as class
-    // Move transformations to Algorithms
-    // Loading files in file loader
-    // Gui class may not be needed
-
-    int algS = None;
-    bool p = false;
-
-    // Image Flags
-    int modeI = Brightnes;
-    int modeO = Brightnes;
+    float contrast = 1.0;
+    float alfa = 1.0;
 
     // Image
-    SDL_Surface* surface = nullptr;
-    SDL_Surface* surfaceO = nullptr;
-    SDL_Texture* tx = nullptr;
-    SDL_Texture* txO = nullptr;
-    int texW = 0;
-    int texH = 0;
-    float lightValuesI[256];
-    float lightValuesO[256];
-    float valuesRI[256];
-    float valuesGI[256];
-    float valuesBI[256];
-    float valuesRO[256];
-    float valuesGO[256];
-    float valuesBO[256];
+    Image inputImage;
+    Image outputImage;
 
     // Scale
     float mainScale;

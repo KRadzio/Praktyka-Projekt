@@ -60,21 +60,6 @@ int App::Init()
     ImGui_ImplSDLRenderer2_Init(renderer);
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-    for (int i = 0; i < 256; i++)
-    {
-        lightValuesI[i] = 0;
-        lightValuesO[i] = 0;
-        valuesBI[i] = 0;
-        valuesBO[i] = 0;
-        valuesGI[i] = 0;
-        valuesGO[i] = 0;
-        valuesRI[i] = 0;
-        valuesRO[i] = 0;
-    }
-    for (const auto& entry : std::filesystem::directory_iterator(selectedDirPath))
-        dir.emplace(dir.end(), entry);
-
     return 0;
 }
 
@@ -96,35 +81,7 @@ int App::Init()
 
 int App::MainLoop()
 {
-
-    // Our state
-
-    // tmp
-    surface = SDL_LoadBMP("./Fish.bmp");
-    tx = SDL_CreateTextureFromSurface(renderer, surface);
-    texW = surface->w;
-    texH = surface->h;
-
-    SDL_LockSurface(surface);
-    uint8_t* surfacePixels = (uint8_t*)surface->pixels;
-    for (int i = 0; i < texW; i++)
-    {
-        for (int j = 0; j < texH; j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-            int brightness = (b + g + r) / 3;
-            lightValuesI[brightness]++;
-            valuesBI[b]++;
-            valuesGI[g]++;
-            valuesRI[r]++;
-        }
-    }
-    // SDL_memset(surface->pixels, 255, surface->h * surface->pitch);
-    SDL_UnlockSurface(surface);
-
-    float arr[] = { 1.0, 2.0, 3.0, 4.0, 5.0 };
+    inputImage.SetSourceImage("./Fish.bmp", renderer);
 
     while (runLoop)
     {
@@ -149,46 +106,11 @@ int App::MainLoop()
         DrawAlgorihmsBar();
 
         DrawPictureSpace();
-        DrawHistogramsAndFunctions(arr, IM_ARRAYSIZE(arr));
+        DrawHistogramsAndFunctions();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            // set the pos elewhere, the size is fixed thou
-
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
-            ImGui::End();
-        }
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
 
         Render();
     }
@@ -202,11 +124,6 @@ void App::Cleanup()
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-
-    SDL_FreeSurface(surface);
-    SDL_FreeSurface(surfaceO);
-    SDL_DestroyTexture(tx);
-    SDL_DestroyTexture(txO);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
     IMG_Quit();
@@ -242,12 +159,24 @@ void App::DrawMenuBar()
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("Plik"))
     {
-        ImGui::MenuItem("Zapisz");
-        ImGui::MenuItem("Zapisz jako");
+        if (ImGui::MenuItem("Zapisz", NULL, false, !outputImage.NoSurface()))
+            if (FileSelector::GetInstance().FileExists(outputImage.GetImageName() + outputImage.GetExtension()))
+                warningPopupActive = true;
+            else
+                outputImage.SaveImage();
+        if (ImGui::MenuItem("Zapisz jako", NULL, false, !outputImage.NoSurface()))
+        {
+            saveAsPopupActive = true;
+            FileSelector::GetInstance().RefreshCurrDir();
+        }
         if (ImGui::MenuItem("Wczytaj"))
-            p = true;
+        {
+            loadPopupActive = true;
+            FileSelector::GetInstance().RefreshCurrDir();
+        }
         ImGui::Separator();
-        ImGui::MenuItem("Wyjdz bez zapisu");
+        if (ImGui::MenuItem("Wyjdz"))
+            runLoop = false;
         ImGui::EndMenu();
     }
 
@@ -264,26 +193,256 @@ void App::DrawMenuBar()
         ImGui::MenuItem("O programie");
         ImGui::Separator();
         ImGui::MenuItem("Skroty klawiszowe");
+        ImGui::Separator();
+        if (ImGui::MenuItem("Pokaz ImGui Demo", NULL, show_demo_window))
+            show_demo_window = !show_demo_window;
         ImGui::EndMenu();
     }
 
     ImGui::EndMainMenuBar();
 
-    if (p)
+    if (loadPopupActive)
     {
-        ImGui::OpenPopup("WczytajPlik");
+        ImGui::OpenPopup("WczytajPlik", ImGuiPopupFlags_NoReopen);
+        ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
             // this has to be maped in some way
-            for (auto it = dir.begin(); it < dir.end(); it++)
-                ImGui::Selectable(it.operator->()->path().generic_string().c_str());
+            auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
+            auto map = FileSelector::GetInstance().GetDirMaped();
+            ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::Text(FileSelector::GetInstance().GetCurrPath().c_str());
+            ImGui::Separator();
+            for (auto name : dir)
+                if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
+                    if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
+                    {
 
+                        if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer) == -1)
+                        {
+                            errorPopupActive = true;
+                            outputImage.ClearImage();
+                        }
+                        else
+                        {
+                            outputImage.ClearImage();
+                            loadPopupActive = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+            ImGui::EndChild();
+            ImGui::Separator();
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Otworz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
+                {
+                    if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer) == -1)
+                    { 
+                        errorPopupActive = true;
+                        outputImage.ClearImage();
+                    }
+                    else
+                    {
+                        outputImage.ClearImage();
+                        loadPopupActive = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+                else if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::DirEntry)
+                    FileSelector::GetInstance().GoUpADirectory();
+            }
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                FileSelector::GetInstance().GoUpADirectory();
+            }
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
             {
-                p = false;
+                loadPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            if (errorPopupActive)
+            {
+                ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
+                ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+                if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+                {
+                    ImGui::Text("Nie udalo sie wczytac pliku");
+                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+                    if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+                    {
+                        errorPopupActive = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    if (saveAsPopupActive)
+    {
+        // add file name input file
+        ImGui::OpenPopup("ZapiszPlik", ImGuiPopupFlags_NoReopen);
+        ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, SAVE_POPUP_HEIGHT));
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("ZapiszPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        {
+            auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
+            auto map = FileSelector::GetInstance().GetDirMaped();
+            ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::Text(FileSelector::GetInstance().GetCurrPath().c_str());
+            ImGui::Separator();
+            for (auto name : dir)
+                if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
+                    if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
+                        warningPopupActive = true;
+            ImGui::EndChild();
+
+            ImGui::Separator();
+
+            ImGui::Text("Nazwa pliku");
+            ImGui::InputText("wpisz", fileNameBuff, 64);
+
+            const char* ext[] = { ".png", ".jpg", ".bmp" };
+            ImGui::Text("Rozszerzenie");
+            ImGui::Combo("wybierz", &currExt, ext, IM_ARRAYSIZE(ext));
+
+            ImGui::Text("Zapisz - jezeli chcemy nadac nazwe");
+            ImGui::Text("Wybierz jezeli chcemy wybrac \n istniejacy plik lub folder");
+            ImGui::Separator();
+
+            int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W - 20) / 2;
+
+            ImGui::SetCursorPosX(offset);
+            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                std::string buffStr = fileNameBuff;
+                if (buffStr == "")
+                    errorPopupActive = true;
+                else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrPath() + '/' + fileNameBuff + ext[currExt]))
+                {
+                    warningPopupActive = true;
+                    customName = true;
+                }
+                else
+                {
+                    outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExt);
+                    saveAsPopupActive = false;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+            if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
+                    warningPopupActive = true;
+                else if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::DirEntry)
+                    FileSelector::GetInstance().GoUpADirectory();
+            }
+            ImGui::SetCursorPosX(offset);
+            if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                FileSelector::GetInstance().GoUpADirectory();
+            }
+            ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                saveAsPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            if (warningPopupActive)
+            {
+                ImGui::OpenPopup("OSTRZEZENIE", ImGuiPopupFlags_NoReopen);
+                ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+                if (ImGui::BeginPopupModal("OSTRZEZENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+                {
+                    ImGui::Text("Plik o takie nazwie ju¿ istnieje czy chcesz go nadpisac?");
+                    ImGui::Separator();
+
+                    int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - 20) / 2;
+
+                    ImGui::SetCursorPosX(offset);
+                    if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+                    {
+                        if (customName)
+                        {
+                            outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExt);
+                            customName = false;
+                        }
+                        else
+                            outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
+                        saveAsPopupActive = false;
+                        warningPopupActive = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+                    if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+                    {
+                        warningPopupActive = false;
+                        FileSelector::GetInstance().DeselectCurrEntry();
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+                if (!saveAsPopupActive)
+                    ImGui::CloseCurrentPopup();
+            }
+
+            if (errorPopupActive)
+            {
+                ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
+                ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+                if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+                {
+                    ImGui::Text("Nazwa pliku nie moze byc pusta");
+                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+                    if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+                    {
+                        errorPopupActive = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    if (warningPopupActive && !saveAsPopupActive)
+    {
+        ImGui::OpenPopup("OSTRZEZENIE", ImGuiPopupFlags_NoReopen);
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("OSTRZEZENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Text("Plik o takie nazwie ju¿ istnieje czy chcesz go nadpisac?");
+            ImGui::Separator();
+
+            int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - 20) / 2;
+
+            ImGui::SetCursorPosX(offset);
+            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                outputImage.SaveImage();
+                warningPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                warningPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -303,6 +462,15 @@ void App::DrawAlgorihmsBar()
     ImGui::SameLine();
     if (ImGui::RadioButton("Rozjasnij", &algS, 2))
         algName = "Rozjasnij";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Kontrast", &algS, 3))
+        algName = "Kontrast";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Potegowanie", &algS, 4))
+        algName = "Potegowanie";
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Wyrownanie histogramu", &algS, 5))
+        algName = "Wyrownanie histogramu";
     ImGui::End();
 }
 
@@ -312,9 +480,14 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
-    ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
-    ImGui::Image((ImTextureRef)tx, ImVec2(texW, texH));
+    if (!inputImage.NoTexture())
+    {
+        if (inputImage.GetWidth() < ImGui::GetWindowWidth())
+            ImGui::SameLine((ImGui::GetWindowWidth() - inputImage.GetWidth()) / 2);
+        if (inputImage.GetHeight() < ImGui::GetWindowHeight())
+            ImGui::SetCursorPosY((ImGui::GetWindowHeight() - inputImage.GetHeight()) / 2);
+        ImGui::Image((ImTextureRef)inputImage.GetTexture(), ImVec2(inputImage.GetWidth(), inputImage.GetHeight()));
+    }
     ImGui::End();
 
     ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
@@ -332,17 +505,24 @@ void App::DrawPictureSpace()
             std::cout << "Nothing happend\n";
             break;
         case Negative:
-            CreateNegative();
+            Algorithms::CreateNegative(inputImage, outputImage, renderer);
             break;
         case Brighten:
-            BrightenImage();
+            Algorithms::BrightenImage(inputImage, outputImage, renderer, value);
+            break;
+        case Contrast:
+            Algorithms::Contrast(inputImage, outputImage, renderer, contrast);
+            break;
+        case Exponentiation:
+            Algorithms::Exponentiation(inputImage, outputImage, renderer, alfa);
+            break;
+        case LeveledHistogram:
+            Algorithms::LevelHistogram(inputImage, outputImage, renderer);
             break;
         default:
             break;
         }
     }
-
-    ImGui::Button("Zatrzymaj przetwarzanie", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H));
 
     ImGui::SeparatorText("Opcje");
     if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
@@ -362,11 +542,20 @@ void App::DrawPictureSpace()
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Brighten:
-            ImGui::InputInt("O ile rozjasnic?", &value);
+            ImGui::SliderInt("O ile rozjasnic?", &value, -255, 255);
+            break;
+        case Contrast:
+            ImGui::SliderFloat("O ile zmienic", &contrast, 0.1, 5.0);
+            break;
+        case Exponentiation:
+            ImGui::SliderFloat("Alfa", &alfa, 0.1, 3.0);
+            break;
+        case LeveledHistogram:
+            ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Powrot", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
@@ -378,11 +567,13 @@ void App::DrawPictureSpace()
     {
         algS = None;
         algName = "Brak wybranego algorytmu";
-        ClearOutputImage();
+        outputImage.ClearImage();
     }
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         value = 0;
+        contrast = 1.0;
+        alfa = 1.0;
     }
 
     ImGui::End();
@@ -390,20 +581,22 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    if (txO != nullptr)
+    if (!outputImage.NoTexture())
     {
-        ImGui::SameLine((ImGui::GetWindowWidth() - texW) / 2);
-        ImGui::SetCursorPosY((ImGui::GetWindowHeight() - texH) / 2);
-        ImGui::Image((ImTextureRef)txO, ImVec2(texW, texH));
+        if (outputImage.GetWidth() < ImGui::GetWindowWidth())
+            ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
+        if (outputImage.GetHeight() < ImGui::GetWindowHeight())
+            ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
+        ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
     }
     ImGui::End();
 }
 
-void App::DrawHistogramsAndFunctions(float arr[], int vc)
+void App::DrawHistogramsAndFunctions()
 {
     float h = ImGui::GetFrameHeight() + ALG_BAR_H + (currHeight - MENU_ALG_HIST_H);
-    float maxO = *(std::max_element(lightValuesO, lightValuesO + 255));
-    float maxI = *(std::max_element(lightValuesI, lightValuesI + 255));
+    float maxO = *(std::max_element(outputImage.GetLightValues(), outputImage.GetLightValues() + 255));
+    float maxI = *(std::max_element(inputImage.GetLightValues(), inputImage.GetLightValues() + 255));
 
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2(currWidth, HIST_BAR_HEIGHT));
@@ -423,19 +616,25 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeI, 3);
     if (modeI == Brightnes)
-        ImGui::PlotHistogram("##", lightValuesI, 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == R)
-        ImGui::PlotHistogram("##", valuesRI, 256, 0, NULL, 0.0f, *(std::max_element(valuesRI, valuesRI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetRValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetRValues(), inputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == G)
-        ImGui::PlotHistogram("##", valuesGI, 256, 0, NULL, 0.0f, *(std::max_element(valuesGI, valuesGI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetGValues(), inputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == B)
-        ImGui::PlotHistogram("##", valuesBI, 256, 0, NULL, 0.0f, *(std::max_element(valuesBI, valuesBI + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetBValues(), inputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     // func
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
-    ImGui::Text("Funkcja");
-    ImGui::PlotLines("##", arr, vc, 0, NULL, 0.0f, 10.0f, ImVec2(HIST_W, HIST_H));
+    ImGui::Text("Dystrybuanta Obrazu");
+    ImGui::RadioButton("Wejsciowego", &modeD, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Wyjsciowego", &modeD, 1);
+    if (modeD == InputDist)
+        ImGui::PlotLines("##", inputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
+    if (modeD == OutputDist)
+        ImGui::PlotLines("##", outputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     // out
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);
@@ -449,13 +648,13 @@ void App::DrawHistogramsAndFunctions(float arr[], int vc)
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeO, 3);
     if (modeO == Brightnes)
-        ImGui::PlotHistogram("##", lightValuesO, 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == R)
-        ImGui::PlotHistogram("##", valuesRO, 256, 0, NULL, 0.0f, *(std::max_element(valuesRO, valuesRO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetRValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetRValues(), outputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == G)
-        ImGui::PlotHistogram("##", valuesGO, 256, 0, NULL, 0.0f, *(std::max_element(valuesGO, valuesGO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetGValues(), outputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == B)
-        ImGui::PlotHistogram("##", valuesBO, 256, 0, NULL, 0.0f, *(std::max_element(valuesBO, valuesBO + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetBValues(), outputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
     ImGui::End();
 }
@@ -468,107 +667,4 @@ void App::Render()
     SDL_RenderClear(renderer);
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
-}
-
-void App::CreateNegative()
-{
-    ClearOutputImage();
-    surfaceO = SDL_DuplicateSurface(surface);
-
-    SDL_LockSurface(surfaceO);
-    uint8_t* surfacePixels = (uint8_t*)surfaceO->pixels;
-    for (int i = 0; i < texW; i++)
-    {
-        for (int j = 0; j < texH; j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = -b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = -g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = -r;
-
-            b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            int brightness = (b + g + r) / 3;
-            lightValuesO[brightness]++;
-            valuesBO[b]++;
-            valuesGO[g]++;
-            valuesRO[r]++;
-        }
-    }
-    SDL_UnlockSurface(surfaceO);
-
-    txO = SDL_CreateTextureFromSurface(renderer, surfaceO);
-}
-
-void App::BrightenImage()
-{
-    ClearOutputImage();
-    surfaceO = SDL_DuplicateSurface(surface);
-
-    SDL_LockSurface(surfaceO);
-    uint8_t* surfacePixels = (uint8_t*)surfaceO->pixels;
-    for (int i = 0; i < texW; i++)
-    {
-        for (int j = 0; j < texH; j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            if (b + value > 255)
-                b = 255;
-            else if (b + value < 0)
-                b = 0;
-            else
-                b += value;
-
-            if (g + value > 255)
-                g = 255;
-            else if (g + value < 0)
-                g = 0;
-            else
-                g += value;
-
-            if (r + value > 255)
-                r = 255;
-            else if (r + value < 0)
-                r = 0;
-            else
-                r += value;
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
-
-            int brightness = (b + g + r) / 3;
-            lightValuesO[brightness]++;
-            valuesBO[b]++;
-            valuesGO[g]++;
-            valuesRO[r]++;
-        }
-    }
-    SDL_UnlockSurface(surfaceO);
-
-    txO = SDL_CreateTextureFromSurface(renderer, surfaceO);
-}
-
-void App::ClearOutputImage()
-{
-    SDL_FreeSurface(surfaceO);
-    if (txO != nullptr)
-        SDL_DestroyTexture(txO);
-    surfaceO = nullptr;
-    txO = nullptr;
-    for (int i = 0; i < 256; i++)
-    {
-        lightValuesO[i] = 0;
-        valuesBO[i] = 0;
-        valuesGO[i] = 0;
-        valuesRO[i] = 0;
-    }
 }
