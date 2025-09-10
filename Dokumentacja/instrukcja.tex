@@ -1,0 +1,181 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{lato}
+\usepackage{graphicx}
+\RequirePackage{polski}
+\graphicspath{ {./images/} }
+
+\title{Laboratorium przetwarzanie obrazów}
+\date{}
+
+
+\begin{document}
+\maketitle
+
+\begin{center}
+  \large{ Instrukcja konfiguracji środowiska}
+\end{center}
+
+\newpage
+
+\section{Windows}
+
+\subsection{}
+Krokiem numer jeden jest uruchomienie Microsoft Visual Studio 22.
+
+\subsection{}
+Następnie należy otworzyć \textbf{Właściwości projektu}.
+Najpierw w zakładcę \textbf{General} należy sprawdzić czy standard jest ustawiony na C++17.
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Standard.png}
+    \caption{Wybór standardu}
+\end{figure}
+
+\subsection{}
+Kolejnym krokiem jest wejście w zakładkę \textbf{C/C++/General}.
+
+\newpage
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{General.png}
+  \caption{Zakładka C/C++/General}
+\end{figure}
+
+Oraz wybrać \textbf{Additional Include Directories}.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{IncludePath.png}
+  \caption{Okno dodawania flderów z plikami nagłówkowymi}
+\end{figure}
+
+I sprawdzić czy ścieżki się zgadzają.
+
+\subsection{}
+Następnie należy przejść do zakładki \textbf{Linker/General}
+
+\newpage
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{GeneralL.png}
+  \caption{Zakładka Linker/General}
+\end{figure}
+
+Oraz wybrać \textbf{Additional Library Directories}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{LibPath.png}
+  \caption{Ścieżki do folderów z bibliotekami}
+\end{figure}
+
+I sprawdzić czy ścieżki się zgadzają.
+
+\newpage
+
+\subsection{}
+Dalej należy wejść w zakładcę \textbf{Linker/Input}.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Input.png}
+  \caption{Zakładka Linker/Input}
+\end{figure}
+
+Orazk kliknąć  \textbf{Additional Dependecies}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Deps.png}
+  \caption{Nazwy bibliotek}
+\end{figure}
+
+I sprawdzić czy pliki się zgadzają.
+
+\newpage
+
+\subsection{}
+Teraz należy sprawdzić czy możemy edytować zmienne środowiskowe. Należy wpisać w wyszukiwarkę systemową \textbf{Edytuj zmienne środowiskowe}
+\newline
+Jeżeli otworzyły się odpowiednie ustawienia wyświetli się takie okienko.
+Należy wybrać opcje \textbf{Zmienne środowiskowe}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{MenuWizard.png}
+  \caption{Okienko}
+\end{figure}
+
+\newpage
+
+Następnie należy znaleść zminną Path w sekcji zmiennych systemowych.
+\newline
+I kliknąć \textbf{Edytuj}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Vars.png}
+  \caption{Okienko zmiennych}
+\end{figure}
+
+Otworzy się takie okienko.
+
+\newpage
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Paths.png}
+  \caption{Zmienna Path}
+\end{figure}
+
+Należy wybrać opcje \textbf{Nowa} i wpisać ścieżki do folderów zawierających pliki .dll.
+\newline
+\textbf{SĄ TO FOLDERY Z SEKCJI 1.4}
+
+\subsection{}
+Jeżeli nie można edytować zmiennych środowiskowych (a w laboratorium nie można) to należy otworzyć \textbf{Wiersz poleceń} i wpisać \textbf{path}
+\newline
+Wyświetli się zmienna Path.
+
+\newpage
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Console.png}
+  \caption{Zmienna Path w wierszu poleceń}
+\end{figure}
+
+Należy wybrać jeden z folderów i wkleić tam pliki .dll.
+\textbf{RÓWNIEŻ SĄ TO FOLDERY Z SEKCJI 1.4}
+
+\section{Linux}
+
+\subsection{}
+Najpierw należy sprawdzić czy zainstalowane są pakiety
+\begin{itemize}
+  \item g++
+  \item make
+  \item SDL2
+  \item SDL2\_image-devel
+  \item libSDL2-2\_0-0
+\end{itemize}
+
+Jeśli ich brakuje to należy je zainstalować.
+\newline
+Jeżeli pakiety nazywają się inaczej, a dla różnych dystrybucji może tak być należy wpisać w terminalu:
+\newline
+\textbf{sudo <nazwa menadżera pakietów> search sdl2}
+\newline
+I zainstalować odpowiadające wymienionym powyżej pakiety (mogą mieć końcówkę -dev).
+\newline
+\textbf{Jeżeli dalej brakuje jakiś pakietów, albo przy uruchomieniu pojawi się błąd, że brakuje biblioteki, to należy ją pobrać.}
+
+\subsection{}
+Następnie należy uruchomić terminal w folderze z wersją programu na Linuxa i wpisać \textbf{make} w terminalu.
+\newline
+Aby uruchomić należy wpisać \textbf{./bin/relase/prog}
+
+\end{document}
