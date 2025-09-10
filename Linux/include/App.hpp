@@ -87,6 +87,7 @@ private:
     bool loadPopupActive = false;
     bool saveAsPopupActive = false;
     bool errorPopupActive = false;
+    bool errorPopupAlgActive = false;
     bool warningPopupActive = false;
     bool customName = false;
 
