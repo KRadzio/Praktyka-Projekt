@@ -19,12 +19,12 @@ public:
 
 public:
     static FileSelector &GetInstance();
-    inline std::string GetCurrPath() { return currDirPath; }
+    inline std::filesystem::path GetCurrPath() { return currPath; }
     inline std::vector<std::filesystem::directory_entry> GetCurrDir() { return currDir; }
     inline std::map<std::string, bool> &GetDirMaped() { return dirMaped; }
     inline std::string GetCurrEntry() { return currEntrySelected; }
     inline std::vector<std::string> GetCurrDirEntryNames() { return currDirEntryNames; }
-    inline std::string GetFullPathToFile() { return currDirPath + '/' + currEntrySelected; }
+    inline std::string GetFullPathToFile() { return currPath.string() + '/' + currEntrySelected; }
     void DeselectCurrEntry();
 
     int SelectEntry(std::string entryname);
@@ -39,7 +39,7 @@ private:
     ~FileSelector();
 
 private:
-    std::string currDirPath;
+    std::filesystem::path currPath;
     std::vector<std::filesystem::directory_entry> currDir;
     std::vector<std::string> currDirEntryNames;
     std::map<std::string, bool> dirMaped;

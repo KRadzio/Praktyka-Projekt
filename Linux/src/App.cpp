@@ -328,7 +328,7 @@ void App::DrawMenuBar()
                 std::string buffStr = fileNameBuff;
                 if (buffStr == "")
                     errorPopupActive = true;
-                else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrPath() + '/' + fileNameBuff + ext[currExt]))
+                else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrPath().string() + '/' + fileNameBuff + ext[currExt]))
                 {
                     warningPopupActive = true;
                     customName = true;
