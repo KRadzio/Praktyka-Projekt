@@ -33,7 +33,7 @@ int Algorithms::CreateNegative(Image &inputImage, Image &outputImage)
     return 0;
 }
 
-int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, ParametersStruct* params)
+int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, ParametersStruct *params)
 {
     if (inputImage.NoSurface())
         return -1;
@@ -84,7 +84,7 @@ int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, ParametersS
     return 0;
 }
 
-int Algorithms::Contrast(Image &inputImage, Image &outputImage, ParametersStruct* params)
+int Algorithms::Contrast(Image &inputImage, Image &outputImage, ParametersStruct *params)
 {
     if (inputImage.NoSurface())
         return -1;
@@ -129,7 +129,7 @@ int Algorithms::Contrast(Image &inputImage, Image &outputImage, ParametersStruct
     return 0;
 }
 
-int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, ParametersStruct* params)
+int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, ParametersStruct *params)
 {
     if (inputImage.NoSurface())
         return -1;
@@ -173,29 +173,25 @@ int Algorithms::LevelHistogram(Image &inputImage, Image &outputImage)
         return -1;
 
     outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
-    float* dist = outputImage.GetDistributor();
+    float *distR = outputImage.GetDistributorR();
+    float *distG = outputImage.GetDistributorG();
+    float *distB = outputImage.GetDistributorB();
 
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    outputImage.LockImage();
     for (int i = 0; i < outputImage.GetWidth(); i++)
     {
         for (int j = 0; j < outputImage.GetHeight(); j++)
         {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+            Image::Pixel pix = outputImage.GetPixel(i, j);
 
-            b = dist[b];
-            g = dist[g];
-            r = dist[r];
+            pix.b = distB[pix.b];
+            pix.g = distG[pix.g];
+            pix.r = distR[pix.r];
 
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
+            outputImage.SetPixel(i, j, pix);
         }
     }
-    SDL_UnlockSurface(surface);
+    outputImage.UnlockImage();
 
     outputImage.RefreshPixelValuesArrays();
     outputImage.RefreshTexture();

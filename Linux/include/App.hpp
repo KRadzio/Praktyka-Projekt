@@ -20,10 +20,10 @@
 #define POPUP_SIZE 200
 #define MENU_ALG_HIST_H 329
 #define HIST_BAR_HEIGHT 310
-#define HIST_WINDOW_W 276
+#define HIST_WINDOW_W 286
 #define HIST_WINDOW_H 270
 #define BORDER_OFFSET 20
-#define HIST_W 256
+#define HIST_W 266
 #define HIST_H 200
 #define MIDDLE_W 200
 #define MIDDLE_BUTTON_W 180

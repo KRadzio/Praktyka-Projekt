@@ -8,7 +8,10 @@ Image::Image()
         valuesR[i] = 0;
         valuesG[i] = 0;
         valuesB[i] = 0;
-        distributor[i] = 0;
+        distributorLight[i] = 0;
+        distributorR[i] = 0;
+        distributorG[i] = 0;
+        distributorB[i] = 0;
     }
 }
 
@@ -26,7 +29,10 @@ Image &Image::operator=(const Image &other)
         valuesR[i] = other.valuesR[i];
         valuesG[i] = other.valuesG[i];
         valuesB[i] = other.valuesB[i];
-        distributor[i] = other.distributor[i];
+        distributorLight[i] = other.distributorLight[i];
+        distributorR[i] = other.distributorR[i];
+        distributorG[i] = other.distributorG[i];
+        distributorB[i] = other.distributorB[i];
     }
     sourceImageName = other.sourceImageName;
     ext = other.ext;
@@ -171,19 +177,7 @@ int Image::SetSourceImage(std::string filename)
     ClearImage();
     surface = IMG_Load(filename.c_str());
     if (surface == nullptr)
-    {
-        // printf("%s\n", SDL_GetError());
-        // make a call to display a gui error later
-        for (int i = 0; i < MAX_VAL; i++)
-        {
-            lightValues[i] = 0;
-            valuesR[i] = 0;
-            valuesG[i] = 0;
-            valuesB[i] = 0;
-            distributor[i] = 0;
-        }
         return -1;
-    }
     else
     {
         int pos = 0;
@@ -225,10 +219,13 @@ void Image::ClearImage()
     for (int i = 0; i < MAX_VAL; i++)
     {
         lightValues[i] = 0;
-        valuesB[i] = 0;
-        valuesG[i] = 0;
         valuesR[i] = 0;
-        distributor[i] = 0;
+        valuesG[i] = 0;
+        valuesB[i] = 0;
+        distributorLight[i] = 0;
+        distributorR[i] = 0;
+        distributorG[i] = 0;
+        distributorB[i] = 0;
     }
     width = 0;
     height = 0;
@@ -241,10 +238,13 @@ void Image::RefreshPixelValuesArrays()
     for (int i = 0; i < MAX_VAL; i++)
     {
         lightValues[i] = 0;
-        valuesB[i] = 0;
-        valuesG[i] = 0;
         valuesR[i] = 0;
-        distributor[i] = 0;
+        valuesG[i] = 0;
+        valuesB[i] = 0;
+        distributorLight[i] = 0;
+        distributorR[i] = 0;
+        distributorG[i] = 0;
+        distributorB[i] = 0;
     }
 
     SDL_LockSurface(surface);
@@ -265,14 +265,31 @@ void Image::RefreshPixelValuesArrays()
         }
     }
     SDL_UnlockSurface(surface);
-    distributor[0] = lightValues[0] / (width * height);
+    distributorLight[0] = lightValues[0] / (width * height);
+    distributorR[0] = valuesR[0] / (width * height);
+    distributorG[0] = valuesG[0] / (width * height);
+    distributorB[0] = valuesB[0] / (width * height);
     for (int i = 1; i < MAX_VAL; i++)
     {
-        distributor[i] = lightValues[i] / (width * height);
-        distributor[i] += distributor[i - 1];
+        distributorLight[i] = lightValues[i] / (width * height);
+        distributorLight[i] += distributorLight[i - 1];
+
+        distributorR[i] = valuesR[i] / (width * height);
+        distributorR[i] += distributorR[i - 1];
+
+        distributorG[i] = valuesG[i] / (width * height);
+        distributorG[i] += distributorG[i - 1];
+
+        distributorB[i] = valuesB[i] / (width * height);
+        distributorB[i] += distributorB[i - 1];
     }
     for (int i = 0; i < MAX_VAL; i++)
-        distributor[i] *= 255;
+    {
+        distributorLight[i] *= 255;
+        distributorR[i] *= 255;
+        distributorG[i] *= 255;
+        distributorB[i] *= 255;
+    }
 }
 
 void Image::RefreshTexture()
@@ -311,7 +328,10 @@ void Image::Copy(Image &other)
         valuesR[i] = other.valuesR[i];
         valuesG[i] = other.valuesG[i];
         valuesB[i] = other.valuesB[i];
-        distributor[i] = other.distributor[i];
+        distributorLight[i] = other.distributorLight[i];
+        distributorR[i] = other.distributorR[i];
+        distributorG[i] = other.distributorG[i];
+        distributorB[i] = other.distributorB[i];
     }
     sourceImageName = other.sourceImageName;
     ext = other.ext;

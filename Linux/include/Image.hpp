@@ -45,7 +45,11 @@ public:
     inline float *GetRValues() { return valuesR; }
     inline float *GetGValues() { return valuesG; }
     inline float *GetBValues() { return valuesB; }
-    inline float *GetDistributor() { return distributor; }
+    inline float *GetDistributor() { return distributorLight; }
+    inline float *GetDistributorR() { return distributorR; }
+    inline float *GetDistributorG() { return distributorG; }
+    inline float *GetDistributorB() { return distributorB; }
+
     inline std::string GetImageName() { return sourceImageName; }
     std::string GetExtension();
 
@@ -64,10 +68,10 @@ public:
     Pixel GetPixel(int x, int y);
     void SetPixel(int x, int y, Pixel pix);
 
-    inline void LockImage() {SDL_LockSurface(surface);}
-    inline void UnlockImage() {SDL_UnlockSurface(surface);}
+    inline void LockImage() { SDL_LockSurface(surface); }
+    inline void UnlockImage() { SDL_UnlockSurface(surface); }
 
-    void Copy(Image& other);
+    void Copy(Image &other);
 
 private:
     SDL_Surface *surface = nullptr;
@@ -78,7 +82,10 @@ private:
     float valuesR[MAX_VAL];
     float valuesG[MAX_VAL];
     float valuesB[MAX_VAL];
-    float distributor[MAX_VAL];
+    float distributorLight[MAX_VAL];
+    float distributorR[MAX_VAL];
+    float distributorG[MAX_VAL];
+    float distributorB[MAX_VAL];
     std::string sourceImageName = "";
     Extension ext = UNKNOWN;
 };
