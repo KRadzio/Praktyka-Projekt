@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <thread>
+#include <chrono>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -34,6 +35,7 @@
 #define SAVE_POPUP_HEIGHT 450
 #define DIR_LIST_WIDTH 290
 #define DIR_LIST_HEIGHT 200
+#define REFRESH_INTERVAL 15.0
 
 class App
 {
@@ -96,9 +98,8 @@ private:
     bool warningPopupActive = false;
     bool customName = false;
     bool inProgressPopupActive = false;
+    bool justRefreshed = false;
 
-    // add execution of algs in a separate thread and add a mutex class
-    // split some functions in app
     // add more algs
     // change how extension is checked in image?
 
@@ -121,13 +122,15 @@ private:
 
     // Thread
     std::thread algThread;
+    float counterImage = 0.0;
+    float counterHist = 0.0;
 
     // Params
-    Algorithms::ParametersStruct params;
+    Algorithms::ParametersStruct params; // CS
 
     // Images
     Image inputImage;
-    Image outputImage;
+    Image outputImage; // CS
 
     // Scale
     float mainScale;

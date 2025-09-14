@@ -68,7 +68,13 @@ public:
     Pixel GetPixel(int x, int y);
     void SetPixel(int x, int y, Pixel pix);
 
+    Pixel GetPixelNoLock(int x, int y);
+    void SetPixelNoLock(int x, int y, Pixel pix);
+
+
+    // unused
     inline void LockImage() { SDL_LockSurface(surface); }
+    // unused
     inline void UnlockImage() { SDL_UnlockSurface(surface); }
 
     void Copy(Image &other);

@@ -91,6 +91,8 @@ int App::MainLoop()
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 
+        auto beg = std::chrono::high_resolution_clock::now();
+
         int eventsCode = HandleEvents();
         if (eventsCode == -2)
             continue;
@@ -113,6 +115,18 @@ int App::MainLoop()
             ImGui::ShowDemoWindow(&show_demo_window);
 
         Render();
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration<float>(end - beg);
+        if (counterImage > 0)
+            counterImage -= duration.count();
+        if (counterImage < 0)
+            counterImage = 0.0;
+
+        if (counterHist > 0)
+            counterHist -= duration.count();
+        if (counterHist < 0)
+            counterHist = 0.0;
     }
 
     return 0;
@@ -221,6 +235,7 @@ void App::DrawMenuBar()
 
 void App::DrawPictureSpace()
 {
+
     float h = ImGui::GetFrameHeight();
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
@@ -240,14 +255,23 @@ void App::DrawPictureSpace()
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+    // CS
+    Mutex::GetInstance().Lock();
     if (!outputImage.NoTexture())
     {
+        // refresh it only if is getting transformed and in intervals
+        if (Mutex::GetInstance().IsThreadRunning() && counterImage == 0.0)
+        {
+            outputImage.RefreshTexture();
+            counterImage = REFRESH_INTERVAL;
+        }
         if (outputImage.GetWidth() < ImGui::GetWindowWidth())
             ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
         if (outputImage.GetHeight() < ImGui::GetWindowHeight())
             ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
         ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
     }
+    Mutex::GetInstance().Unlock();
     ImGui::End();
 
     if (errorPopupAlgActive)
@@ -316,9 +340,14 @@ void App::DrawHistogramsAndFunctions()
     if (modeD == InputDist)
         ImGui::PlotLines("##", inputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
     if (modeD == OutputDist)
+    {
+        Mutex::GetInstance().Lock();
         ImGui::PlotLines("##", outputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
+        Mutex::GetInstance().Unlock();
+    }
     ImGui::EndChild();
     // out
+
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);
     ImGui::BeginChild("Histogram wyjsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Obraz wyjsciowy");
@@ -329,6 +358,14 @@ void App::DrawHistogramsAndFunctions()
     ImGui::RadioButton("G", &modeO, 2);
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeO, 3);
+    // CS
+    Mutex::GetInstance().Lock();
+    // refresh it only if is getting transformed and in intervals
+    if (!outputImage.NoSurface() && Mutex::GetInstance().IsThreadRunning() && counterHist == 0.0)
+    {
+        outputImage.RefreshPixelValuesArrays();
+        counterHist = REFRESH_INTERVAL;
+    }
     if (modeO == Brightnes)
         ImGui::PlotHistogram("##", outputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == R)
@@ -337,6 +374,7 @@ void App::DrawHistogramsAndFunctions()
         ImGui::PlotHistogram("##", outputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetGValues(), outputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == B)
         ImGui::PlotHistogram("##", outputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetBValues(), outputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+    Mutex::GetInstance().Unlock();
     ImGui::EndChild();
     ImGui::End();
 }
@@ -372,13 +410,14 @@ void App::DrawAlgMenuElements()
 
 void App::DrawLoadPopup()
 {
+    // can not be opend if thread is running
+
     ImGui::OpenPopup("WczytajPlik", ImGuiPopupFlags_NoReopen);
     ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        // this has to be maped in some way
         auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
@@ -458,6 +497,7 @@ void App::DrawLoadPopup()
 
 void App::DrawSavePopup()
 {
+    // can not be opend if thread is running
     ImGui::OpenPopup("ZapiszPlik", ImGuiPopupFlags_NoReopen);
     ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, SAVE_POPUP_HEIGHT));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -590,6 +630,8 @@ void App::DrawSavePopup()
 
 void App::DrawSaveWarningPopup()
 {
+    // can not be opend if thread is running
+
     ImGui::OpenPopup("OSTRZEZENIE", ImGuiPopupFlags_NoReopen);
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -619,42 +661,104 @@ void App::DrawSaveWarningPopup()
 
 void App::DrawMiddleButtonsWindow(float h)
 {
-    int outputCode;
     ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
     ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     ImGui::Text("Wybrany algorytm:");
     ImGui::Text(algName.c_str());
 
-    // this also can be moved
     ImGui::SeparatorText("Rozpocznij/Przerwij");
     if (ImGui::Button("Przetworz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
+        // not valid for transformation
+        if (algS == None || inputImage.NoSurface())
+            errorPopupAlgActive = true;
+        else
+        {
+            // can not be called if thread is execiting (no CS)
+            Mutex::GetInstance().ThreadRunning();
+            Mutex::GetInstance().SetOutputCode(Mutex::Undefined);
+            outputImage = inputImage;
+        }
+
         switch (algS)
         {
-        case None:
-            errorPopupAlgActive = true;
-            break;
         case Negative:
-            outputCode = Algorithms::CreateNegative(inputImage, outputImage);
+            algThread = std::thread(&Algorithms::CreateNegative, &outputImage);
+            algThread.detach();
             break;
         case Brighten:
-            outputCode = Algorithms::BrightenImage(inputImage, outputImage, &params);
+            algThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
+            algThread.detach();
             break;
         case Contrast:
-            outputCode = Algorithms::Contrast(inputImage, outputImage, &params);
+            algThread = std::thread(&Algorithms::Contrast, &outputImage, &params);
+            algThread.detach();
             break;
         case Exponentiation:
-            outputCode = Algorithms::Exponentiation(inputImage, outputImage, &params);
+            algThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
+            algThread.detach();
             break;
         case LeveledHistogram:
-            outputCode = Algorithms::LevelHistogram(inputImage, outputImage);
+            algThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
+            algThread.detach();
             break;
         default:
             break;
         }
-        if (outputCode == -1)
-            errorPopupAlgActive = true;
+    }
+
+    Mutex::GetInstance().Lock();
+    if (Mutex::GetInstance().IsThreadRunning())
+        inProgressPopupActive = true;
+    Mutex::GetInstance().Unlock();
+
+    if (inProgressPopupActive)
+    {
+        ImGui::OpenPopup("Przetwarzanie obrazu");
+        ImGui::SetNextWindowSize(ImVec2(200, 80));
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("Przetwarzanie obrazu"))
+        {
+            Mutex::GetInstance().Lock();
+            auto running = Mutex::GetInstance().IsThreadRunning();
+            Mutex::GetInstance().Unlock();
+            if (running)
+            {
+                ImGui::SetCursorPosX(10);
+                ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(180.0f, 0.0f), "Przetwarzanie...");
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+                if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+                {
+                    Mutex::GetInstance().Lock();
+                    Mutex::GetInstance().ThreadStopped();
+                    Mutex::GetInstance().Unlock();
+                    inProgressPopupActive = false;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            else
+            {
+                // tmp solution but it works
+                if (!justRefreshed)
+                {
+                    justRefreshed = true;
+                    outputImage.RefreshPixelValuesArrays();
+                    outputImage.RefreshTexture();
+                }
+                ImGui::Text("Ukonczone");
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+                if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+                {
+                    inProgressPopupActive = false;
+                    justRefreshed = false;
+                    Mutex::GetInstance().SetOutputCode(Mutex::Undefined);
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::EndPopup();
+        }
     }
 
     ImGui::SeparatorText("Opcje");
@@ -664,6 +768,7 @@ void App::DrawMiddleButtonsWindow(float h)
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
+    // can not be opend if thread is running
     if (ImGui::BeginPopupModal("Parametry", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
         switch (algS)
@@ -695,6 +800,7 @@ void App::DrawMiddleButtonsWindow(float h)
         ImGui::EndPopup();
     }
 
+    // can not be opend if thread is running
     ImGui::SeparatorText("Reset");
     if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
@@ -702,6 +808,7 @@ void App::DrawMiddleButtonsWindow(float h)
         algName = "Brak wybranego algorytmu";
         outputImage.ClearImage();
     }
+    // can not be opend if thread is running
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         params.value = 0;
@@ -714,10 +821,12 @@ void App::DrawMiddleButtonsWindow(float h)
 
 void App::Render()
 {
+    Mutex::GetInstance().Lock();
     ImGui::Render();
     SDL_RenderSetScale(Renderer::GetInstance().GetRenderer(), io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y);
     SDL_SetRenderDrawColor(Renderer::GetInstance().GetRenderer(), (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
     SDL_RenderClear(Renderer::GetInstance().GetRenderer());
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), Renderer::GetInstance().GetRenderer());
     SDL_RenderPresent(Renderer::GetInstance().GetRenderer());
+    Mutex::GetInstance().Unlock();
 }

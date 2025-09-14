@@ -15,15 +15,15 @@ namespace Algorithms
         float alfa = 1.0;
     };
 
-    int CreateNegative(Image &inputImage, Image &outputImage);
+    void CreateNegative(Image* outputImage);
 
-    int BrightenImage(Image &inputImage, Image &outputImage, ParametersStruct *params);
+    void BrightenImage(Image *outputImage, ParametersStruct *params);
 
-    int Contrast(Image &inputImage, Image &outputImage, ParametersStruct *params);
+    void Contrast(Image *outputImage, ParametersStruct *params);
 
-    int Exponentiation(Image &inputImage, Image &outputImage, ParametersStruct *params);
+    void Exponentiation(Image *outputImage, ParametersStruct *params);
 
-    int LevelHistogram(Image &inputImage, Image &outputImage);
+    void LevelHistogram(Image *outputImage);
 
 }
 

@@ -294,10 +294,37 @@ void Image::RefreshPixelValuesArrays()
 
 void Image::RefreshTexture()
 {
+    if (texture != nullptr)
+    {
+        SDL_DestroyTexture(texture);
+        texture = nullptr;
+    }
     texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
 }
 
 Image::Pixel Image::GetPixel(int x, int y)
+{
+    SDL_LockSurface(surface);
+    Pixel px;
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    px.b = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel];
+    px.g = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1];
+    px.r = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2];
+    SDL_UnlockSurface(surface);
+    return px;
+}
+
+void Image::SetPixel(int x, int y, Pixel pix)
+{
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = pix.b;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = pix.g;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = pix.r;
+    SDL_UnlockSurface(surface);
+}
+
+Image::Pixel Image::GetPixelNoLock(int x, int y)
 {
     Pixel px;
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
@@ -307,7 +334,7 @@ Image::Pixel Image::GetPixel(int x, int y)
     return px;
 }
 
-void Image::SetPixel(int x, int y, Pixel pix)
+void Image::SetPixelNoLock(int x, int y, Pixel pix)
 {
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
     surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = pix.b;

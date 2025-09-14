@@ -1,199 +1,240 @@
 #include "App.hpp"
 
-int Algorithms::CreateNegative(Image &inputImage, Image &outputImage)
+void Algorithms::CreateNegative(Image *outputImage)
 {
-    if (inputImage.NoSurface())
-        return -1;
+    Mutex::GetInstance().Lock();
 
-    outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
-
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < outputImage.GetWidth(); i++)
+    if (outputImage->NoSurface())
     {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = 255 - b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = 255 - g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = 255 - r;
-
-            b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-        }
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
     }
-    SDL_UnlockSurface(surface);
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture();
-    return 0;
+    Mutex::GetInstance().Unlock();
+
+    for (int i = 0; i < outputImage->GetWidth(); i++)
+    {
+        Mutex::GetInstance().Lock();
+        for (int j = 0; j < outputImage->GetHeight(); j++)
+        {
+            auto pix = outputImage->GetPixel(i, j);
+            pix.b = 255 - pix.b;
+            pix.g = 255 - pix.g;
+            pix.r = 255 - pix.r;
+            outputImage->SetPixel(i, j, pix);
+        }
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
+    }
+
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
-int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, ParametersStruct *params)
+void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
 {
-    if (inputImage.NoSurface())
-        return -1;
+    Mutex::GetInstance().Lock();
 
-    outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
-
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < outputImage.GetWidth(); i++)
+    if (outputImage->NoSurface())
     {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            if (b + params->value > 255)
-                b = 255;
-            else if (b + params->value < 0)
-                b = 0;
-            else
-                b += params->value;
-
-            if (g + params->value > 255)
-                g = 255;
-            else if (g + params->value < 0)
-                g = 0;
-            else
-                g += params->value;
-
-            if (r + params->value > 255)
-                r = 255;
-            else if (r + params->value < 0)
-                r = 0;
-            else
-                r += params->value;
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
-        }
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
     }
-    SDL_UnlockSurface(surface);
+    Mutex::GetInstance().Unlock();
 
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture();
-    return 0;
+    for (int i = 0; i < outputImage->GetWidth(); i++)
+    {
+        Mutex::GetInstance().Lock();
+        for (int j = 0; j < outputImage->GetHeight(); j++)
+        {
+            auto pix = outputImage->GetPixel(i, j);
+
+            if (pix.b + params->value > 255)
+                pix.b = 255;
+            else if (pix.b + params->value < 0)
+                pix.b = 0;
+            else
+                pix.b += params->value;
+
+            if (pix.g + params->value > 255)
+                pix.g = 255;
+            else if (pix.g + params->value < 0)
+                pix.g = 0;
+            else
+                pix.g += params->value;
+
+            if (pix.r + params->value > 255)
+                pix.r = 255;
+            else if (pix.r + params->value < 0)
+                pix.r = 0;
+            else
+                pix.r += params->value;
+
+            outputImage->SetPixel(i, j, pix);
+        }
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
+    }
+
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
-int Algorithms::Contrast(Image &inputImage, Image &outputImage, ParametersStruct *params)
+void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
 {
-    if (inputImage.NoSurface())
-        return -1;
+    Mutex::GetInstance().Lock();
 
-    outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
-
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < outputImage.GetWidth(); i++)
+    if (outputImage->NoSurface())
     {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
-        {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
-
-            if (b * params->contrast > 255)
-                b = 255;
-            else
-                b *= params->contrast;
-
-            if (g * params->contrast > 255)
-                g = 255;
-            else
-                g *= params->contrast;
-
-            if (r * params->contrast > 255)
-                r = 255;
-            else
-                r *= params->contrast;
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
-        }
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
     }
-    SDL_UnlockSurface(surface);
+    Mutex::GetInstance().Unlock();
 
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture();
-    return 0;
+    for (int i = 0; i < outputImage->GetWidth(); i++)
+    {
+        Mutex::GetInstance().Lock();
+        for (int j = 0; j < outputImage->GetHeight(); j++)
+        {
+            auto pix = outputImage->GetPixel(i, j);
+
+            if (pix.b * params->contrast > 255)
+                pix.b = 255;
+            else
+                pix.b *= params->contrast;
+
+            if (pix.g * params->contrast > 255)
+                pix.g = 255;
+            else
+                pix.g *= params->contrast;
+
+            if (pix.r * params->contrast > 255)
+                pix.r = 255;
+            else
+                pix.r *= params->contrast;
+            outputImage->SetPixel(i, j, pix);
+        }
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
+    }
+
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
-int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, ParametersStruct *params)
+void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
 {
-    if (inputImage.NoSurface())
-        return -1;
+    Mutex::GetInstance().Lock();
+
+    if (outputImage->NoSurface())
+    {
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
 
     int tab[256];
     for (int i = 0; i < 256; i++)
         tab[i] = 255.0 * pow((float)i / 255.0, params->alfa);
 
-    outputImage = inputImage;
-    SDL_Surface *surface = outputImage.GetSurface();
+    Mutex::GetInstance().Unlock();
 
-    SDL_LockSurface(surface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    for (int i = 0; i < outputImage.GetWidth(); i++)
+    for (int i = 0; i < outputImage->GetWidth(); i++)
     {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
+        Mutex::GetInstance().Lock();
+        for (int j = 0; j < outputImage->GetHeight(); j++)
         {
-            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
-            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+            auto pix = outputImage->GetPixel(i, j);
 
-            b = tab[b];
-            g = tab[g];
-            r = tab[r];
-
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
-            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = r;
+            pix.b = tab[pix.b];
+            pix.g = tab[pix.g];
+            pix.r = tab[pix.r];
+            outputImage->SetPixel(i, j, pix);
         }
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
     }
-    SDL_UnlockSurface(surface);
 
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture();
-    return 0;
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
-int Algorithms::LevelHistogram(Image &inputImage, Image &outputImage)
+void Algorithms::LevelHistogram(Image *outputImage)
 {
-    if (inputImage.NoSurface())
-        return -1;
+    Mutex::GetInstance().Lock();
 
-    outputImage = inputImage;
-    float *distR = outputImage.GetDistributorR();
-    float *distG = outputImage.GetDistributorG();
-    float *distB = outputImage.GetDistributorB();
-
-    outputImage.LockImage();
-    for (int i = 0; i < outputImage.GetWidth(); i++)
+    if (outputImage->NoSurface())
     {
-        for (int j = 0; j < outputImage.GetHeight(); j++)
-        {
-            Image::Pixel pix = outputImage.GetPixel(i, j);
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
 
+    float *distR = outputImage->GetDistributorR();
+    float *distG = outputImage->GetDistributorG();
+    float *distB = outputImage->GetDistributorB();
+
+    Mutex::GetInstance().Unlock();
+
+    for (int i = 0; i < outputImage->GetWidth(); i++)
+    {
+        for (int j = 0; j < outputImage->GetHeight(); j++)
+        {
+            Mutex::GetInstance().Lock();
+            Image::Pixel pix = outputImage->GetPixel(i, j);
             pix.b = distB[pix.b];
             pix.g = distG[pix.g];
             pix.r = distR[pix.r];
-
-            outputImage.SetPixel(i, j, pix);
+            outputImage->SetPixel(i, j, pix);
+            Mutex::GetInstance().Unlock();
         }
+        Mutex::GetInstance().Lock();
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
     }
-    outputImage.UnlockImage();
 
-    outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture();
-    return 0;
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
