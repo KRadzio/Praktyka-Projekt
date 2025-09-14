@@ -744,8 +744,10 @@ void App::DrawMiddleButtonsWindow(float h)
                 if (!justRefreshed)
                 {
                     justRefreshed = true;
+                    Mutex::GetInstance().Lock();
                     outputImage.RefreshPixelValuesArrays();
                     outputImage.RefreshTexture();
+                    Mutex::GetInstance().Unlock();
                 }
                 ImGui::Text("Ukonczone");
                 ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
