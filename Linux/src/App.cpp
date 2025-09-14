@@ -764,6 +764,12 @@ void App::DrawMiddleButtonsWindow(float h)
     ImGui::SeparatorText("Opcje");
     if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
         ImGui::OpenPopup("Parametry");
+    if(ImGui::Button("Odśwież obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        // can not be opend if thread is running
+        outputImage.RefreshPixelValuesArrays();
+        outputImage.RefreshTexture();
+    }
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
