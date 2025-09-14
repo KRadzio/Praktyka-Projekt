@@ -77,6 +77,11 @@ private:
     void DrawMenuBar();
     void DrawPictureSpace();
     void DrawHistogramsAndFunctions();
+    void DrawAlgMenuElements();
+    void DrawLoadPopup();
+    void DrawSavePopup();
+    void DrawSaveWarningPopup();
+    void DrawMiddleButtonsWindow(float h);
     void Render();
 
 private:
