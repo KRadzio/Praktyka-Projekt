@@ -4,18 +4,26 @@
 #include <SDL2/SDL.h>
 
 #include "Image.hpp"
+#include "Mutex.hpp"
 
 namespace Algorithms
 {
-    int CreateNegative(Image &inputImage, Image &outputImage, SDL_Renderer *renderer);
+    struct ParametersStruct
+    {
+        int value = 0;
+        float contrast = 1.0;
+        float alfa = 1.0;
+    };
 
-    int BrightenImage(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, int value);
+    int CreateNegative(Image &inputImage, Image &outputImage);
 
-    int Contrast(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float value);
+    int BrightenImage(Image &inputImage, Image &outputImage, ParametersStruct *params);
 
-    int Exponentiation(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float alfa);
+    int Contrast(Image &inputImage, Image &outputImage, ParametersStruct *params);
 
-    int LevelHistogram(Image &inputImage, Image &outputImage, SDL_Renderer *renderer);
+    int Exponentiation(Image &inputImage, Image &outputImage, ParametersStruct *params);
+
+    int LevelHistogram(Image &inputImage, Image &outputImage);
 
 }
 

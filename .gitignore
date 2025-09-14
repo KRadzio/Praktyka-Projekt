@@ -542,3 +542,11 @@ Linux/Fish2.png
 Dokumentacja/instrukcja.aux
 Dokumentacja/instrukcja.log
 Dokumentacja/missfont.log
+Linux/bin/debug/Mutex.d
+Linux/bin/debug/Mutex.o
+Linux/bin/debug/Renderer.d
+Linux/bin/debug/Renderer.o
+Linux/bin/relase/Mutex.d
+Linux/bin/relase/Mutex.o
+Linux/bin/relase/Renderer.d
+Linux/bin/relase/Renderer.o

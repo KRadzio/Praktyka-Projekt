@@ -14,10 +14,11 @@
 #include "Image.hpp"
 #include "FileSelector.hpp"
 #include "Algorithms.hpp"
+#include "Renderer.hpp"
+#include "Mutex.hpp"
 
-#define ALG_BAR_H 40
 #define POPUP_SIZE 200
-#define MENU_ALG_HIST_H 369
+#define MENU_ALG_HIST_H 329
 #define HIST_BAR_HEIGHT 310
 #define HIST_WINDOW_W 276
 #define HIST_WINDOW_H 270
@@ -74,7 +75,6 @@ private:
     void Cleanup();
     int HandleEvents();
     void DrawMenuBar();
-    void DrawAlgorihmsBar();
     void DrawPictureSpace();
     void DrawHistogramsAndFunctions();
     void Render();
@@ -90,6 +90,12 @@ private:
     bool errorPopupAlgActive = false;
     bool warningPopupActive = false;
     bool customName = false;
+    bool inProgressPopupActive = false;
+
+    // add execution of algs in a separate thread and add a mutex class
+    // split some functions in app
+    // add more algs
+    // change how extension is checked in image?
 
     // image histograms and plot flags
     int modeI = Brightnes;
@@ -104,15 +110,17 @@ private:
     std::string algName = "Brak wybranego algorytmu";
     int algS = None;
 
+    // File name and extension
     char fileNameBuff[64];
     int currExt = 0;
 
-    // Tmp
-    int value = 0;
-    float contrast = 1.0;
-    float alfa = 1.0;
+    // Thread
+    std::thread algThread;
 
-    // Image
+    // Params
+    Algorithms::ParametersStruct params;
+
+    // Images
     Image inputImage;
     Image outputImage;
 
@@ -122,10 +130,9 @@ private:
     // Events
     SDL_Event event;
 
-    // Rendering
+    // Window
     SDL_WindowFlags windowFlags;
     SDL_Window *mainWindow = nullptr;
-    SDL_Renderer *renderer = nullptr;
     ImVec4 clear_color;
 
     // ImGui

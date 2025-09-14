@@ -1,6 +1,6 @@
 #include "App.hpp"
 
-int Algorithms::CreateNegative(Image &inputImage, Image &outputImage, SDL_Renderer *renderer)
+int Algorithms::CreateNegative(Image &inputImage, Image &outputImage)
 {
     if (inputImage.NoSurface())
         return -1;
@@ -29,30 +29,14 @@ int Algorithms::CreateNegative(Image &inputImage, Image &outputImage, SDL_Render
     }
     SDL_UnlockSurface(surface);
     outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
+    outputImage.RefreshTexture();
     return 0;
 }
 
-int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, int value)
+int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, ParametersStruct* params)
 {
     if (inputImage.NoSurface())
-    {
-        // ImGui::OpenPopup("Blad");
-        // ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        // ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-        // if (ImGui::BeginPopupModal("Blad", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-        // {
-        //     ImGui::Text("Brak wczytanego obrazu");
-        //     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        //     if (ImGui::Button("Cofnij", ImVec2(CANCEL_BUTTON_W, 0)))
-        //     {
-        //         ImGui::CloseCurrentPopup();
-        //     }
-        //     ImGui::EndPopup();
-        // }
         return -1;
-    }
 
     outputImage = inputImage;
     SDL_Surface *surface = outputImage.GetSurface();
@@ -67,26 +51,26 @@ int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, SDL_Rendere
             uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
             uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
 
-            if (b + value > 255)
+            if (b + params->value > 255)
                 b = 255;
-            else if (b + value < 0)
+            else if (b + params->value < 0)
                 b = 0;
             else
-                b += value;
+                b += params->value;
 
-            if (g + value > 255)
+            if (g + params->value > 255)
                 g = 255;
-            else if (g + value < 0)
+            else if (g + params->value < 0)
                 g = 0;
             else
-                g += value;
+                g += params->value;
 
-            if (r + value > 255)
+            if (r + params->value > 255)
                 r = 255;
-            else if (r + value < 0)
+            else if (r + params->value < 0)
                 r = 0;
             else
-                r += value;
+                r += params->value;
 
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
@@ -96,11 +80,11 @@ int Algorithms::BrightenImage(Image &inputImage, Image &outputImage, SDL_Rendere
     SDL_UnlockSurface(surface);
 
     outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
+    outputImage.RefreshTexture();
     return 0;
 }
 
-int Algorithms::Contrast(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float value)
+int Algorithms::Contrast(Image &inputImage, Image &outputImage, ParametersStruct* params)
 {
     if (inputImage.NoSurface())
         return -1;
@@ -118,20 +102,20 @@ int Algorithms::Contrast(Image &inputImage, Image &outputImage, SDL_Renderer *re
             uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
             uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
 
-            if (b * value > 255)
+            if (b * params->contrast > 255)
                 b = 255;
             else
-                b *= value;
+                b *= params->contrast;
 
-            if (g * value > 255)
+            if (g * params->contrast > 255)
                 g = 255;
             else
-                g *= value;
+                g *= params->contrast;
 
-            if (r * value > 255)
+            if (r * params->contrast > 255)
                 r = 255;
             else
-                r *= value;
+                r *= params->contrast;
 
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = b;
             surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = g;
@@ -141,18 +125,18 @@ int Algorithms::Contrast(Image &inputImage, Image &outputImage, SDL_Renderer *re
     SDL_UnlockSurface(surface);
 
     outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
+    outputImage.RefreshTexture();
     return 0;
 }
 
-int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, SDL_Renderer *renderer, float alfa)
+int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, ParametersStruct* params)
 {
     if (inputImage.NoSurface())
         return -1;
 
     int tab[256];
     for (int i = 0; i < 256; i++)
-        tab[i] = 255.0 * pow((float)i / 255.0, alfa);
+        tab[i] = 255.0 * pow((float)i / 255.0, params->alfa);
 
     outputImage = inputImage;
     SDL_Surface *surface = outputImage.GetSurface();
@@ -179,11 +163,11 @@ int Algorithms::Exponentiation(Image &inputImage, Image &outputImage, SDL_Render
     SDL_UnlockSurface(surface);
 
     outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
+    outputImage.RefreshTexture();
     return 0;
 }
 
-int Algorithms::LevelHistogram(Image &inputImage, Image &outputImage, SDL_Renderer *renderer)
+int Algorithms::LevelHistogram(Image &inputImage, Image &outputImage)
 {
     if (inputImage.NoSurface())
         return -1;
@@ -214,6 +198,6 @@ int Algorithms::LevelHistogram(Image &inputImage, Image &outputImage, SDL_Render
     SDL_UnlockSurface(surface);
 
     outputImage.RefreshPixelValuesArrays();
-    outputImage.RefreshTexture(renderer);
+    outputImage.RefreshTexture();
     return 0;
 }

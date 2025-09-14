@@ -6,6 +6,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "Renderer.hpp"
+
 #define MAX_VAL 256
 
 class Image
@@ -31,7 +33,7 @@ public:
     // the texture is not copied so use RefreshTexture after this one
     // IT CHANGES THE FILEPATH
     Image &operator=(const Image &other);
-    Image(std::string filename, SDL_Renderer *renderer);
+    Image(std::string filename);
     ~Image();
 
 public:
@@ -47,19 +49,17 @@ public:
     inline std::string GetImageName() { return sourceImageName; }
     std::string GetExtension();
 
-    // if save as was not used, it will save it as <filaname>.png
-    // IT CAN SAVE AS EXISTING IMAGE
     void SaveImage();
     void SaveImageAs(std::string filename);
     void SaveImageAs(std::string path, char *filename, int extension);
-    int SetSourceImage(std::string filename, SDL_Renderer *renderer);
+    int SetSourceImage(std::string filename);
     void ClearImage();
 
     inline bool NoSurface() { return surface == nullptr; }
     inline bool NoTexture() { return texture == nullptr; }
 
     void RefreshPixelValuesArrays();
-    void RefreshTexture(SDL_Renderer *renderer);
+    void RefreshTexture();
 
     Pixel GetPixel(int x, int y);
     void SetPixel(int x, int y, Pixel pix);

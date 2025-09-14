@@ -16,7 +16,8 @@ Image &Image::operator=(const Image &other)
 {
     ClearImage();
     surface = SDL_DuplicateSurface(other.surface);
-    // texture = other.texture;
+    if (surface != nullptr)
+        texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
     width = other.width;
     height = other.height;
     for (int i = 0; i < MAX_VAL; i++)
@@ -32,9 +33,9 @@ Image &Image::operator=(const Image &other)
     return *this;
 }
 
-Image::Image(std::string filename, SDL_Renderer *renderer)
+Image::Image(std::string filename)
 {
-    SetSourceImage(filename, renderer);
+    SetSourceImage(filename);
 }
 
 Image::~Image()
@@ -114,7 +115,7 @@ void Image::SaveImageAs(std::string filename)
             std::string newFileName = sourceImageName + ".jpg";
             IMG_SaveJPG(surface, newFileName.c_str(), 100);
         }
-        else if(extS == ".bmp")
+        else if (extS == ".bmp")
         {
             ext = BMP;
             std::string newFileName = sourceImageName + ".bmp";
@@ -165,7 +166,7 @@ void Image::SaveImageAs(std::string path, char *filename, int extension)
     }
 }
 
-int Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
+int Image::SetSourceImage(std::string filename)
 {
     ClearImage();
     surface = IMG_Load(filename.c_str());
@@ -203,7 +204,7 @@ int Image::SetSourceImage(std::string filename, SDL_Renderer *renderer)
         // default to png
         else
             ext = PNG;
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
         // handle it in some way
         if (texture == nullptr)
             printf("%s\n", SDL_GetError());
@@ -274,9 +275,9 @@ void Image::RefreshPixelValuesArrays()
         distributor[i] *= 255;
 }
 
-void Image::RefreshTexture(SDL_Renderer *renderer)
+void Image::RefreshTexture()
 {
-    texture = SDL_CreateTextureFromSurface(renderer, surface);
+    texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
 }
 
 Image::Pixel Image::GetPixel(int x, int y)

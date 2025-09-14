@@ -31,8 +31,8 @@ int App::Init()
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
         return -1;
     }
-    renderer = SDL_CreateRenderer(mainWindow, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-    if (renderer == nullptr)
+    bool r = Renderer::GetInstance().Init(mainWindow);
+    if (!r)
     {
         SDL_Log("Error creating SDL_Renderer!");
         return -1;
@@ -56,8 +56,8 @@ int App::Init()
     style->FontScaleDpi = mainScale; // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
     // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForSDLRenderer(mainWindow, renderer);
-    ImGui_ImplSDLRenderer2_Init(renderer);
+    ImGui_ImplSDL2_InitForSDLRenderer(mainWindow, Renderer::GetInstance().GetRenderer());
+    ImGui_ImplSDLRenderer2_Init(Renderer::GetInstance().GetRenderer());
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     return 0;
@@ -81,7 +81,7 @@ int App::Init()
 
 int App::MainLoop()
 {
-    inputImage.SetSourceImage("./Fish.bmp", renderer);
+    inputImage.SetSourceImage("./Fish.bmp");
 
     while (runLoop)
     {
@@ -103,8 +103,8 @@ int App::MainLoop()
         ImGui::NewFrame();
 
         DrawMenuBar();
-        DrawAlgorihmsBar();
-
+        // DrawAlgorihmsBar();
+        SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
         DrawPictureSpace();
         DrawHistogramsAndFunctions();
 
@@ -124,7 +124,6 @@ void App::Cleanup()
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
     IMG_Quit();
     SDL_Quit();
@@ -160,10 +159,12 @@ void App::DrawMenuBar()
     if (ImGui::BeginMenu("Plik"))
     {
         if (ImGui::MenuItem("Zapisz", NULL, false, !outputImage.NoSurface()))
+        {
             if (FileSelector::GetInstance().FileExists(outputImage.GetImageName() + outputImage.GetExtension()))
                 warningPopupActive = true;
             else
                 outputImage.SaveImage();
+        }
         if (ImGui::MenuItem("Zapisz jako", NULL, false, !outputImage.NoSurface()))
         {
             saveAsPopupActive = true;
@@ -177,6 +178,37 @@ void App::DrawMenuBar()
         ImGui::Separator();
         if (ImGui::MenuItem("Wyjdz"))
             runLoop = false;
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Algorytmy"))
+    {
+        if (ImGui::MenuItem("Negatyw", NULL, algS == 1))
+        {
+            algName = "Negatyw";
+            algS = 1;
+        }
+        if (ImGui::MenuItem("Rozjasnij", NULL, algS == 2))
+        {
+            algName = "Rozjasnij";
+            algS = 2;
+        }
+        if (ImGui::MenuItem("Kontrast", NULL, algS == 3))
+        {
+            algName = "Kontrast";
+            algS = 3;
+        }
+        if (ImGui::MenuItem("Potegowanie", NULL, algS == 4))
+        {
+            algName = "Potegowanie";
+            algS = 4;
+        }
+        if (ImGui::MenuItem("Wyrownanie histogramu", NULL, algS == 5))
+        {
+            algName = "Wyrownanie histogramu";
+            algS = 5;
+        }
+
         ImGui::EndMenu();
     }
 
@@ -220,7 +252,7 @@ void App::DrawMenuBar()
                     if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
                     {
 
-                        if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer) == -1)
+                        if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
                         {
                             errorPopupActive = true;
                             outputImage.ClearImage();
@@ -239,7 +271,7 @@ void App::DrawMenuBar()
             {
                 if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 {
-                    if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile(), renderer) == -1)
+                    if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
                     {
                         errorPopupActive = true;
                         outputImage.ClearImage();
@@ -450,34 +482,10 @@ void App::DrawMenuBar()
     }
 }
 
-void App::DrawAlgorihmsBar()
-{
-    ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));
-    SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
-    ImGui::SetNextWindowSize(ImVec2(currWidth, ALG_BAR_H));
-    ImGui::Begin("Algorytmy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-
-    if (ImGui::RadioButton("Negatyw", &algS, 1))
-        algName = "Negatyw";
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Rozjasnij", &algS, 2))
-        algName = "Rozjasnij";
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Kontrast", &algS, 3))
-        algName = "Kontrast";
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Potegowanie", &algS, 4))
-        algName = "Potegowanie";
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Wyrownanie histogramu", &algS, 5))
-        algName = "Wyrownanie histogramu";
-    ImGui::End();
-}
-
 void App::DrawPictureSpace()
 {
     int outputCode;
-    float h = ImGui::GetFrameHeight() + ALG_BAR_H;
+    float h = ImGui::GetFrameHeight();
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
@@ -503,22 +511,22 @@ void App::DrawPictureSpace()
         switch (algS)
         {
         case None:
-            std::cout << "Nothing happend\n";
+            errorPopupAlgActive = true;
             break;
         case Negative:
-            outputCode = Algorithms::CreateNegative(inputImage, outputImage, renderer);
+            outputCode = Algorithms::CreateNegative(inputImage, outputImage);
             break;
         case Brighten:
-            outputCode = Algorithms::BrightenImage(inputImage, outputImage, renderer, value);
+            outputCode = Algorithms::BrightenImage(inputImage, outputImage, &params);
             break;
         case Contrast:
-            outputCode = Algorithms::Contrast(inputImage, outputImage, renderer, contrast);
+            outputCode = Algorithms::Contrast(inputImage, outputImage, &params);
             break;
         case Exponentiation:
-            outputCode = Algorithms::Exponentiation(inputImage, outputImage, renderer, alfa);
+            outputCode = Algorithms::Exponentiation(inputImage, outputImage, &params);
             break;
         case LeveledHistogram:
-            outputCode = Algorithms::LevelHistogram(inputImage, outputImage, renderer);
+            outputCode = Algorithms::LevelHistogram(inputImage, outputImage);
             break;
         default:
             break;
@@ -545,13 +553,13 @@ void App::DrawPictureSpace()
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Brighten:
-            ImGui::SliderInt("O ile rozjasnic?", &value, -255, 255);
+            ImGui::SliderInt("O ile rozjasnic?", &params.value, -255, 255);
             break;
         case Contrast:
-            ImGui::SliderFloat("O ile zmienic", &contrast, 0.1, 5.0);
+            ImGui::SliderFloat("O ile zmienic", &params.contrast, 0.1, 5.0);
             break;
         case Exponentiation:
-            ImGui::SliderFloat("Alfa", &alfa, 0.1, 3.0);
+            ImGui::SliderFloat("Alfa", &params.alfa, 0.1, 3.0);
             break;
         case LeveledHistogram:
             ImGui::Text("Brak parametrów do tego algorytmu");
@@ -574,9 +582,9 @@ void App::DrawPictureSpace()
     }
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
-        value = 0;
-        contrast = 1.0;
-        alfa = 1.0;
+        params.value = 0;
+        params.contrast = 1.0;
+        params.alfa = 1.0;
     }
 
     ImGui::End();
@@ -598,10 +606,15 @@ void App::DrawPictureSpace()
     {
         ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowSize(ImVec2(0,100));
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
-            ImGui::Text("Brak obrazu");
+            ImGui::Text("Nie mozna przetworzyc obrazu");
+            if (inputImage.NoSurface())
+                ImGui::Text("Brak wczytanego obrazu");
+            else if (algS == None)
+                ImGui::Text("Bral wybranego algorytmu");
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
             {
@@ -615,7 +628,7 @@ void App::DrawPictureSpace()
 
 void App::DrawHistogramsAndFunctions()
 {
-    float h = ImGui::GetFrameHeight() + ALG_BAR_H + (currHeight - MENU_ALG_HIST_H);
+    float h = ImGui::GetFrameHeight() + (currHeight - MENU_ALG_HIST_H);
     float maxO = *(std::max_element(outputImage.GetLightValues(), outputImage.GetLightValues() + 255));
     float maxI = *(std::max_element(inputImage.GetLightValues(), inputImage.GetLightValues() + 255));
 
@@ -683,9 +696,9 @@ void App::DrawHistogramsAndFunctions()
 void App::Render()
 {
     ImGui::Render();
-    SDL_RenderSetScale(renderer, io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y);
-    SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
-    SDL_RenderClear(renderer);
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
-    SDL_RenderPresent(renderer);
+    SDL_RenderSetScale(Renderer::GetInstance().GetRenderer(), io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y);
+    SDL_SetRenderDrawColor(Renderer::GetInstance().GetRenderer(), (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+    SDL_RenderClear(Renderer::GetInstance().GetRenderer());
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), Renderer::GetInstance().GetRenderer());
+    SDL_RenderPresent(Renderer::GetInstance().GetRenderer());
 }
