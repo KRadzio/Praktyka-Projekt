@@ -81,8 +81,6 @@ int App::Init()
 
 int App::MainLoop()
 {
-    inputImage.SetSourceImage("./Fish.bmp");
-
     while (runLoop)
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -282,11 +280,15 @@ void App::DrawPictureSpace()
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
-            ImGui::Text("Nie mozna przetworzyc obrazu");
+            // no file loaded
             if (inputImage.NoSurface())
                 ImGui::Text("Brak wczytanego obrazu");
+            // no alg selected
             else if (algS == None)
-                ImGui::Text("Bral wybranego algorytmu");
+                ImGui::Text("Brak wybranego algorytmu");
+            // not transformed
+            else if (outputImage.NoSurface())
+                ImGui::Text("Nie mozna odswierzyc obraz nie przetworzony");
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
             {
@@ -478,6 +480,7 @@ void App::DrawLoadPopup()
         {
             ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowSize(ImVec2(0, 100));
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
             if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
             {
@@ -611,6 +614,7 @@ void App::DrawSavePopup()
         {
             ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowSize(ImVec2(0, 100));
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
             if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
             {
@@ -766,11 +770,16 @@ void App::DrawMiddleButtonsWindow(float h)
     ImGui::SeparatorText("Opcje");
     if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
         ImGui::OpenPopup("Parametry");
-    if(ImGui::Button("Odśwież obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    if (ImGui::Button("Odśwież obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         // can not be opend if thread is running
-        outputImage.RefreshPixelValuesArrays();
-        outputImage.RefreshTexture();
+        if (!outputImage.NoSurface())
+        {
+            outputImage.RefreshPixelValuesArrays();
+            outputImage.RefreshTexture();
+        }
+        else
+            errorPopupAlgActive = true;
     }
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
