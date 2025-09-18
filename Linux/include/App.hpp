@@ -62,7 +62,9 @@ public:
         Contrast,
         Exponentiation,
         LeveledHistogram,
-        Binarization
+        Binarization,
+        LinearFilter,
+        MedianFilter
     };
 
 public:
@@ -86,6 +88,7 @@ private:
     void DrawSaveWarningPopup();
     void DrawMiddleButtonsWindow(float h);
     void Render();
+    void SetLinearMask(int newMask[3][3]);
 
 private:
     // App

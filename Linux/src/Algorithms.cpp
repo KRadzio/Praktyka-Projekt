@@ -459,3 +459,115 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
+
+void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
+{
+    Image copy;
+    int maskCopy[3][3];
+    bool normalise = true;
+    int maskSum = 0;
+    int filter;
+    Mutex::GetInstance().Lock();
+
+    if (outputImage->NoSurface())
+    {
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+    copy.CopyOnlySurfaceAndSize(*outputImage);
+    if (copy.NoSurface())
+    {
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+        {
+            maskCopy[i][j] = params->linearMask[i][j];
+            // all elements must be > 0
+            if (maskCopy[i][j] <= 0)
+                normalise = false;
+            maskSum += maskCopy[i][j];
+        }
+    filter = params->linerFilterS;
+
+    Mutex::GetInstance().Unlock();
+
+    for (int row = 1; row < outputImage->GetWidth() - 1; row++)
+    {
+        Mutex::GetInstance().Lock();
+        for (int col = 1; col < outputImage->GetHeight() - 1; col++)
+        {
+            auto pix = copy.GetPixel(row, col);
+            int JR = 0;
+            int JG = 0;
+            int JB = 0;
+
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    auto neighbourPix = copy.GetPixel(row + x - 1, col + y - 1);
+                    JR += neighbourPix.r * maskCopy[x][y];
+                    JG += neighbourPix.g * maskCopy[x][y];
+                    JB += neighbourPix.b * maskCopy[x][y];
+                }
+            }
+
+            if (normalise)
+            {
+                JR /= maskSum;
+                JG /= maskSum;
+                JB /= maskSum;
+                pix.r = JR;
+                pix.g = JG;
+                pix.b = JB;
+            }
+            else
+            {
+                JR = abs(JR);
+                JG = abs(JG);
+                JB = abs(JB);
+                if (filter == SobelHorizontal || filter == SobelVertical || filter == Laplasjan)
+                {
+                    JR += 127;
+                    JG += 127;
+                    JB += 127;
+                }
+                if (JR > 255)
+                    pix.r = 255;
+                else
+                    pix.r = JR;
+
+                if (JG > 255)
+                    pix.g = 255;
+                else
+                    pix.g = JG;
+
+                if (JB > 255)
+                    pix.b = 255;
+                else
+                    pix.b = JB;
+            }
+            outputImage->SetPixel(row, col, pix);
+        }
+
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
+    }
+
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
+}

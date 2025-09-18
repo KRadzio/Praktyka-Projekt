@@ -413,6 +413,11 @@ void App::DrawAlgMenuElements()
         algName = "Binaryzacja";
         algS = Binarization;
     }
+    if (ImGui::MenuItem("Filtry Liniowe", NULL, algS == LinearFilter))
+    {
+        algName = "Filtry Liniowe";
+        algS = LinearFilter;
+    }
 }
 
 void App::DrawLoadPopup()
@@ -428,7 +433,7 @@ void App::DrawLoadPopup()
         auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text(FileSelector::GetInstance().GetCurrPath().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrPath().c_str());
         ImGui::Separator();
         for (auto name : dir)
             if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
@@ -515,7 +520,7 @@ void App::DrawSavePopup()
         auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text(FileSelector::GetInstance().GetCurrPath().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrPath().c_str());
         ImGui::Separator();
         for (auto name : dir)
             if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
@@ -674,7 +679,7 @@ void App::DrawMiddleButtonsWindow(float h)
     ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     ImGui::Text("Wybrany algorytm:");
-    ImGui::Text(algName.c_str());
+    ImGui::Text("%s", algName.c_str());
 
     ImGui::SeparatorText("Rozpocznij/Przerwij");
     if (ImGui::Button("Przetworz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
@@ -714,6 +719,10 @@ void App::DrawMiddleButtonsWindow(float h)
             break;
         case Binarization:
             algThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
+            algThread.detach();
+            break;
+        case LinearFilter:
+            algThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
             algThread.detach();
             break;
         default:
@@ -842,6 +851,93 @@ void App::DrawMiddleButtonsWindow(float h)
                     ImGui::SliderInt("t1", &params.upperBound, 0, 255);
             }
             break;
+        case LinearFilter:
+            if (ImGui::RadioButton("Uśredniający", &params.linerFilterS, Algorithms::LinearFilters::Average))
+            {
+                int averageMask[3][3] = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+                SetLinearMask(averageMask);
+            }
+            ImGui::SameLine();
+
+            if (ImGui::RadioButton("Gauss", &params.linerFilterS, Algorithms::LinearFilters::Gauss))
+            {
+                int mask[3][3] = {{1, 4, 1}, {4, 12, 4}, {1, 4, 1}};
+                SetLinearMask(mask);
+            }
+            ImGui::SameLine();
+
+            if (ImGui::RadioButton("Sobel Poziomy", &params.linerFilterS, Algorithms::LinearFilters::SobelHorizontal))
+            {
+                int mask[3][3] = {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
+                SetLinearMask(mask);
+            }
+            // in new line
+            if (ImGui::RadioButton("Sobel Pionowy", &params.linerFilterS, Algorithms::LinearFilters::SobelVertical))
+            {
+                int mask[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+                SetLinearMask(mask);
+            }
+            ImGui::SameLine();
+
+            if (ImGui::RadioButton("Laplasjan", &params.linerFilterS, Algorithms::LinearFilters::Laplasjan))
+            {
+                int mask[3][3] = {{-2, 1, -2}, {1, 4, 1}, {-2, 1, -2}};
+                SetLinearMask(mask);
+            }
+            ImGui::SameLine();
+
+            if (ImGui::RadioButton("Wyostrzający", &params.linerFilterS, Algorithms::LinearFilters::Sharpening))
+            {
+                int mask[3][3] = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
+                SetLinearMask(mask);
+            }
+
+            ImGui::RadioButton("Wlasna", &params.linerFilterS, Algorithms::LinearFilters::Custom);
+            if (params.linerFilterS == Algorithms::LinearFilters::Custom)
+            {
+                if (ImGui::BeginTable("Maska", 3, ImGuiTableFlags_Borders))
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+
+                        ImGui::PushID(i);
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::PushItemWidth(120);
+                        ImGui::InputInt("##0", &params.linearMask[i][0]);
+                        ImGui::TableSetColumnIndex(1);
+                        ImGui::PushItemWidth(120);
+                        ImGui::InputInt("##1", &params.linearMask[i][1]);
+                        ImGui::TableSetColumnIndex(2);
+                        ImGui::PushItemWidth(120);
+                        ImGui::InputInt("##2", &params.linearMask[i][2]);
+                        ImGui::PopID();
+                    }
+                    ImGui::EndTable();
+                }
+            }
+            else
+            {
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
+                if (ImGui::BeginTable("Maska", 3, ImGuiTableFlags_Borders, ImVec2(120,0)))
+                {
+                    ImGui::TableSetupColumn("##0", ImGuiTableColumnFlags_WidthFixed, 30);
+                    ImGui::TableSetupColumn("##1", ImGuiTableColumnFlags_WidthFixed, 30);
+                    ImGui::TableSetupColumn("##2", ImGuiTableColumnFlags_WidthFixed, 30);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("%d", params.linearMask[i][0]);
+                        ImGui::TableSetColumnIndex(1);
+                        ImGui::Text("%d", params.linearMask[i][1]);
+                        ImGui::TableSetColumnIndex(2);
+                        ImGui::Text("%d", params.linearMask[i][2]);
+                    }
+                    ImGui::EndTable();
+                }
+            }
+            break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Powrot", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -869,6 +965,10 @@ void App::DrawMiddleButtonsWindow(float h)
         params.lowerBound = 0;
         params.upperBound = 0;
         params.method = Algorithms::BinarizationMethod::None;
+        params.linerFilterS = Algorithms::LinearFilters::Average;
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                params.linearMask[i][j] = 1;
     }
 
     ImGui::End();
@@ -884,4 +984,11 @@ void App::Render()
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), Renderer::GetInstance().GetRenderer());
     SDL_RenderPresent(Renderer::GetInstance().GetRenderer());
     Mutex::GetInstance().Unlock();
+}
+
+void App::SetLinearMask(int newMask[3][3])
+{
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            params.linearMask[i][j] = newMask[i][j];
 }

@@ -82,12 +82,17 @@ public:
     void SetPixelBlack(int x, int y);
     void SetPixelBlackNoLock(int x, int y);
 
+    void SetPixelByBrightness(int x, int y, uint8_t bright);
+
     // unused
     inline void LockImage() { SDL_LockSurface(surface); }
     // unused
     inline void UnlockImage() { SDL_UnlockSurface(surface); }
 
     void Copy(Image &other);
+
+    // use only if pixels and size info is needed
+    void CopyOnlySurfaceAndSize(Image &other);
 
 private:
     SDL_Surface *surface = nullptr;

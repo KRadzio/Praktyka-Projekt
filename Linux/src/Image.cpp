@@ -395,11 +395,26 @@ void Image::SetPixelBlackNoLock(int x, int y)
     surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 0;
 }
 
+void Image::SetPixelByBrightness(int x, int y, uint8_t bright)
+{
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t b = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel];
+    uint8_t g = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1];
+    uint8_t r = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2];
+    int currBri = (b + g + r) / 3;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = (float)(b / currBri) * bright;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = (float)(g / currBri) * bright;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = (float)(r / currBri) * bright;
+    SDL_UnlockSurface(surface);
+}
+
 void Image::Copy(Image &other)
 {
     ClearImage();
     surface = SDL_DuplicateSurface(other.surface);
-    // texture = other.texture;
+    if (surface != nullptr)
+        texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
     width = other.width;
     height = other.height;
     for (int i = 0; i < MAX_VAL; i++)
@@ -415,4 +430,12 @@ void Image::Copy(Image &other)
     }
     sourceImageName = other.sourceImageName;
     ext = other.ext;
+}
+
+void Image::CopyOnlySurfaceAndSize(Image &other)
+{
+    ClearImage();
+    surface = SDL_DuplicateSurface(other.surface);
+    width = other.width;
+    height = other.height;
 }
