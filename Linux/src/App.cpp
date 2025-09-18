@@ -792,6 +792,12 @@ void App::DrawMiddleButtonsWindow(float h)
         else
             errorPopupAlgActive = true;
     }
+    if (!outputImage.NoSurface())
+        if (ImGui::Button("Wejście = Wyjście", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+        { // can not be done if thread is running
+            inputImage = outputImage;
+            outputImage.ClearImage();
+        }
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));

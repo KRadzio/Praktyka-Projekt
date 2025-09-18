@@ -110,7 +110,6 @@ private:
     // make a help window
     // add a font
     // hadle error state from thread or remove the code since it is not needed
-    // add a button to set output image as input image
 
     // image histograms and plot flags
     int modeI = Brightnes;
