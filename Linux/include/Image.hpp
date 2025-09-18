@@ -18,6 +18,7 @@ public:
         uint8_t b;
         uint8_t g;
         uint8_t r;
+        int brightnes; // set auto
     };
 
     enum Extension
@@ -49,9 +50,13 @@ public:
     inline float *GetDistributorR() { return distributorR; }
     inline float *GetDistributorG() { return distributorG; }
     inline float *GetDistributorB() { return distributorB; }
+    inline int GetPixelCount() { return width * height; }
 
     inline std::string GetImageName() { return sourceImageName; }
     std::string GetExtension();
+
+    void CopyBrightnessHistogram(float* dst);
+    void CopyNormalisedBrightnessHistogram(float* dst);
 
     void SaveImage();
     void SaveImageAs(std::string filename);
@@ -71,6 +76,11 @@ public:
     Pixel GetPixelNoLock(int x, int y);
     void SetPixelNoLock(int x, int y, Pixel pix);
 
+    void SetPixelWhite(int x, int y);
+    void SetPixelWhiteNoLock(int x, int y);
+
+    void SetPixelBlack(int x, int y);
+    void SetPixelBlackNoLock(int x, int y);
 
     // unused
     inline void LockImage() { SDL_LockSurface(surface); }

@@ -64,6 +64,21 @@ std::string Image::GetExtension()
         return ".png";
 }
 
+void Image::CopyBrightnessHistogram(float *dst)
+{
+    for (int i = 0; i < MAX_VAL; i++)
+        dst[i] = lightValues[i];
+}
+
+void Image::CopyNormalisedBrightnessHistogram(float *dst)
+{
+    for (int i = 0; i < MAX_VAL; i++)
+    {
+        dst[i] = lightValues[i];
+        dst[i] /= (width * height);
+    }
+}
+
 void Image::SaveImage()
 {
     if (surface == nullptr)
@@ -311,6 +326,7 @@ Image::Pixel Image::GetPixel(int x, int y)
     px.g = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1];
     px.r = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2];
     SDL_UnlockSurface(surface);
+    px.brightnes = (px.b + px.g + px.r) / 3;
     return px;
 }
 
@@ -331,6 +347,7 @@ Image::Pixel Image::GetPixelNoLock(int x, int y)
     px.b = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel];
     px.g = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1];
     px.r = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2];
+    px.brightnes = (px.b + px.g + px.r) / 3;
     return px;
 }
 
@@ -340,6 +357,42 @@ void Image::SetPixelNoLock(int x, int y, Pixel pix)
     surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = pix.b;
     surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = pix.g;
     surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = pix.r;
+}
+
+void Image::SetPixelWhite(int x, int y)
+{
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = 255;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = 255;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 255;
+    SDL_UnlockSurface(surface);
+}
+
+void Image::SetPixelWhiteNoLock(int x, int y)
+{
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = 255;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = 255;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 255;
+}
+
+void Image::SetPixelBlack(int x, int y)
+{
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = 0;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = 0;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 0;
+    SDL_UnlockSurface(surface);
+}
+
+void Image::SetPixelBlackNoLock(int x, int y)
+{
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = 0;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = 0;
+    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 0;
 }
 
 void Image::Copy(Image &other)

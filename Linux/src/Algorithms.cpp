@@ -238,3 +238,224 @@ void Algorithms::LevelHistogram(Image *outputImage)
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
+
+void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
+{
+    int method;
+    int lowerBound;
+    int upperBound;
+    int boundCount;
+    Mutex::GetInstance().Lock();
+
+    if (outputImage->NoSurface())
+    {
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    // copy to local vars
+    method = params->method;
+    boundCount = params->boundCount;
+    if (method == None)
+    {
+        if (params->boundCount == 1)
+            lowerBound = params->lowerBound;
+        else
+        {
+            lowerBound = params->lowerBound;
+            upperBound = params->upperBound;
+        }
+    }
+
+    Mutex::GetInstance().Unlock();
+
+    if (method == None)
+    {
+        for (int i = 0; i < outputImage->GetWidth(); i++)
+        {
+            Mutex::GetInstance().Lock();
+            for (int j = 0; j < outputImage->GetHeight(); j++)
+            {
+
+                Image::Pixel pix = outputImage->GetPixel(i, j);
+
+                if (boundCount == 1)
+                {
+                    if (pix.brightnes < lowerBound)
+                    {
+                        pix.b = 0;
+                        pix.g = 0;
+                        pix.r = 0;
+                    }
+                    else
+                    {
+                        pix.b = 255;
+                        pix.g = 255;
+                        pix.r = 255;
+                    }
+                }
+                else
+                {
+                    if (pix.brightnes > lowerBound && pix.brightnes < upperBound)
+                    {
+                        pix.b = 0;
+                        pix.g = 0;
+                        pix.r = 0;
+                    }
+                    else
+                    {
+                        pix.b = 255;
+                        pix.g = 255;
+                        pix.r = 255;
+                    }
+                }
+
+                outputImage->SetPixel(i, j, pix);
+            }
+
+            if (!Mutex::GetInstance().IsThreadRunning())
+            {
+                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+                Mutex::GetInstance().Unlock();
+                return;
+            }
+            Mutex::GetInstance().Unlock();
+        }
+    }
+    else if (method == Gradient)
+    {
+        float G = 0;
+        float Gx = 0;
+        float Gy = 0;
+        float sum_JG = 0;
+        float sum_G = 0;
+
+        for (int i = 1; i < outputImage->GetWidth() - 1; i++)
+        {
+            Mutex::GetInstance().Lock();
+
+            for (int j = 1; j < outputImage->GetHeight() - 1; j++)
+            {
+                Image::Pixel pix = outputImage->GetPixel(i, j);
+                Gx = outputImage->GetPixel(i + 1, j).brightnes - outputImage->GetPixel(i - 1, j).brightnes;
+                Gy = outputImage->GetPixel(i, j + 1).brightnes - outputImage->GetPixel(i, j - 1).brightnes;
+                G = std::max(abs(Gx), abs(Gy));
+                sum_G += G;
+                sum_JG += pix.brightnes * G;
+            }
+
+            if (!Mutex::GetInstance().IsThreadRunning())
+            {
+                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+                Mutex::GetInstance().Unlock();
+                return;
+            }
+            Mutex::GetInstance().Unlock();
+        }
+        lowerBound = sum_JG / sum_G;
+    }
+    // iter
+    else
+    {
+        uint8_t JMax = 255;
+        uint8_t JMin = 0;
+        int t = 0;
+        int t_old = 0;
+        bool end = false;
+        float p[MAX_VAL];
+        Mutex::GetInstance().Lock();
+        outputImage->CopyNormalisedBrightnessHistogram(p);
+        Mutex::GetInstance().Unlock();
+
+        for (int i = 0; i < MAX_VAL; i++)
+            if (p[i] > 0)
+            {
+                JMin = i;
+                break;
+            }
+
+        for (int i = 255; i >= 0; i--)
+            if (p[i] > 0)
+            {
+                JMax = i;
+                break;
+            }
+
+        t = (JMax - JMin) / 2;
+        t_old = t;
+        while (!end)
+        {
+            float m0 = 0;
+            float P0 = 0;
+
+            float m1 = 0;
+            float P1 = 0;
+
+            for (int i = 0; i < t; i++)
+            {
+                m0 += i * p[i];
+                P0 += p[i];
+            }
+
+            m0 /= P0;
+
+            for (int i = t; i < MAX_VAL; i++)
+            {
+                m1 += i * p[i];
+                P1 += p[i];
+            }
+
+            m1 /= P1;
+
+            t_old = t;
+            t = (m0 + m1) / 2;
+
+            if (abs(t_old - t) < 2)
+            {
+                end = true;
+                lowerBound = t;
+            }
+
+            Mutex::GetInstance().Lock();
+            if (!Mutex::GetInstance().IsThreadRunning())
+            {
+                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+                Mutex::GetInstance().Unlock();
+                return;
+            }
+            Mutex::GetInstance().Unlock();
+        }
+    }
+
+    if (params->method != None)
+    {
+        for (int i = 0; i < outputImage->GetWidth(); i++)
+        {
+            Mutex::GetInstance().Lock();
+
+            for (int j = 0; j < outputImage->GetHeight(); j++)
+            {
+                Image::Pixel pix = outputImage->GetPixel(i, j);
+                if (pix.brightnes < lowerBound)
+                    outputImage->SetPixelBlack(i, j);
+                else
+                    outputImage->SetPixelWhite(i, j);
+            }
+
+            if (!Mutex::GetInstance().IsThreadRunning())
+            {
+                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+                Mutex::GetInstance().Unlock();
+                return;
+            }
+            Mutex::GetInstance().Unlock();
+        }
+    }
+
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
+}

@@ -11,7 +11,7 @@ public:
         Error = -1,
         Normal = 0,
         Stoped = 1,
-        Undefined = 2
+        Awating = 2
     };
 
 public:
@@ -33,7 +33,7 @@ private:
 
 private:
     std::mutex mutex;
-    int outputCode = Undefined;
+    int outputCode = Awating;
     bool threadIsRunning = false;
 };
 

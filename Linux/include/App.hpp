@@ -61,7 +61,8 @@ public:
         Brighten,
         Contrast,
         Exponentiation,
-        LeveledHistogram
+        LeveledHistogram,
+        Binarization
     };
 
 public:
@@ -100,8 +101,16 @@ private:
     bool inProgressPopupActive = false;
     bool justRefreshed = false;
 
-    // add more algs
+    // add more algs (in progress)
     // change how extension is checked in image?
+    // add new directory button in save as window
+    // add a setting to how often to refresh the transformed image
+    // add a transformation function diragram in the middle of the bottom bar
+    // maybe add shortcuts?
+    // make a help window
+    // add a font
+    // hadle error state from thread or remove the code since it is not needed
+    // add a button to set output image as input image
 
     // image histograms and plot flags
     int modeI = Brightnes;

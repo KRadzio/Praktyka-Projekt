@@ -8,11 +8,23 @@
 
 namespace Algorithms
 {
+    enum BinarizationMethod
+    {
+        None,
+        Gradient,
+        Histogram
+    };
+
     struct ParametersStruct
     {
         int value = 0;
         float contrast = 1.0;
         float alfa = 1.0;
+        // Binarization
+        int boundCount = 1;
+        int lowerBound = 0;
+        int upperBound = 0;
+        int method;
     };
 
     void CreateNegative(Image* outputImage);
@@ -24,6 +36,8 @@ namespace Algorithms
     void Exponentiation(Image *outputImage, ParametersStruct *params);
 
     void LevelHistogram(Image *outputImage);
+
+    void Binarization(Image *outputImage, ParametersStruct *params);
 
 }
 

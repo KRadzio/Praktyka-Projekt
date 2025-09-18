@@ -383,30 +383,35 @@ void App::DrawHistogramsAndFunctions()
 
 void App::DrawAlgMenuElements()
 {
-    if (ImGui::MenuItem("Negatyw", NULL, algS == 1))
+    if (ImGui::MenuItem("Negatyw", NULL, algS == Negative))
     {
         algName = "Negatyw";
-        algS = 1;
+        algS = Negative;
     }
-    if (ImGui::MenuItem("Rozjasnij", NULL, algS == 2))
+    if (ImGui::MenuItem("Rozjasnij", NULL, algS == Brighten))
     {
         algName = "Rozjasnij";
-        algS = 2;
+        algS = Brighten;
     }
-    if (ImGui::MenuItem("Kontrast", NULL, algS == 3))
+    if (ImGui::MenuItem("Kontrast", NULL, algS == Contrast))
     {
         algName = "Kontrast";
-        algS = 3;
+        algS = Contrast;
     }
-    if (ImGui::MenuItem("Potegowanie", NULL, algS == 4))
+    if (ImGui::MenuItem("Potegowanie", NULL, algS == Exponentiation))
     {
         algName = "Potegowanie";
-        algS = 4;
+        algS = Exponentiation;
     }
-    if (ImGui::MenuItem("Wyrownanie histogramu", NULL, algS == 5))
+    if (ImGui::MenuItem("Wyrownanie histogramu", NULL, algS == LeveledHistogram))
     {
         algName = "Wyrownanie histogramu";
-        algS = 5;
+        algS = LeveledHistogram;
+    }
+    if (ImGui::MenuItem("Binaryzacja", NULL, algS == Binarization))
+    {
+        algName = "Binaryzacja";
+        algS = Binarization;
     }
 }
 
@@ -681,7 +686,7 @@ void App::DrawMiddleButtonsWindow(float h)
         {
             // can not be called if thread is execiting (no CS)
             Mutex::GetInstance().ThreadRunning();
-            Mutex::GetInstance().SetOutputCode(Mutex::Undefined);
+            Mutex::GetInstance().SetOutputCode(Mutex::Awating);
             outputImage = inputImage;
         }
 
@@ -705,6 +710,10 @@ void App::DrawMiddleButtonsWindow(float h)
             break;
         case LeveledHistogram:
             algThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
+            algThread.detach();
+            break;
+        case Binarization:
+            algThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
             algThread.detach();
             break;
         default:
@@ -737,6 +746,8 @@ void App::DrawMiddleButtonsWindow(float h)
                 {
                     Mutex::GetInstance().Lock();
                     Mutex::GetInstance().ThreadStopped();
+                    // outputImage.RefreshPixelValuesArrays();
+                    // outputImage.RefreshTexture();
                     Mutex::GetInstance().Unlock();
                     inProgressPopupActive = false;
                     ImGui::CloseCurrentPopup();
@@ -759,7 +770,7 @@ void App::DrawMiddleButtonsWindow(float h)
                 {
                     inProgressPopupActive = false;
                     justRefreshed = false;
-                    Mutex::GetInstance().SetOutputCode(Mutex::Undefined);
+                    Mutex::GetInstance().SetOutputCode(Mutex::Awating);
                     ImGui::CloseCurrentPopup();
                 }
             }
@@ -808,6 +819,23 @@ void App::DrawMiddleButtonsWindow(float h)
         case LeveledHistogram:
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
+        case Binarization:
+
+            ImGui::RadioButton("Ręcznie ustaw próg", &params.method, Algorithms::None);
+            ImGui::SameLine();
+            ImGui::RadioButton("Metoda Gradientowa", &params.method, Algorithms::Gradient);
+            ImGui::SameLine();
+            ImGui::RadioButton("Metoda iteracyjna", &params.method, Algorithms::Histogram);
+            if (params.method == Algorithms::BinarizationMethod::None)
+            {
+                ImGui::RadioButton("Jeden próg", &params.boundCount, 1);
+                ImGui::SameLine();
+                ImGui::RadioButton("Dwa progi", &params.boundCount, 2);
+                ImGui::SliderInt("t", &params.lowerBound, 0, 255);
+                if (params.boundCount == 2)
+                    ImGui::SliderInt("t1", &params.upperBound, 0, 255);
+            }
+            break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Powrot", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -831,6 +859,10 @@ void App::DrawMiddleButtonsWindow(float h)
         params.value = 0;
         params.contrast = 1.0;
         params.alfa = 1.0;
+        params.boundCount = 1;
+        params.lowerBound = 0;
+        params.upperBound = 0;
+        params.method = Algorithms::BinarizationMethod::None;
     }
 
     ImGui::End();
