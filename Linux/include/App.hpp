@@ -31,8 +31,8 @@
 #define MIDDLE_BUTTON_H 30
 #define CANCEL_BUTTON_W 120
 #define FILE_POPUP_WIDTH 300
-#define FILE_POPUP_HEIGHT 310
-#define SAVE_POPUP_HEIGHT 450
+#define FILE_POPUP_HEIGHT 340
+#define SAVE_POPUP_HEIGHT 480
 #define DIR_LIST_WIDTH 290
 #define DIR_LIST_HEIGHT 200
 #define REFRESH_INTERVAL 15.0
@@ -120,6 +120,7 @@ private:
     // add a transformation function diragram in the middle of the bottom bar
     // maybe add shortcuts?
     // make a help window
+    // resize some windows
 
     // image histograms and plot flags
     int modeI = Brightnes;
