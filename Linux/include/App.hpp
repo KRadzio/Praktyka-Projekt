@@ -67,7 +67,9 @@ public:
         LeveledHistogram,
         Binarization,
         LinearFilter,
-        MedianFilter
+        MedianFilter,
+        Erosion,
+        Dilatation
     };
 
 public:
@@ -109,6 +111,7 @@ private:
     bool customName = false;
     bool inProgressPopupActive = false;
     bool justRefreshed = false;
+    bool errorCopying = false;
 
     // add more algs (in progress)
     // change how extension is checked in image?
@@ -118,7 +121,6 @@ private:
     // maybe add shortcuts?
     // make a help window
     // add a font
-    // hadle error state from thread or remove the code since it is not needed
 
     // image histograms and plot flags
     int modeI = Brightnes;

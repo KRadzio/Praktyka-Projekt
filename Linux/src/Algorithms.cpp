@@ -2,17 +2,6 @@
 
 void Algorithms::CreateNegative(Image *outputImage)
 {
-    Mutex::GetInstance().Lock();
-
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
-    Mutex::GetInstance().Unlock();
-
     for (int i = 0; i < outputImage->GetWidth(); i++)
     {
         Mutex::GetInstance().Lock();
@@ -26,7 +15,6 @@ void Algorithms::CreateNegative(Image *outputImage)
         }
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -34,23 +22,12 @@ void Algorithms::CreateNegative(Image *outputImage)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
 {
-    Mutex::GetInstance().Lock();
-
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
-    Mutex::GetInstance().Unlock();
 
     for (int i = 0; i < outputImage->GetWidth(); i++)
     {
@@ -84,7 +61,6 @@ void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
         }
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -92,24 +68,13 @@ void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
 {
-    Mutex::GetInstance().Lock();
-
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
-    Mutex::GetInstance().Unlock();
-
+    
     for (int i = 0; i < outputImage->GetWidth(); i++)
     {
         Mutex::GetInstance().Lock();
@@ -135,7 +100,6 @@ void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
         }
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -143,7 +107,6 @@ void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
@@ -151,15 +114,6 @@ void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
 void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
 {
     Mutex::GetInstance().Lock();
-
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
-
     int tab[256];
     for (int i = 0; i < 256; i++)
         tab[i] = 255.0 * pow((float)i / 255.0, params->alfa);
@@ -180,7 +134,6 @@ void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
         }
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -188,7 +141,6 @@ void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
@@ -196,14 +148,6 @@ void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
 void Algorithms::LevelHistogram(Image *outputImage)
 {
     Mutex::GetInstance().Lock();
-
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
 
     float *distR = outputImage->GetDistributorR();
     float *distG = outputImage->GetDistributorG();
@@ -226,7 +170,6 @@ void Algorithms::LevelHistogram(Image *outputImage)
         Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -234,7 +177,6 @@ void Algorithms::LevelHistogram(Image *outputImage)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
@@ -246,14 +188,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
     int upperBound;
     int boundCount;
     Mutex::GetInstance().Lock();
-
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
 
     // copy to local vars
     method = params->method;
@@ -317,7 +251,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
 
             if (!Mutex::GetInstance().IsThreadRunning())
             {
-                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -348,7 +281,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
 
             if (!Mutex::GetInstance().IsThreadRunning())
             {
-                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -421,7 +353,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Lock();
             if (!Mutex::GetInstance().IsThreadRunning())
             {
-                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -446,7 +377,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
 
             if (!Mutex::GetInstance().IsThreadRunning())
             {
-                Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -455,7 +385,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
@@ -471,17 +400,9 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
     int filter;
     Mutex::GetInstance().Lock();
 
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
     copy.CopyOnlySurfaceAndSize(*outputImage);
     if (copy.NoSurface())
     {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
         Mutex::GetInstance().ThreadStopped();
         Mutex::GetInstance().Unlock();
         return;
@@ -570,7 +491,6 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
 
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -578,7 +498,6 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
@@ -591,17 +510,9 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
     int maskSize = 0;
     Mutex::GetInstance().Lock();
 
-    if (outputImage->NoSurface())
-    {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
-        Mutex::GetInstance().ThreadStopped();
-        Mutex::GetInstance().Unlock();
-        return;
-    }
     copy.CopyOnlySurfaceAndSize(*outputImage);
     if (copy.NoSurface())
     {
-        Mutex::GetInstance().SetOutputCode(Mutex::Error);
         Mutex::GetInstance().ThreadStopped();
         Mutex::GetInstance().Unlock();
         return;
@@ -660,7 +571,6 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
 
         if (!Mutex::GetInstance().IsThreadRunning())
         {
-            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -668,7 +578,6 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
     }
 
     Mutex::GetInstance().Lock();
-    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }

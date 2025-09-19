@@ -287,12 +287,15 @@ void App::DrawPictureSpace()
             else if (algS == None)
                 ImGui::Text("Brak wybranego algorytmu");
             // not transformed
+            else if (errorCopying)
+                ImGui::Text("Błąd podczas kopiowania obrazu");
             else if (outputImage.NoSurface())
                 ImGui::Text("Nie mozna odswierzyc obraz nie przetworzony");
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
             {
                 errorPopupAlgActive = false;
+                errorCopying = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -696,8 +699,12 @@ void App::DrawMiddleButtonsWindow(float h)
         {
             // can not be called if thread is execiting (no CS)
             Mutex::GetInstance().ThreadRunning();
-            Mutex::GetInstance().SetOutputCode(Mutex::Awating);
             outputImage = inputImage;
+            if (outputImage.NoSurface())
+            {
+                errorPopupAlgActive = true;
+                errorCopying = true;
+            }
         }
 
         switch (algS)
@@ -788,7 +795,6 @@ void App::DrawMiddleButtonsWindow(float h)
                 {
                     inProgressPopupActive = false;
                     justRefreshed = false;
-                    Mutex::GetInstance().SetOutputCode(Mutex::Awating);
                     ImGui::CloseCurrentPopup();
                 }
             }
