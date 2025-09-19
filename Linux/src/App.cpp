@@ -46,14 +46,18 @@ int App::Init()
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
+    lato = io->Fonts->AddFontFromFileTTF("./resources/Lato-Regular.ttf");
+    if(lato == nullptr)
+        return -1;
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     // ImGui::StyleColorsLight();
 
     // Setup scaling
     style = &ImGui::GetStyle();
-    style->ScaleAllSizes(mainScale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-    style->FontScaleDpi = mainScale; // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+    style->ScaleAllSizes(mainScale);
+    style->FontScaleDpi = mainScale; 
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(mainWindow, Renderer::GetInstance().GetRenderer());
@@ -63,32 +67,10 @@ int App::Init()
     return 0;
 }
 
-// Load Fonts
-// - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-// - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-// - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-// - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-// - Read 'docs/FONTS.md' for more instructions and details.
-// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-// style.FontSizeBase = 20.0f;
-// io.Fonts->AddFontDefault();
-// io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf");
-// io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf");
-// io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf");
-// io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf");
-// ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf");
-// IM_ASSERT(font != nullptr);
-
 int App::MainLoop()
 {
     while (runLoop)
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-
         auto beg = std::chrono::high_resolution_clock::now();
 
         int eventsCode = HandleEvents();
@@ -102,15 +84,19 @@ int App::MainLoop()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        ImGui::PushFont(lato, 18.0f);
+
         DrawMenuBar();
-        // DrawAlgorihmsBar();
         SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
         DrawPictureSpace();
         DrawHistogramsAndFunctions();
 
+        ImGui::PopFont();
+
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
+
 
         Render();
 

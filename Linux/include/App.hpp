@@ -120,7 +120,6 @@ private:
     // add a transformation function diragram in the middle of the bottom bar
     // maybe add shortcuts?
     // make a help window
-    // add a font
 
     // image histograms and plot flags
     int modeI = Brightnes;
@@ -165,6 +164,7 @@ private:
     // ImGui
     ImGuiIO *io = nullptr;
     ImGuiStyle *style = nullptr;
+    ImFont* lato = nullptr;
 };
 
 #endif
