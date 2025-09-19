@@ -418,6 +418,11 @@ void App::DrawAlgMenuElements()
         algName = "Filtry Liniowe";
         algS = LinearFilter;
     }
+    if (ImGui::MenuItem("Filtry medianowe", NULL, algS == MedianFilter))
+    {
+        algName = "Filtry medianowe";
+        algS = MedianFilter;
+    }
 }
 
 void App::DrawLoadPopup()
@@ -725,6 +730,10 @@ void App::DrawMiddleButtonsWindow(float h)
             algThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
             algThread.detach();
             break;
+        case MedianFilter:
+            algThread = std::thread(&Algorithms::MedianFilter, &outputImage, &params);
+            algThread.detach();
+            break;
         default:
             break;
         }
@@ -852,91 +861,98 @@ void App::DrawMiddleButtonsWindow(float h)
             }
             break;
         case LinearFilter:
+
+            ImGui::RadioButton("3x3", &params.linearFilterSize, Algorithms::MatrixSize::S3x3);
+            ImGui::SameLine();
+            ImGui::RadioButton("5x5", &params.linearFilterSize, Algorithms::MatrixSize::S5x5);
+            ImGui::SameLine();
+            ImGui::RadioButton("7x7", &params.linearFilterSize, Algorithms::MatrixSize::S7x7);
+
             if (ImGui::RadioButton("Uśredniający", &params.linerFilterS, Algorithms::LinearFilters::Average))
             {
-                int averageMask[3][3] = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
-                SetLinearMask(averageMask);
+                params.linearMask3x3 = AVERAGE_3x3;
+                params.linearMask5x5 = AVERAGE_5x5;
+                params.linearMask7x7 = AVERAGE_7x7;
             }
             ImGui::SameLine();
 
             if (ImGui::RadioButton("Gauss", &params.linerFilterS, Algorithms::LinearFilters::Gauss))
             {
-                int mask[3][3] = {{1, 4, 1}, {4, 12, 4}, {1, 4, 1}};
-                SetLinearMask(mask);
+                params.linearMask3x3 = GAUSS_3x3;
+                params.linearMask5x5 = GAUSS_5x5;
+                params.linearMask7x7 = GAUSS_7x7;
             }
             ImGui::SameLine();
 
             if (ImGui::RadioButton("Sobel Poziomy", &params.linerFilterS, Algorithms::LinearFilters::SobelHorizontal))
             {
-                int mask[3][3] = {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
-                SetLinearMask(mask);
+                params.linearMask3x3 = SOBEL_HORIZONTAL_3x3;
+                params.linearMask5x5 = SOBEL_HORIZONTAL_5x5;
+                params.linearMask7x7 = SOBEL_HORIZONTAL_7x7;
             }
             // in new line
             if (ImGui::RadioButton("Sobel Pionowy", &params.linerFilterS, Algorithms::LinearFilters::SobelVertical))
             {
-                int mask[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
-                SetLinearMask(mask);
+                params.linearMask3x3 = SOBEL_VERTICAL_3x3;
+                params.linearMask5x5 = SOBEL_VERTICAL_5x5;
+                params.linearMask7x7 = SOBEL_VERTICAL_7x7;
             }
             ImGui::SameLine();
 
             if (ImGui::RadioButton("Laplasjan", &params.linerFilterS, Algorithms::LinearFilters::Laplasjan))
             {
-                int mask[3][3] = {{-2, 1, -2}, {1, 4, 1}, {-2, 1, -2}};
-                SetLinearMask(mask);
+                params.linearMask3x3 = LAPLACIAN_3x3;
+                params.linearMask5x5 = LAPLACIAN_5x5;
+                params.linearMask7x7 = LAPLACIAN_7x7;
             }
             ImGui::SameLine();
 
             if (ImGui::RadioButton("Wyostrzający", &params.linerFilterS, Algorithms::LinearFilters::Sharpening))
             {
-                int mask[3][3] = {{0, -1, 0}, {-1, 5, -1}, {0, -1, 0}};
-                SetLinearMask(mask);
+                params.linearMask3x3 = SHARPENING_3x3;
+                params.linearMask5x5 = SHARPENING_5x5;
+                params.linearMask7x7 = SHARPENING_7x7;
             }
 
-            ImGui::RadioButton("Wlasna", &params.linerFilterS, Algorithms::LinearFilters::Custom);
-            if (params.linerFilterS == Algorithms::LinearFilters::Custom)
+            ImGui::RadioButton("Wlasna", &params.linerFilterS, Algorithms::LinearFilters::CustomL);
+            if (params.linerFilterS == Algorithms::LinearFilters::CustomL)
             {
-                if (ImGui::BeginTable("Maska", 3, ImGuiTableFlags_Borders))
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-
-                        ImGui::PushID(i);
-                        ImGui::TableNextRow();
-                        ImGui::TableSetColumnIndex(0);
-                        ImGui::PushItemWidth(120);
-                        ImGui::InputInt("##0", &params.linearMask[i][0]);
-                        ImGui::TableSetColumnIndex(1);
-                        ImGui::PushItemWidth(120);
-                        ImGui::InputInt("##1", &params.linearMask[i][1]);
-                        ImGui::TableSetColumnIndex(2);
-                        ImGui::PushItemWidth(120);
-                        ImGui::InputInt("##2", &params.linearMask[i][2]);
-                        ImGui::PopID();
-                    }
-                    ImGui::EndTable();
-                }
+                ImGui::Text("To może mieć ciewawe efekty");
+                DrawLinearInputArray();
             }
             else
+                DrawLinearDisplayArray();
+
+            break;
+        case MedianFilter:
+            ImGui::RadioButton("3x3", &params.medianFilterSize, Algorithms::MatrixSize::S3x3);
+            ImGui::SameLine();
+            ImGui::RadioButton("5x5", &params.medianFilterSize, Algorithms::MatrixSize::S5x5);
+            ImGui::SameLine();
+            ImGui::RadioButton("7x7", &params.medianFilterSize, Algorithms::MatrixSize::S7x7);
+
+            if (ImGui::RadioButton("Pełny", &params.medianFilterS, Algorithms::MedianFilters::Full))
             {
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-                if (ImGui::BeginTable("Maska", 3, ImGuiTableFlags_Borders, ImVec2(120,0)))
-                {
-                    ImGui::TableSetupColumn("##0", ImGuiTableColumnFlags_WidthFixed, 30);
-                    ImGui::TableSetupColumn("##1", ImGuiTableColumnFlags_WidthFixed, 30);
-                    ImGui::TableSetupColumn("##2", ImGuiTableColumnFlags_WidthFixed, 30);
-                    for (int i = 0; i < 3; i++)
-                    {
-                        ImGui::TableNextRow();
-                        ImGui::TableSetColumnIndex(0);
-                        ImGui::Text("%d", params.linearMask[i][0]);
-                        ImGui::TableSetColumnIndex(1);
-                        ImGui::Text("%d", params.linearMask[i][1]);
-                        ImGui::TableSetColumnIndex(2);
-                        ImGui::Text("%d", params.linearMask[i][2]);
-                    }
-                    ImGui::EndTable();
-                }
+                params.medianMask3x3 = MEDIAN_3x3;
+                params.medianMask5x5 = MEDIAN_5x5;
+                params.medianMask7x7 = MEDIAN_7x7;
             }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Krzyżowy", &params.medianFilterS, Algorithms::MedianFilters::Cross))
+            {
+                params.medianMask3x3 = MEDIAN_CROSS_3x3;
+                params.medianMask5x5 = MEDIAN_CROSS_5x5;
+                params.medianMask7x7 = MEDIAN_CROSS_7x7;
+            }
+            ImGui::SameLine();
+            ImGui::RadioButton("Wlasna", &params.medianFilterS, Algorithms::MedianFilters::CustomM);
+            if (params.medianFilterS == Algorithms::MedianFilters::CustomM)
+            {
+                ImGui::Text("To może mieć ciewawe efekty");
+                DrawMedianInputArray();
+            }
+            else
+                DrawMedianDisplayArray();
             break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -965,10 +981,18 @@ void App::DrawMiddleButtonsWindow(float h)
         params.lowerBound = 0;
         params.upperBound = 0;
         params.method = Algorithms::BinarizationMethod::None;
+        // linear
         params.linerFilterS = Algorithms::LinearFilters::Average;
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
-                params.linearMask[i][j] = 1;
+        params.linearFilterSize = Algorithms::MatrixSize::S3x3;
+        params.linearMask3x3 = AVERAGE_3x3;
+        params.linearMask5x5 = AVERAGE_5x5;
+        params.linearMask7x7 = AVERAGE_7x7;
+        // median
+        params.medianFilterS = Algorithms::MedianFilters::Full;
+        params.medianFilterSize = Algorithms::MatrixSize::S3x3;
+        params.medianMask3x3 = MEDIAN_3x3;
+        params.medianMask5x5 = MEDIAN_5x5;
+        params.medianMask7x7 = MEDIAN_7x7;
     }
 
     ImGui::End();
@@ -986,9 +1010,106 @@ void App::Render()
     Mutex::GetInstance().Unlock();
 }
 
-void App::SetLinearMask(int newMask[3][3])
+void App::DrawLinearInputArray()
 {
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            params.linearMask[i][j] = newMask[i][j];
+    if (ImGui::BeginTable("Maska", params.linearFilterSize, ImGuiTableFlags_Borders))
+    {
+        for (int row = 0; row < params.linearFilterSize; row++)
+        {
+
+            ImGui::PushID(row);
+            ImGui::TableNextRow();
+            for (int col = 0; col < params.linearFilterSize; col++)
+            {
+                ImGui::TableSetColumnIndex(col);
+                ImGui::PushItemWidth(ARRAY_INPUT_WIDTH);
+                std::string s = "##" + std::to_string(col);
+                if (params.linearFilterSize == Algorithms::MatrixSize::S3x3)
+                    ImGui::InputInt(s.c_str(), &params.linearMask3x3[row][col]);
+                else if (params.linearFilterSize == Algorithms::MatrixSize::S5x5)
+                    ImGui::InputInt(s.c_str(), &params.linearMask5x5[row][col]);
+                else
+                    ImGui::InputInt(s.c_str(), &params.linearMask7x7[row][col]);
+            }
+            ImGui::PopID();
+        }
+        ImGui::EndTable();
+    }
+}
+
+void App::DrawLinearDisplayArray()
+{
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - (ARRAY_FIELD_WIDTH * params.linearFilterSize) / 2);
+    if (ImGui::BeginTable("Maska", params.linearFilterSize, ImGuiTableFlags_Borders, ImVec2(ARRAY_FIELD_WIDTH * params.linearFilterSize, 0)))
+    {
+        for (int i = 0; i < params.linearFilterSize; i++)
+            ImGui::TableSetupColumn("##", ImGuiTableColumnFlags_WidthFixed, ARRAY_ITEM_WIDTH);
+        for (int row = 0; row < params.linearFilterSize; row++)
+        {
+            ImGui::TableNextRow();
+            for (int col = 0; col < params.linearFilterSize; col++)
+            {
+                ImGui::TableSetColumnIndex(col);
+                if (params.linearFilterSize == Algorithms::MatrixSize::S3x3)
+                    ImGui::Text("%d", params.linearMask3x3[row][col]);
+                else if (params.linearFilterSize == Algorithms::MatrixSize::S5x5)
+                    ImGui::Text("%d", params.linearMask5x5[row][col]);
+                else
+                    ImGui::Text("%d", params.linearMask7x7[row][col]);
+            }
+        }
+        ImGui::EndTable();
+    }
+}
+
+void App::DrawMedianInputArray()
+{
+    if (ImGui::BeginTable("Maska", params.medianFilterSize, ImGuiTableFlags_Borders))
+    {
+        for (int row = 0; row < params.medianFilterSize; row++)
+        {
+
+            ImGui::PushID(row);
+            ImGui::TableNextRow();
+            for (int col = 0; col < params.medianFilterSize; col++)
+            {
+                ImGui::TableSetColumnIndex(col);
+                ImGui::PushItemWidth(ARRAY_INPUT_WIDTH);
+                std::string s = "##" + std::to_string(col);
+                if (params.medianFilterSize == Algorithms::MatrixSize::S3x3)
+                    ImGui::Checkbox(s.c_str(), &params.medianMask3x3[row][col]);
+                else if (params.medianFilterSize == Algorithms::MatrixSize::S5x5)
+                    ImGui::Checkbox(s.c_str(), &params.medianMask5x5[row][col]);
+                else
+                    ImGui::Checkbox(s.c_str(), &params.medianMask7x7[row][col]);
+            }
+            ImGui::PopID();
+        }
+        ImGui::EndTable();
+    }
+}
+
+void App::DrawMedianDisplayArray()
+{
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - (ARRAY_FIELD_WIDTH * params.medianFilterSize) / 2);
+    if (ImGui::BeginTable("Maska", params.medianFilterSize, ImGuiTableFlags_Borders, ImVec2(ARRAY_FIELD_WIDTH * params.medianFilterSize, 0)))
+    {
+        for (int i = 0; i < params.medianFilterSize; i++)
+            ImGui::TableSetupColumn("##", ImGuiTableColumnFlags_WidthFixed, ARRAY_ITEM_WIDTH);
+        for (int row = 0; row < params.medianFilterSize; row++)
+        {
+            ImGui::TableNextRow();
+            for (int col = 0; col < params.medianFilterSize; col++)
+            {
+                ImGui::TableSetColumnIndex(col);
+                if (params.medianFilterSize == Algorithms::MatrixSize::S3x3)
+                    ImGui::Text("%d", params.medianMask3x3[row][col]);
+                else if (params.medianFilterSize == Algorithms::MatrixSize::S5x5)
+                    ImGui::Text("%d", params.medianMask5x5[row][col]);
+                else
+                    ImGui::Text("%d", params.medianMask7x7[row][col]);
+            }
+        }
+        ImGui::EndTable();
+    }
 }

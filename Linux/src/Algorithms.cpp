@@ -463,7 +463,9 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
 void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
 {
     Image copy;
-    int maskCopy[3][3];
+    int offset = 0;
+    int maskCopy[7][7];
+    int maskSize = 0;
     bool normalise = true;
     int maskSum = 0;
     int filter;
@@ -485,10 +487,19 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
         return;
     }
 
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
+    maskSize = params->linearFilterSize;
+    offset = params->linearFilterSize / 2;
+
+    for (int i = 0; i < maskSize; i++)
+        for (int j = 0; j < maskSize; j++)
         {
-            maskCopy[i][j] = params->linearMask[i][j];
+            if (maskSize == S3x3)
+                maskCopy[i][j] = params->linearMask3x3[i][j];
+            else if (maskSize == S5x5)
+                maskCopy[i][j] = params->linearMask5x5[i][j];
+            else
+                maskCopy[i][j] = params->linearMask7x7[i][j];
+
             // all elements must be > 0
             if (maskCopy[i][j] <= 0)
                 normalise = false;
@@ -498,21 +509,21 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Unlock();
 
-    for (int row = 1; row < outputImage->GetWidth() - 1; row++)
+    for (int row = offset; row < outputImage->GetWidth() - offset; row++)
     {
         Mutex::GetInstance().Lock();
-        for (int col = 1; col < outputImage->GetHeight() - 1; col++)
+        for (int col = offset; col < outputImage->GetHeight() - offset; col++)
         {
             auto pix = copy.GetPixel(row, col);
             int JR = 0;
             int JG = 0;
             int JB = 0;
 
-            for (int x = 0; x < 3; x++)
+            for (int x = 0; x < maskSize; x++)
             {
-                for (int y = 0; y < 3; y++)
+                for (int y = 0; y < maskSize; y++)
                 {
-                    auto neighbourPix = copy.GetPixel(row + x - 1, col + y - 1);
+                    auto neighbourPix = copy.GetPixel(row + x - offset, col + y - offset);
                     JR += neighbourPix.r * maskCopy[x][y];
                     JG += neighbourPix.g * maskCopy[x][y];
                     JB += neighbourPix.b * maskCopy[x][y];
@@ -554,6 +565,96 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
                 else
                     pix.b = JB;
             }
+            outputImage->SetPixel(row, col, pix);
+        }
+
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            Mutex::GetInstance().SetOutputCode(Mutex::Stoped);
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        Mutex::GetInstance().Unlock();
+    }
+
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().SetOutputCode(Mutex::Normal);
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
+}
+
+void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
+{
+    Image copy;
+    int offset = 0;
+    int maskCopy[7][7];
+    int maskSize = 0;
+    Mutex::GetInstance().Lock();
+
+    if (outputImage->NoSurface())
+    {
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+    copy.CopyOnlySurfaceAndSize(*outputImage);
+    if (copy.NoSurface())
+    {
+        Mutex::GetInstance().SetOutputCode(Mutex::Error);
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    maskSize = params->linearFilterSize;
+    offset = params->linearFilterSize / 2;
+
+    for (int i = 0; i < maskSize; i++)
+        for (int j = 0; j < maskSize; j++)
+        {
+            if (maskSize == S3x3)
+                maskCopy[i][j] = params->medianMask3x3[i][j];
+            else if (maskSize == S5x5)
+                maskCopy[i][j] = params->medianMask5x5[i][j];
+            else
+                maskCopy[i][j] = params->medianMask7x7[i][j];
+        }
+
+    Mutex::GetInstance().Unlock();
+
+    for (int row = offset; row < outputImage->GetWidth() - offset; row++)
+    {
+        Mutex::GetInstance().Lock();
+        for (int col = offset; col < outputImage->GetHeight() - offset; col++)
+        {
+            auto pix = copy.GetPixel(row, col);
+            std::vector<int> JR;
+            std::vector<int> JG;
+            std::vector<int> JB;
+
+            for (int x = 0; x < maskSize; x++)
+            {
+                for (int y = 0; y < maskSize; y++)
+                {
+                    auto neighbourPix = copy.GetPixel(row + x - offset, col + y - offset);
+                    if(maskCopy[x][y])
+                    {
+                        JR.emplace(JR.end(), neighbourPix.r);
+                        JG.emplace(JG.end(), neighbourPix.g);
+                        JB.emplace(JB.end(), neighbourPix.b);
+                    }
+                }
+            }
+
+            std::sort(JR.begin(), JR.end());
+            std::sort(JG.begin(), JG.end());
+            std::sort(JB.begin(), JB.end());
+
+            pix.r = JR[JR.size()/2];
+            pix.g = JG[JG.size()/2];
+            pix.b = JB[JB.size()/2];
+
             outputImage->SetPixel(row, col, pix);
         }
 

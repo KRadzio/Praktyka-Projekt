@@ -36,6 +36,9 @@
 #define DIR_LIST_WIDTH 290
 #define DIR_LIST_HEIGHT 200
 #define REFRESH_INTERVAL 15.0
+#define ARRAY_INPUT_WIDTH 100
+#define ARRAY_ITEM_WIDTH 30
+#define ARRAY_FIELD_WIDTH 40
 
 class App
 {
@@ -88,7 +91,10 @@ private:
     void DrawSaveWarningPopup();
     void DrawMiddleButtonsWindow(float h);
     void Render();
-    void SetLinearMask(int newMask[3][3]);
+    void DrawLinearInputArray();
+    void DrawLinearDisplayArray();
+    void DrawMedianInputArray();
+    void DrawMedianDisplayArray();
 
 private:
     // App
