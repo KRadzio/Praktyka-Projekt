@@ -174,7 +174,7 @@ void App::DrawMenuBar()
             FileSelector::GetInstance().RefreshCurrDir();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Wyjdz"))
+        if (ImGui::MenuItem("Wyjdź"))
             runLoop = false;
         ImGui::EndMenu();
     }
@@ -188,9 +188,7 @@ void App::DrawMenuBar()
 
     if (ImGui::BeginMenu("Ustawienia"))
     {
-        ImGui::MenuItem("Motyw");
-        ImGui::Separator();
-        ImGui::MenuItem("Skroty");
+        ImGui::MenuItem("Czas odświerzania");
         ImGui::EndMenu();
     }
 
@@ -198,9 +196,7 @@ void App::DrawMenuBar()
     {
         ImGui::MenuItem("O programie");
         ImGui::Separator();
-        ImGui::MenuItem("Skroty klawiszowe");
-        ImGui::Separator();
-        if (ImGui::MenuItem("Pokaz ImGui Demo", NULL, show_demo_window))
+        if (ImGui::MenuItem("Pokaż ImGui Demo", NULL, show_demo_window))
             show_demo_window = !show_demo_window;
         ImGui::EndMenu();
     }
@@ -223,7 +219,7 @@ void App::DrawPictureSpace()
     float h = ImGui::GetFrameHeight();
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Obraz wejsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Obraz wejściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
     if (!inputImage.NoTexture())
     {
         if (inputImage.GetWidth() < ImGui::GetWindowWidth())
@@ -238,7 +234,7 @@ void App::DrawPictureSpace()
 
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Obraz wyjsciowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Obraz wyjściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
     // CS
     Mutex::GetInstance().Lock();
     if (!outputImage.NoTexture())
@@ -260,11 +256,11 @@ void App::DrawPictureSpace()
 
     if (errorPopupAlgActive)
     {
-        ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
+        ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowSize(ImVec2(0, 100));
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
             // no file loaded
             if (inputImage.NoSurface())
@@ -276,7 +272,7 @@ void App::DrawPictureSpace()
             else if (errorCopying)
                 ImGui::Text("Błąd podczas kopiowania obrazu");
             else if (outputImage.NoSurface())
-                ImGui::Text("Nie mozna odswierzyc obraz nie przetworzony");
+                ImGui::Text("Nie można odświerzyć obraz nie przetworzony");
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
             {
@@ -304,8 +300,8 @@ void App::DrawHistogramsAndFunctions()
     // in
     ImGui::SameLine(BORDER_OFFSET);
     ImGui::BeginChild("Histogram wejsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
-    ImGui::Text("Obraz wejsciowy");
-    ImGui::RadioButton("Jasnosc", &modeI, 0);
+    ImGui::Text("Obraz wejściowy");
+    ImGui::RadioButton("Jasność", &modeI, 0);
     ImGui::SameLine();
     ImGui::RadioButton("R", &modeI, 1);
     ImGui::SameLine();
@@ -325,9 +321,9 @@ void App::DrawHistogramsAndFunctions()
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Dystrybuanta Obrazu");
-    ImGui::RadioButton("Wejsciowego", &modeD, 0);
+    ImGui::RadioButton("Wejściowego", &modeD, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Wyjsciowego", &modeD, 1);
+    ImGui::RadioButton("Wyjściowego", &modeD, 1);
     if (modeD == InputDist)
         ImGui::PlotLines("##", inputImage.GetDistributor(), MAX_VAL, 0, NULL, 0, 255, ImVec2(HIST_W, HIST_H));
     if (modeD == OutputDist)
@@ -340,9 +336,9 @@ void App::DrawHistogramsAndFunctions()
     // out
 
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);
-    ImGui::BeginChild("Histogram wyjsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
-    ImGui::Text("Obraz wyjsciowy");
-    ImGui::RadioButton("Jasnosc", &modeO, 0);
+    ImGui::BeginChild("Histogram wyjściowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
+    ImGui::Text("Obraz wyjściowy");
+    ImGui::RadioButton("Jasność", &modeO, 0);
     ImGui::SameLine();
     ImGui::RadioButton("R", &modeO, 1);
     ImGui::SameLine();
@@ -377,9 +373,9 @@ void App::DrawAlgMenuElements()
         algName = "Negatyw";
         algS = Negative;
     }
-    if (ImGui::MenuItem("Rozjasnij", NULL, algS == Brighten))
+    if (ImGui::MenuItem("Rozjaśnij", NULL, algS == Brighten))
     {
-        algName = "Rozjasnij";
+        algName = "Rozjaśnij";
         algS = Brighten;
     }
     if (ImGui::MenuItem("Kontrast", NULL, algS == Contrast))
@@ -387,14 +383,14 @@ void App::DrawAlgMenuElements()
         algName = "Kontrast";
         algS = Contrast;
     }
-    if (ImGui::MenuItem("Potegowanie", NULL, algS == Exponentiation))
+    if (ImGui::MenuItem("Potęgowanie", NULL, algS == Exponentiation))
     {
-        algName = "Potegowanie";
+        algName = "Potęgowanie";
         algS = Exponentiation;
     }
-    if (ImGui::MenuItem("Wyrownanie histogramu", NULL, algS == LeveledHistogram))
+    if (ImGui::MenuItem("Wyrównanie histogramu", NULL, algS == LeveledHistogram))
     {
-        algName = "Wyrownanie histogramu";
+        algName = "Wyrównanie histogramu";
         algS = LeveledHistogram;
     }
     if (ImGui::MenuItem("Binaryzacja", NULL, algS == Binarization))
@@ -449,7 +445,7 @@ void App::DrawLoadPopup()
         ImGui::EndChild();
         ImGui::Separator();
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Otworz", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Otwórz", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
             {
@@ -469,7 +465,7 @@ void App::DrawLoadPopup()
                 FileSelector::GetInstance().GoUpADirectory();
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             FileSelector::GetInstance().GoUpADirectory();
         }
@@ -482,13 +478,13 @@ void App::DrawLoadPopup()
 
         if (errorPopupActive)
         {
-            ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
+            ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowSize(ImVec2(0, 100));
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+            if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
             {
-                ImGui::Text("Nie udalo sie wczytac pliku");
+                ImGui::Text("Nie udało sie wczytać pliku");
                 ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
                 if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
                 {
@@ -564,7 +560,7 @@ void App::DrawSavePopup()
                 FileSelector::GetInstance().GoUpADirectory();
         }
         ImGui::SetCursorPosX(offset);
-        if (ImGui::Button("Folder wyzej", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             FileSelector::GetInstance().GoUpADirectory();
         }
@@ -577,12 +573,12 @@ void App::DrawSavePopup()
 
         if (warningPopupActive)
         {
-            ImGui::OpenPopup("OSTRZEZENIE", ImGuiPopupFlags_NoReopen);
+            ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("OSTRZEZENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+            if (ImGui::BeginPopupModal("OSTRZEŻENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
             {
-                ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisac?");
+                ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
                 ImGui::Separator();
 
                 int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - 20) / 2;
@@ -616,13 +612,13 @@ void App::DrawSavePopup()
 
         if (errorPopupActive)
         {
-            ImGui::OpenPopup("BLAD", ImGuiPopupFlags_NoReopen);
+            ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowSize(ImVec2(0, 100));
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("BLAD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+            if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
             {
-                ImGui::Text("Nazwa pliku nie moze byc pusta");
+                ImGui::Text("Nazwa pliku nie może być pusta");
                 ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
                 if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
                 {
@@ -640,12 +636,12 @@ void App::DrawSaveWarningPopup()
 {
     // can not be opend if thread is running
 
-    ImGui::OpenPopup("OSTRZEZENIE", ImGuiPopupFlags_NoReopen);
+    ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("OSTRZEZENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+    if (ImGui::BeginPopupModal("OSTRZEŻENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisac?");
+        ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
         ImGui::Separator();
 
         int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - 20) / 2;
@@ -676,7 +672,7 @@ void App::DrawMiddleButtonsWindow(float h)
     ImGui::Text("%s", algName.c_str());
 
     ImGui::SeparatorText("Rozpocznij/Przerwij");
-    if (ImGui::Button("Przetworz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    if (ImGui::Button("Przetwórz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         // not valid for transformation
         if (algS == None || inputImage.NoSurface())
@@ -775,7 +771,7 @@ void App::DrawMiddleButtonsWindow(float h)
                     outputImage.RefreshTexture();
                     Mutex::GetInstance().Unlock();
                 }
-                ImGui::Text("Ukonczone");
+                ImGui::Text("Ukończone");
                 ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
                 if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
                 {
@@ -824,10 +820,10 @@ void App::DrawMiddleButtonsWindow(float h)
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Brighten:
-            ImGui::SliderInt("O ile rozjasnic?", &params.value, -255, 255);
+            ImGui::SliderInt("O ile rozjaśnić?", &params.value, -255, 255);
             break;
         case Contrast:
-            ImGui::SliderFloat("O ile zmienic", &params.contrast, 0.1, 5.0);
+            ImGui::SliderFloat("O ile zmienić", &params.contrast, 0.1, 5.0);
             break;
         case Exponentiation:
             ImGui::SliderFloat("Alfa", &params.alfa, 0.1, 3.0);
@@ -906,10 +902,10 @@ void App::DrawMiddleButtonsWindow(float h)
                 params.linearMask7x7 = SHARPENING_7x7;
             }
 
-            ImGui::RadioButton("Wlasna", &params.linerFilterS, Algorithms::LinearFilters::CustomL);
+            ImGui::RadioButton("Własna", &params.linerFilterS, Algorithms::LinearFilters::CustomL);
             if (params.linerFilterS == Algorithms::LinearFilters::CustomL)
             {
-                ImGui::Text("To może mieć ciewawe efekty");
+                ImGui::Text("To może mieć ciekawe efekty");
                 DrawLinearInputArray();
             }
             else
@@ -937,10 +933,10 @@ void App::DrawMiddleButtonsWindow(float h)
                 params.medianMask7x7 = MEDIAN_CROSS_7x7;
             }
             ImGui::SameLine();
-            ImGui::RadioButton("Wlasna", &params.medianFilterS, Algorithms::MedianFilters::CustomM);
+            ImGui::RadioButton("Własna", &params.medianFilterS, Algorithms::MedianFilters::CustomM);
             if (params.medianFilterS == Algorithms::MedianFilters::CustomM)
             {
-                ImGui::Text("To może mieć ciewawe efekty");
+                ImGui::Text("To może mieć ciekawe efekty");
                 DrawMedianInputArray();
             }
             else
@@ -948,7 +944,7 @@ void App::DrawMiddleButtonsWindow(float h)
             break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Powrot", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
@@ -1105,3 +1101,4 @@ void App::DrawMedianDisplayArray()
         ImGui::EndTable();
     }
 }
+

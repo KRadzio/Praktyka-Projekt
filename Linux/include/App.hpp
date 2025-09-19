@@ -118,9 +118,9 @@ private:
     // add new directory button in save as window
     // add a setting to how often to refresh the transformed image
     // add a transformation function diragram in the middle of the bottom bar
-    // maybe add shortcuts?
     // make a help window
     // resize some windows
+    // change how critical section is handled
 
     // image histograms and plot flags
     int modeI = Brightnes;
