@@ -177,6 +177,42 @@
         }                                                                                                                                                                                                                                                                                                                     \
     }
 
+#define EMPTY_3x3                                             \
+    {                                                         \
+        {                                                     \
+            {{false, false, false}}, {{false, false, false}}, \
+            {                                                 \
+                {                                             \
+                    false, false, false                       \
+                }                                             \
+            }                                                 \
+        }                                                     \
+    }
+
+#define EMPTY_5x5                                                                                                                                                       \
+    {                                                                                                                                                                   \
+        {                                                                                                                                                               \
+            {{false, false, false, false, false}}, {{false, false, false, false, false}}, {{false, false, false, false, false}}, {{false, false, false, false, false}}, \
+            {                                                                                                                                                           \
+                {                                                                                                                                                       \
+                    false, false, false, false, false                                                                                                                   \
+                }                                                                                                                                                       \
+            }                                                                                                                                                           \
+        }                                                                                                                                                               \
+    }
+
+#define EMPTY_7x7                                                                                                                                                                                                                                                                                                                         \
+    {                                                                                                                                                                                                                                                                                                                                     \
+        {                                                                                                                                                                                                                                                                                                                                 \
+            {{false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}}, \
+            {                                                                                                                                                                                                                                                                                                                             \
+                {                                                                                                                                                                                                                                                                                                                         \
+                    false, false, false, false, false, false, false                                                                                                                                                                                                                                                                       \
+                }                                                                                                                                                                                                                                                                                                                         \
+            }                                                                                                                                                                                                                                                                                                                             \
+        }                                                                                                                                                                                                                                                                                                                                 \
+    }
+
 namespace Algorithms
 {
     enum BinarizationMethod
@@ -236,6 +272,16 @@ namespace Algorithms
         std::array<std::array<bool, 3>, 3> medianMask3x3 = MEDIAN_3x3;
         std::array<std::array<bool, 5>, 5> medianMask5x5 = MEDIAN_5x5;
         std::array<std::array<bool, 7>, 7> medianMask7x7 = MEDIAN_7x7;
+        // Erosion
+        int erosionFilterSize = S3x3;
+        std::array<std::array<bool, 3>, 3> erosionElement3x3 = EMPTY_3x3;
+        std::array<std::array<bool, 5>, 5> erosionElement5x5 = EMPTY_5x5;
+        std::array<std::array<bool, 7>, 7> erosionElement7x7 = EMPTY_7x7;
+        // Dilatation
+        int dilatationFilterSize = S3x3;
+        std::array<std::array<bool, 3>, 3> dilatationElement3x3 = EMPTY_3x3;
+        std::array<std::array<bool, 5>, 5> dilatationElement5x5 = EMPTY_5x5;
+        std::array<std::array<bool, 7>, 7> dilatationElement7x7 = EMPTY_7x7;
     };
 
     void CreateNegative(Image *outputImage);
@@ -253,6 +299,14 @@ namespace Algorithms
     void LinearFilter(Image *outputImage, ParametersStruct *params);
 
     void MedianFilter(Image *outputImage, ParametersStruct *params);
+
+    void Erosion(Image* outputImage, ParametersStruct *params);
+
+    void Dilatation(Image* outputImage, ParametersStruct *params);
+
+    void Skeletonization(Image* outputImage, ParametersStruct *params);
+
+    void Hought(Image* outputImage, ParametersStruct *params);
 
 }
 

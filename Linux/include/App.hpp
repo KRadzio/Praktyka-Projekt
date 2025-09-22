@@ -18,7 +18,7 @@
 #include "Renderer.hpp"
 #include "Mutex.hpp"
 
-#define POPUP_SIZE 200
+// bottom bar
 #define MENU_ALG_HIST_H 329
 #define HIST_BAR_HEIGHT 310
 #define HIST_WINDOW_W 286
@@ -26,19 +26,29 @@
 #define BORDER_OFFSET 20
 #define HIST_W 266
 #define HIST_H 200
+
+// middle menu
 #define MIDDLE_W 200
 #define MIDDLE_BUTTON_W 180
 #define MIDDLE_BUTTON_H 30
 #define CANCEL_BUTTON_W 120
+
+// popups
+#define POPUP_SIZE 200
 #define FILE_POPUP_WIDTH 300
 #define FILE_POPUP_HEIGHT 340
 #define SAVE_POPUP_HEIGHT 480
+
+// dir items
 #define DIR_LIST_WIDTH 290
 #define DIR_LIST_HEIGHT 200
-#define REFRESH_INTERVAL 15.0
+
+// arrays
 #define ARRAY_INPUT_WIDTH 100
 #define ARRAY_ITEM_WIDTH 30
 #define ARRAY_FIELD_WIDTH 40
+
+#define DEFAULT_REFRESH_INTERVAL 15.0
 
 class App
 {
@@ -69,7 +79,9 @@ public:
         LinearFilter,
         MedianFilter,
         Erosion,
-        Dilatation
+        Dilatation,
+        Skeletonization,
+        Hought
     };
 
 public:
@@ -112,15 +124,19 @@ private:
     bool inProgressPopupActive = false;
     bool justRefreshed = false;
     bool errorCopying = false;
+    bool settingsPopupActive = false;
+    bool newDirPopupActive = false;
+    bool helpWindowActive = false;
 
     // add more algs (in progress)
     // change how extension is checked in image?
     // add new directory button in save as window
     // add a setting to how often to refresh the transformed image
     // add a transformation function diragram in the middle of the bottom bar
+    // ^^^ nat all algorithms need this
     // make a help window
     // resize some windows
-    // change how critical section is handled
+    // change how critical section is handled (copy then work on copy)
 
     // image histograms and plot flags
     int modeI = Brightnes;
@@ -132,17 +148,18 @@ private:
     int currHeight = 720;
 
     // algorithm state
-    std::string algName = "Brak wybranego algorytmu";
-    int algS = None;
+    std::string selectedAlgorithmName = "Brak wybranego algorytmu";
+    int algorithmSelected = None;
 
     // File name and extension
     char fileNameBuff[64];
-    int currExt = 0;
+    int currExtension = 0;
 
     // Thread
-    std::thread algThread;
-    float counterImage = 0.0;
-    float counterHist = 0.0;
+    std::thread algorithmThread;
+    float counterRefreshImage = 0.0;
+    float counterRefreshHist = 0.0;
+    float refreshIntervalValue = DEFAULT_REFRESH_INTERVAL;
 
     // Params
     Algorithms::ParametersStruct params; // CS

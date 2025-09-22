@@ -47,7 +47,7 @@ int App::Init()
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
     lato = io->Fonts->AddFontFromFileTTF("./resources/Lato-Regular.ttf");
-    if(lato == nullptr)
+    if (lato == nullptr)
         return -1;
 
     // Setup Dear ImGui style
@@ -57,7 +57,7 @@ int App::Init()
     // Setup scaling
     style = &ImGui::GetStyle();
     style->ScaleAllSizes(mainScale);
-    style->FontScaleDpi = mainScale; 
+    style->FontScaleDpi = mainScale;
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(mainWindow, Renderer::GetInstance().GetRenderer());
@@ -97,20 +97,19 @@ int App::MainLoop()
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-
         Render();
 
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration<float>(end - beg);
-        if (counterImage > 0)
-            counterImage -= duration.count();
-        if (counterImage < 0)
-            counterImage = 0.0;
+        if (counterRefreshImage > 0)
+            counterRefreshImage -= duration.count();
+        if (counterRefreshImage < 0)
+            counterRefreshImage = 0.0;
 
-        if (counterHist > 0)
-            counterHist -= duration.count();
-        if (counterHist < 0)
-            counterHist = 0.0;
+        if (counterRefreshHist > 0)
+            counterRefreshHist -= duration.count();
+        if (counterRefreshHist < 0)
+            counterRefreshHist = 0.0;
     }
 
     return 0;
@@ -240,10 +239,10 @@ void App::DrawPictureSpace()
     if (!outputImage.NoTexture())
     {
         // refresh it only if is getting transformed and in intervals
-        if (Mutex::GetInstance().IsThreadRunning() && counterImage == 0.0)
+        if (Mutex::GetInstance().IsThreadRunning() && counterRefreshImage == 0.0)
         {
             outputImage.RefreshTexture();
-            counterImage = REFRESH_INTERVAL;
+            counterRefreshImage = refreshIntervalValue;
         }
         if (outputImage.GetWidth() < ImGui::GetWindowWidth())
             ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
@@ -266,7 +265,7 @@ void App::DrawPictureSpace()
             if (inputImage.NoSurface())
                 ImGui::Text("Brak wczytanego obrazu");
             // no alg selected
-            else if (algS == None)
+            else if (algorithmSelected == None)
                 ImGui::Text("Brak wybranego algorytmu");
             // not transformed
             else if (errorCopying)
@@ -348,10 +347,10 @@ void App::DrawHistogramsAndFunctions()
     // CS
     Mutex::GetInstance().Lock();
     // refresh it only if is getting transformed and in intervals
-    if (!outputImage.NoSurface() && Mutex::GetInstance().IsThreadRunning() && counterHist == 0.0)
+    if (!outputImage.NoSurface() && Mutex::GetInstance().IsThreadRunning() && counterRefreshHist == 0.0)
     {
         outputImage.RefreshPixelValuesArrays();
-        counterHist = REFRESH_INTERVAL;
+        counterRefreshHist = refreshIntervalValue;
     }
     if (modeO == Brightnes)
         ImGui::PlotHistogram("##", outputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
@@ -368,45 +367,65 @@ void App::DrawHistogramsAndFunctions()
 
 void App::DrawAlgMenuElements()
 {
-    if (ImGui::MenuItem("Negatyw", NULL, algS == Negative))
+    if (ImGui::MenuItem("Negatyw", NULL, algorithmSelected == Negative))
     {
-        algName = "Negatyw";
-        algS = Negative;
+        selectedAlgorithmName = "Negatyw";
+        algorithmSelected = Negative;
     }
-    if (ImGui::MenuItem("Rozjaśnij", NULL, algS == Brighten))
+    if (ImGui::MenuItem("Rozjaśnij", NULL, algorithmSelected == Brighten))
     {
-        algName = "Rozjaśnij";
-        algS = Brighten;
+        selectedAlgorithmName = "Rozjaśnij";
+        algorithmSelected = Brighten;
     }
-    if (ImGui::MenuItem("Kontrast", NULL, algS == Contrast))
+    if (ImGui::MenuItem("Kontrast", NULL, algorithmSelected == Contrast))
     {
-        algName = "Kontrast";
-        algS = Contrast;
+        selectedAlgorithmName = "Kontrast";
+        algorithmSelected = Contrast;
     }
-    if (ImGui::MenuItem("Potęgowanie", NULL, algS == Exponentiation))
+    if (ImGui::MenuItem("Potęgowanie", NULL, algorithmSelected == Exponentiation))
     {
-        algName = "Potęgowanie";
-        algS = Exponentiation;
+        selectedAlgorithmName = "Potęgowanie";
+        algorithmSelected = Exponentiation;
     }
-    if (ImGui::MenuItem("Wyrównanie histogramu", NULL, algS == LeveledHistogram))
+    if (ImGui::MenuItem("Wyrównanie histogramu", NULL, algorithmSelected == LeveledHistogram))
     {
-        algName = "Wyrównanie histogramu";
-        algS = LeveledHistogram;
+        selectedAlgorithmName = "Wyrównanie histogramu";
+        algorithmSelected = LeveledHistogram;
     }
-    if (ImGui::MenuItem("Binaryzacja", NULL, algS == Binarization))
+    if (ImGui::MenuItem("Binaryzacja", NULL, algorithmSelected == Binarization))
     {
-        algName = "Binaryzacja";
-        algS = Binarization;
+        selectedAlgorithmName = "Binaryzacja";
+        algorithmSelected = Binarization;
     }
-    if (ImGui::MenuItem("Filtry Liniowe", NULL, algS == LinearFilter))
+    if (ImGui::MenuItem("Filtry Liniowe", NULL, algorithmSelected == LinearFilter))
     {
-        algName = "Filtry Liniowe";
-        algS = LinearFilter;
+        selectedAlgorithmName = "Filtry Liniowe";
+        algorithmSelected = LinearFilter;
     }
-    if (ImGui::MenuItem("Filtry medianowe", NULL, algS == MedianFilter))
+    if (ImGui::MenuItem("Filtry medianowe", NULL, algorithmSelected == MedianFilter))
     {
-        algName = "Filtry medianowe";
-        algS = MedianFilter;
+        selectedAlgorithmName = "Filtry medianowe";
+        algorithmSelected = MedianFilter;
+    }
+    if (ImGui::MenuItem("Erozja", NULL, algorithmSelected == Erosion))
+    {
+        selectedAlgorithmName = "Erozja";
+        algorithmSelected = Erosion;
+    }
+    if (ImGui::MenuItem("Dylatacja", NULL, algorithmSelected == Dilatation))
+    {
+        selectedAlgorithmName = "Dylatacja";
+        algorithmSelected = Dilatation;
+    }
+    if (ImGui::MenuItem("Szkieletyzacja", NULL, algorithmSelected == Skeletonization))
+    {
+        selectedAlgorithmName = "Szkieletyzacja";
+        algorithmSelected = Skeletonization;
+    }
+    if (ImGui::MenuItem("Transformacja Houghta", NULL, algorithmSelected == Hought))
+    {
+        selectedAlgorithmName = "Transformacja Houghta";
+        algorithmSelected = Hought;
     }
 }
 
@@ -525,7 +544,7 @@ void App::DrawSavePopup()
 
         const char *ext[] = {".png", ".jpg", ".bmp"};
         ImGui::Text("Rozszerzenie");
-        ImGui::Combo("wybierz", &currExt, ext, IM_ARRAYSIZE(ext));
+        ImGui::Combo("wybierz", &currExtension, ext, IM_ARRAYSIZE(ext));
 
         ImGui::Text("Zapisz - jezeli chcemy nadac nazwe");
         ImGui::Text("Wybierz jezeli chcemy wybrac \n istniejacy plik lub folder");
@@ -539,14 +558,14 @@ void App::DrawSavePopup()
             std::string buffStr = fileNameBuff;
             if (buffStr == "")
                 errorPopupActive = true;
-            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrPath().string() + '/' + fileNameBuff + ext[currExt]))
+            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrPath().string() + '/' + fileNameBuff + ext[currExtension]))
             {
                 warningPopupActive = true;
                 customName = true;
             }
             else
             {
-                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExt);
+                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExtension);
                 saveAsPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
@@ -588,7 +607,7 @@ void App::DrawSavePopup()
                 {
                     if (customName)
                     {
-                        outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExt);
+                        outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExtension);
                         customName = false;
                     }
                     else
@@ -669,13 +688,13 @@ void App::DrawMiddleButtonsWindow(float h)
     ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     ImGui::Text("Wybrany algorytm:");
-    ImGui::Text("%s", algName.c_str());
+    ImGui::Text("%s", selectedAlgorithmName.c_str());
 
     ImGui::SeparatorText("Rozpocznij/Przerwij");
     if (ImGui::Button("Przetwórz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         // not valid for transformation
-        if (algS == None || inputImage.NoSurface())
+        if (algorithmSelected == None || inputImage.NoSurface())
             errorPopupAlgActive = true;
         else
         {
@@ -689,39 +708,55 @@ void App::DrawMiddleButtonsWindow(float h)
             }
         }
 
-        switch (algS)
+        switch (algorithmSelected)
         {
         case Negative:
-            algThread = std::thread(&Algorithms::CreateNegative, &outputImage);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::CreateNegative, &outputImage);
+            algorithmThread.detach();
             break;
         case Brighten:
-            algThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
+            algorithmThread.detach();
             break;
         case Contrast:
-            algThread = std::thread(&Algorithms::Contrast, &outputImage, &params);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::Contrast, &outputImage, &params);
+            algorithmThread.detach();
             break;
         case Exponentiation:
-            algThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
+            algorithmThread.detach();
             break;
         case LeveledHistogram:
-            algThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
+            algorithmThread.detach();
             break;
         case Binarization:
-            algThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
+            algorithmThread.detach();
             break;
         case LinearFilter:
-            algThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
+            algorithmThread.detach();
             break;
         case MedianFilter:
-            algThread = std::thread(&Algorithms::MedianFilter, &outputImage, &params);
-            algThread.detach();
+            algorithmThread = std::thread(&Algorithms::MedianFilter, &outputImage, &params);
+            algorithmThread.detach();
+            break;
+        case Erosion:
+            algorithmThread = std::thread(&Algorithms::Erosion, &outputImage, &params);
+            algorithmThread.detach();
+            break;
+        case Dilatation:
+            algorithmThread = std::thread(&Algorithms::Dilatation, &outputImage, &params);
+            algorithmThread.detach();
+            break;
+        case Skeletonization:
+            algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage, &params);
+            algorithmThread.detach();
+            break;
+        case Hought:
+            algorithmThread = std::thread(&Algorithms::Hought, &outputImage, &params);
+            algorithmThread.detach();
             break;
         default:
             break;
@@ -762,7 +797,7 @@ void App::DrawMiddleButtonsWindow(float h)
             }
             else
             {
-                // tmp solution but it works
+                // refresh only once after
                 if (!justRefreshed)
                 {
                     justRefreshed = true;
@@ -811,7 +846,7 @@ void App::DrawMiddleButtonsWindow(float h)
     // can not be opend if thread is running
     if (ImGui::BeginPopupModal("Parametry", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        switch (algS)
+        switch (algorithmSelected)
         {
         case None:
             ImGui::Text("Nie wybrano algorytmu");
@@ -942,6 +977,26 @@ void App::DrawMiddleButtonsWindow(float h)
             else
                 DrawMedianDisplayArray();
             break;
+        case Erosion:
+            ImGui::RadioButton("3x3", &params.erosionFilterSize, Algorithms::MatrixSize::S3x3);
+            ImGui::SameLine();
+            ImGui::RadioButton("5x5", &params.erosionFilterSize, Algorithms::MatrixSize::S5x5);
+            ImGui::SameLine();
+            ImGui::RadioButton("7x7", &params.erosionFilterSize, Algorithms::MatrixSize::S7x7);
+            break;
+        case Dilatation:
+            ImGui::RadioButton("3x3", &params.dilatationFilterSize, Algorithms::MatrixSize::S3x3);
+            ImGui::SameLine();
+            ImGui::RadioButton("5x5", &params.dilatationFilterSize, Algorithms::MatrixSize::S5x5);
+            ImGui::SameLine();
+            ImGui::RadioButton("7x7", &params.dilatationFilterSize, Algorithms::MatrixSize::S7x7);
+            break;
+        case Skeletonization:
+            ImGui::Text("Brak paramentrów dla tego algorytmu");
+            break;
+        case Hought:
+            ImGui::Text("?????");
+            break;
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -955,8 +1010,8 @@ void App::DrawMiddleButtonsWindow(float h)
     ImGui::SeparatorText("Reset");
     if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
-        algS = None;
-        algName = "Brak wybranego algorytmu";
+        algorithmSelected = None;
+        selectedAlgorithmName = "Brak wybranego algorytmu";
         outputImage.ClearImage();
     }
     // can not be opend if thread is running
@@ -981,6 +1036,16 @@ void App::DrawMiddleButtonsWindow(float h)
         params.medianMask3x3 = MEDIAN_3x3;
         params.medianMask5x5 = MEDIAN_5x5;
         params.medianMask7x7 = MEDIAN_7x7;
+        // erosion
+        params.erosionFilterSize = Algorithms::MatrixSize::S3x3;
+        params.erosionElement3x3 = EMPTY_3x3;
+        params.erosionElement5x5 = EMPTY_5x5;
+        params.erosionElement7x7 = EMPTY_7x7;
+        // dilatation
+        params.dilatationFilterSize = Algorithms::MatrixSize::S3x3;
+        params.dilatationElement3x3 = EMPTY_3x3;
+        params.dilatationElement5x5 = EMPTY_5x5;
+        params.dilatationElement7x7 = EMPTY_7x7;
     }
 
     ImGui::End();
@@ -1101,4 +1166,3 @@ void App::DrawMedianDisplayArray()
         ImGui::EndTable();
     }
 }
-

@@ -74,7 +74,7 @@ void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
 
 void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
 {
-    
+
     for (int i = 0; i < outputImage->GetWidth(); i++)
     {
         Mutex::GetInstance().Lock();
@@ -549,7 +549,7 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
                 for (int y = 0; y < maskSize; y++)
                 {
                     auto neighbourPix = copy.GetPixel(row + x - offset, col + y - offset);
-                    if(maskCopy[x][y])
+                    if (maskCopy[x][y])
                     {
                         JR.emplace(JR.end(), neighbourPix.r);
                         JG.emplace(JG.end(), neighbourPix.g);
@@ -562,9 +562,9 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
             std::sort(JG.begin(), JG.end());
             std::sort(JB.begin(), JB.end());
 
-            pix.r = JR[JR.size()/2];
-            pix.g = JG[JG.size()/2];
-            pix.b = JB[JB.size()/2];
+            pix.r = JR[JR.size() / 2];
+            pix.g = JG[JG.size() / 2];
+            pix.b = JB[JB.size() / 2];
 
             outputImage->SetPixel(row, col, pix);
         }
@@ -580,4 +580,20 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
+}
+
+void Algorithms::Erosion(Image *outputImage, ParametersStruct *params)
+{
+}
+
+void Algorithms::Dilatation(Image *outputImage, ParametersStruct *params)
+{
+}
+
+void Algorithms::Skeletonization(Image *outputImage, ParametersStruct *params)
+{
+}
+
+void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
+{
 }
