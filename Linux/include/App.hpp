@@ -54,6 +54,10 @@
 #define ARRAY_ITEM_WIDTH 30
 #define ARRAY_FIELD_WIDTH 40
 
+// help window
+#define HELP_WINDOW_WIDTH 400
+#define HELP_WINDOW_HEIGHT 300
+
 #define DEFAULT_REFRESH_INTERVAL 15.0
 
 class App
@@ -122,7 +126,8 @@ private:
     void DrawSettingsPopup();
     void DrawMiddleErrorPopup();
     void DrawInProgressPopup();
-    void DisplayParametersPopup();
+    void DrawParametersPopup();
+    void DrawResetDonePopup();
 
     // parameters popup split
     void DrawBinarizationParams();
@@ -160,14 +165,13 @@ private:
     bool newDirPopupActive = false;
     bool helpWindowActive = false;
     bool drawExtraFunctionDiagram = false;
+    bool resetDonePopupActive = false;
 
     // add more algs (in progress)
     // change how extension is checked in image?
     // add new directory button in save as window
-    // add a setting to how often to refresh the transformed image
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
-    // make a help window
     // change how critical section is handled (copy then work on copy)
 
     // image histograms and plot flags

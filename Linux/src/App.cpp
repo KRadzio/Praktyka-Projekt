@@ -344,7 +344,7 @@ void App::DrawMiddleButtonsWindow(float h)
         }
     }
 
-    DisplayParametersPopup();
+    DrawParametersPopup();
 
     // can not be opend if thread is running
     ImGui::SeparatorText("Reset");
@@ -353,10 +353,17 @@ void App::DrawMiddleButtonsWindow(float h)
         algorithmSelected = None;
         selectedAlgorithmName = "Brak wybranego algorytmu";
         outputImage.ClearImage();
+        resetDonePopupActive = true;
     }
     // can not be opend if thread is running
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
         ResetParameters();
+        resetDonePopupActive = true;
+    }
+
+    if(resetDonePopupActive)
+        DrawResetDonePopup();
 
     ImGui::End();
 }
@@ -717,7 +724,7 @@ void App::DrawSaveWarningAndErrorPopup()
     {
         ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowSize(ImVec2(0, 100));
+        ImGui::SetNextWindowSize(ImVec2(0, POPUP_HEIGHT));
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
@@ -770,6 +777,25 @@ void App::DrawNewDirPopup()
 
 void App::DrawSettingsPopup()
 {
+    if (settingsPopupActive)
+    {
+        ImGui::OpenPopup("Ustawienia", ImGuiPopupFlags_NoReopen);
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT + 40));
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("Ustawienia", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Text("Ustaw co ile sekund obraz\nwyjściowy ma się odświerzać");
+            ImGui::InputFloat("##", &refreshIntervalValue, 1);
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                settingsPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
 }
 
 void App::DrawMiddleErrorPopup()
@@ -853,7 +879,7 @@ void App::DrawInProgressPopup()
     }
 }
 
-void App::DisplayParametersPopup()
+void App::DrawParametersPopup()
 {
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -910,6 +936,25 @@ void App::DisplayParametersPopup()
         }
         ImGui::EndPopup();
     }
+}
+
+void App::DrawResetDonePopup()
+{
+    ImGui::OpenPopup("INFORMACJA");
+    ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT));
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("INFORMACJA"))
+    {
+        ImGui::Text("Zresetowano");
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+        if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+        {
+            resetDonePopupActive = false;
+            ImGui::CloseCurrentPopup();
+        }
+    }
+    ImGui::EndPopup();
 }
 
 void App::DrawBinarizationParams()
@@ -1071,6 +1116,14 @@ void App::DrawDilatationParams()
 
 void App::DrawHelpMenu()
 {
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(HELP_WINDOW_WIDTH, HELP_WINDOW_HEIGHT));
+    if (ImGui::Begin("O programie", &helpWindowActive, ImGuiWindowFlags_NoSavedSettings))
+    {
+        ImGui::Text("Ta sekcja jest jeszcze do uzupełnienia");
+        ImGui::End();
+    }
 }
 
 void App::LaunchAlgorithms()
