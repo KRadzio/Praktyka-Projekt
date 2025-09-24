@@ -18,6 +18,10 @@
 #include "Renderer.hpp"
 #include "Mutex.hpp"
 
+// window size
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
+
 // events
 #define QUIT -1
 #define MINIMIZED -2
@@ -178,8 +182,8 @@ private:
     int modeD = InputDist;
 
     // window
-    int currWidth = 1280;
-    int currHeight = 720;
+    int currWidth = WINDOW_HEIGHT;
+    int currHeight = WINDOW_HEIGHT;
 
     // algorithm state
     std::string selectedAlgorithmName = "Brak wybranego algorytmu";
