@@ -1171,11 +1171,11 @@ void App::LaunchAlgorithms()
         algorithmThread.detach();
         break;
     case Skeletonization:
-        algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage, &params);
+        algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage);
         algorithmThread.detach();
         break;
     case Hought:
-        algorithmThread = std::thread(&Algorithms::Hought, &outputImage, &params);
+        algorithmThread = std::thread(&Algorithms::Hought, &outputImage);
         algorithmThread.detach();
         break;
     default:

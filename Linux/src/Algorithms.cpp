@@ -2,19 +2,25 @@
 
 void Algorithms::CreateNegative(Image *outputImage)
 {
-    for (int i = 0; i < outputImage->GetWidth(); i++)
+    Mutex::GetInstance().Lock();
+    Image copy = *outputImage;
+    Mutex::GetInstance().Unlock();
+
+    for (int i = 0; i < copy.GetWidth(); i++)
     {
-        Mutex::GetInstance().Lock();
-        for (int j = 0; j < outputImage->GetHeight(); j++)
+        for (int j = 0; j < copy.GetHeight(); j++)
         {
-            auto pix = outputImage->GetPixel(i, j);
+            auto pix = copy.GetPixel(i, j);
             pix.b = 255 - pix.b;
             pix.g = 255 - pix.g;
             pix.r = 255 - pix.r;
-            outputImage->SetPixel(i, j, pix);
+            copy.SetPixel(i, j, pix);
         }
+        Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = copy;
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -23,44 +29,54 @@ void Algorithms::CreateNegative(Image *outputImage)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = copy;
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
 {
 
-    for (int i = 0; i < outputImage->GetWidth(); i++)
-    {
-        Mutex::GetInstance().Lock();
-        for (int j = 0; j < outputImage->GetHeight(); j++)
-        {
-            auto pix = outputImage->GetPixel(i, j);
+    Mutex::GetInstance().Lock();
+    Image copy = *outputImage;
+    auto value = params->value;
+    Mutex::GetInstance().Unlock();
 
-            if (pix.b + params->value > 255)
+    for (int i = 0; i < copy.GetWidth(); i++)
+    {
+        for (int j = 0; j < copy.GetHeight(); j++)
+        {
+            auto pix = copy.GetPixel(i, j);
+
+            if (pix.b + value > 255)
                 pix.b = 255;
-            else if (pix.b + params->value < 0)
+            else if (pix.b + value < 0)
                 pix.b = 0;
             else
-                pix.b += params->value;
+                pix.b += value;
 
-            if (pix.g + params->value > 255)
+            if (pix.g + value > 255)
                 pix.g = 255;
-            else if (pix.g + params->value < 0)
+            else if (pix.g + value < 0)
                 pix.g = 0;
             else
-                pix.g += params->value;
+                pix.g += value;
 
-            if (pix.r + params->value > 255)
+            if (pix.r + value > 255)
                 pix.r = 255;
-            else if (pix.r + params->value < 0)
+            else if (pix.r + value < 0)
                 pix.r = 0;
             else
-                pix.r += params->value;
+                pix.r += value;
 
-            outputImage->SetPixel(i, j, pix);
+            copy.SetPixel(i, j, pix);
         }
+
+        Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = copy;
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -69,37 +85,47 @@ void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = copy;
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
 {
 
-    for (int i = 0; i < outputImage->GetWidth(); i++)
-    {
-        Mutex::GetInstance().Lock();
-        for (int j = 0; j < outputImage->GetHeight(); j++)
-        {
-            auto pix = outputImage->GetPixel(i, j);
+    Mutex::GetInstance().Lock();
+    Image copy = *outputImage;
+    auto contrast = params->contrast;
+    Mutex::GetInstance().Unlock();
 
-            if (pix.b * params->contrast > 255)
+    for (int i = 0; i < copy.GetWidth(); i++)
+    {
+        for (int j = 0; j < copy.GetHeight(); j++)
+        {
+            auto pix = copy.GetPixel(i, j);
+
+            if (pix.b * contrast > 255)
                 pix.b = 255;
             else
-                pix.b *= params->contrast;
+                pix.b *= contrast;
 
-            if (pix.g * params->contrast > 255)
+            if (pix.g * contrast > 255)
                 pix.g = 255;
             else
-                pix.g *= params->contrast;
+                pix.g *= contrast;
 
-            if (pix.r * params->contrast > 255)
+            if (pix.r * contrast > 255)
                 pix.r = 255;
             else
-                pix.r *= params->contrast;
-            outputImage->SetPixel(i, j, pix);
+                pix.r *= contrast;
+            copy.SetPixel(i, j, pix);
         }
+
+        Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = copy;
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -108,32 +134,37 @@ void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = copy;
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
 {
     Mutex::GetInstance().Lock();
+    Image copy = *outputImage;
     int tab[256];
     for (int i = 0; i < 256; i++)
         tab[i] = 255.0 * pow((float)i / 255.0, params->alfa);
 
     Mutex::GetInstance().Unlock();
 
-    for (int i = 0; i < outputImage->GetWidth(); i++)
+    for (int i = 0; i < copy.GetWidth(); i++)
     {
-        Mutex::GetInstance().Lock();
-        for (int j = 0; j < outputImage->GetHeight(); j++)
+        for (int j = 0; j < copy.GetHeight(); j++)
         {
-            auto pix = outputImage->GetPixel(i, j);
+            auto pix = copy.GetPixel(i, j);
 
             pix.b = tab[pix.b];
             pix.g = tab[pix.g];
             pix.r = tab[pix.r];
-            outputImage->SetPixel(i, j, pix);
+            copy.SetPixel(i, j, pix);
         }
+        Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = copy;
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -142,34 +173,36 @@ void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = copy;
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::LevelHistogram(Image *outputImage)
 {
     Mutex::GetInstance().Lock();
-
-    float *distR = outputImage->GetDistributorR();
-    float *distG = outputImage->GetDistributorG();
-    float *distB = outputImage->GetDistributorB();
-
+    auto copy = *outputImage;
     Mutex::GetInstance().Unlock();
 
-    for (int i = 0; i < outputImage->GetWidth(); i++)
+    float *distR = copy.GetDistributorR();
+    float *distG = copy.GetDistributorG();
+    float *distB = copy.GetDistributorB();
+
+    for (int i = 0; i < copy.GetWidth(); i++)
     {
-        for (int j = 0; j < outputImage->GetHeight(); j++)
+        for (int j = 0; j < copy.GetHeight(); j++)
         {
-            Mutex::GetInstance().Lock();
-            Image::Pixel pix = outputImage->GetPixel(i, j);
+            Image::Pixel pix = copy.GetPixel(i, j);
             pix.b = distB[pix.b];
             pix.g = distG[pix.g];
             pix.r = distR[pix.r];
-            outputImage->SetPixel(i, j, pix);
-            Mutex::GetInstance().Unlock();
+            copy.SetPixel(i, j, pix);
         }
         Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = copy;
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -178,6 +211,8 @@ void Algorithms::LevelHistogram(Image *outputImage)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = copy;
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
@@ -189,6 +224,7 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
     int boundCount;
     Mutex::GetInstance().Lock();
 
+    auto copy = *outputImage;
     // copy to local vars
     method = params->method;
     boundCount = params->boundCount;
@@ -207,13 +243,13 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
 
     if (method == None)
     {
-        for (int i = 0; i < outputImage->GetWidth(); i++)
+        for (int i = 0; i < copy.GetWidth(); i++)
         {
-            Mutex::GetInstance().Lock();
-            for (int j = 0; j < outputImage->GetHeight(); j++)
+
+            for (int j = 0; j < copy.GetHeight(); j++)
             {
 
-                Image::Pixel pix = outputImage->GetPixel(i, j);
+                Image::Pixel pix = copy.GetPixel(i, j);
 
                 if (boundCount == 1)
                 {
@@ -246,11 +282,13 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                     }
                 }
 
-                outputImage->SetPixel(i, j, pix);
+                copy.SetPixel(i, j, pix);
             }
-
+            Mutex::GetInstance().Lock();
             if (!Mutex::GetInstance().IsThreadRunning())
             {
+                *outputImage = copy;
+                copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -265,22 +303,23 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
         float sum_JG = 0;
         float sum_G = 0;
 
-        for (int i = 1; i < outputImage->GetWidth() - 1; i++)
+        for (int i = 1; i < copy.GetWidth() - 1; i++)
         {
-            Mutex::GetInstance().Lock();
 
-            for (int j = 1; j < outputImage->GetHeight() - 1; j++)
+            for (int j = 1; j < copy.GetHeight() - 1; j++)
             {
-                Image::Pixel pix = outputImage->GetPixel(i, j);
-                Gx = outputImage->GetPixel(i + 1, j).brightnes - outputImage->GetPixel(i - 1, j).brightnes;
-                Gy = outputImage->GetPixel(i, j + 1).brightnes - outputImage->GetPixel(i, j - 1).brightnes;
+                Image::Pixel pix = copy.GetPixel(i, j);
+                Gx = copy.GetPixel(i + 1, j).brightnes - copy.GetPixel(i - 1, j).brightnes;
+                Gy = copy.GetPixel(i, j + 1).brightnes - copy.GetPixel(i, j - 1).brightnes;
                 G = std::max(abs(Gx), abs(Gy));
                 sum_G += G;
                 sum_JG += pix.brightnes * G;
             }
-
+            Mutex::GetInstance().Lock();
             if (!Mutex::GetInstance().IsThreadRunning())
             {
+                *outputImage = copy;
+                copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -298,7 +337,7 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
         bool end = false;
         float p[MAX_VAL];
         Mutex::GetInstance().Lock();
-        outputImage->CopyNormalisedBrightnessHistogram(p);
+        copy.CopyNormalisedBrightnessHistogram(p);
         Mutex::GetInstance().Unlock();
 
         for (int i = 0; i < MAX_VAL; i++)
@@ -353,6 +392,8 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Lock();
             if (!Mutex::GetInstance().IsThreadRunning())
             {
+                *outputImage = copy;
+                copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -360,23 +401,25 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
         }
     }
 
-    if (params->method != None)
+    if (method != None)
     {
-        for (int i = 0; i < outputImage->GetWidth(); i++)
+        for (int i = 0; i < copy.GetWidth(); i++)
         {
-            Mutex::GetInstance().Lock();
 
-            for (int j = 0; j < outputImage->GetHeight(); j++)
+            for (int j = 0; j < copy.GetHeight(); j++)
             {
-                Image::Pixel pix = outputImage->GetPixel(i, j);
+                Image::Pixel pix = copy.GetPixel(i, j);
                 if (pix.brightnes < lowerBound)
-                    outputImage->SetPixelBlack(i, j);
+                    copy.SetPixelBlack(i, j);
                 else
-                    outputImage->SetPixelWhite(i, j);
+                    copy.SetPixelWhite(i, j);
             }
 
+            Mutex::GetInstance().Lock();
             if (!Mutex::GetInstance().IsThreadRunning())
             {
+                *outputImage = copy;
+                copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
             }
@@ -386,11 +429,14 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = copy;
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
 {
+    // only for pixels, the result is saved to fullCopy
     Image copy;
     int offset = 0;
     int maskCopy[7][7];
@@ -399,6 +445,9 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
     int maskSum = 0;
     int filter;
     Mutex::GetInstance().Lock();
+
+    // to set pixels
+    auto fullCopy = *outputImage;
 
     copy.CopyOnlySurfaceAndSize(*outputImage);
     if (copy.NoSurface())
@@ -430,10 +479,9 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Unlock();
 
-    for (int row = offset; row < outputImage->GetWidth() - offset; row++)
+    for (int row = offset; row < copy.GetWidth() - offset; row++)
     {
-        Mutex::GetInstance().Lock();
-        for (int col = offset; col < outputImage->GetHeight() - offset; col++)
+        for (int col = offset; col < copy.GetHeight() - offset; col++)
         {
             auto pix = copy.GetPixel(row, col);
             int JR = 0;
@@ -486,11 +534,14 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
                 else
                     pix.b = JB;
             }
-            outputImage->SetPixel(row, col, pix);
+            fullCopy.SetPixel(row, col, pix);
         }
-
+        Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = fullCopy;
+            fullCopy.ClearImage();
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -499,16 +550,23 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = fullCopy;
+    fullCopy.ClearImage();
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
 {
+    // only for pixels
     Image copy;
     int offset = 0;
     int maskCopy[7][7];
     int maskSize = 0;
     Mutex::GetInstance().Lock();
+
+    // results go here
+    auto fullCopy = *outputImage;
 
     copy.CopyOnlySurfaceAndSize(*outputImage);
     if (copy.NoSurface())
@@ -534,10 +592,9 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Unlock();
 
-    for (int row = offset; row < outputImage->GetWidth() - offset; row++)
+    for (int row = offset; row < copy.GetWidth() - offset; row++)
     {
-        Mutex::GetInstance().Lock();
-        for (int col = offset; col < outputImage->GetHeight() - offset; col++)
+        for (int col = offset; col < copy.GetHeight() - offset; col++)
         {
             auto pix = copy.GetPixel(row, col);
             std::vector<int> JR;
@@ -566,11 +623,15 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
             pix.g = JG[JG.size() / 2];
             pix.b = JB[JB.size() / 2];
 
-            outputImage->SetPixel(row, col, pix);
+            fullCopy.SetPixel(row, col, pix);
         }
 
+        Mutex::GetInstance().Lock();
         if (!Mutex::GetInstance().IsThreadRunning())
         {
+            *outputImage = fullCopy;
+            fullCopy.ClearImage();
+            copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -579,21 +640,48 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
 
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = fullCopy;
+    fullCopy.ClearImage();
+    copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::Erosion(Image *outputImage, ParametersStruct *params)
 {
+    Mutex::GetInstance().Lock();
+    auto o = *outputImage;
+    o.ClearImage();
+    auto p = params->value;
+    p++;
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
 void Algorithms::Dilatation(Image *outputImage, ParametersStruct *params)
 {
+    Mutex::GetInstance().Lock();
+    auto o = *outputImage;
+    o.ClearImage();
+    auto p = params->value;
+    p++;
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
-void Algorithms::Skeletonization(Image *outputImage, ParametersStruct *params)
+void Algorithms::Skeletonization(Image *outputImage)
 {
+    Mutex::GetInstance().Lock();
+    auto o = *outputImage;
+    o.ClearImage();
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }
 
-void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
+void Algorithms::Hought(Image *outputImage)
 {
+    Mutex::GetInstance().Lock();
+    auto o = *outputImage;
+    o.ClearImage();
+    Mutex::GetInstance().ThreadStopped();
+    Mutex::GetInstance().Unlock();
 }

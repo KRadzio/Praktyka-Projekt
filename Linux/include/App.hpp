@@ -172,7 +172,6 @@ private:
     // add new directory button in save as window
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
-    // change how critical section is handled (copy then work on copy)
 
     // image histograms and plot flags
     int modeI = Brightnes;

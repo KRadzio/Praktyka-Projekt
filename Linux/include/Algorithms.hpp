@@ -304,9 +304,9 @@ namespace Algorithms
 
     void Dilatation(Image* outputImage, ParametersStruct *params);
 
-    void Skeletonization(Image* outputImage, ParametersStruct *params);
+    void Skeletonization(Image* outputImage);
 
-    void Hought(Image* outputImage, ParametersStruct *params);
+    void Hought(Image* outputImage);
 
 }
 

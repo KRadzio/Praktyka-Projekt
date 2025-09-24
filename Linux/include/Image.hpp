@@ -31,9 +31,8 @@ public:
 
 public:
     Image();
-    // the texture is not copied so use RefreshTexture after this one
-    // IT CHANGES THE FILEPATH
-    Image &operator=(const Image &other);
+    Image(const Image & other);
+    Image operator=(const Image &other);
     Image(std::string filename);
     ~Image();
 

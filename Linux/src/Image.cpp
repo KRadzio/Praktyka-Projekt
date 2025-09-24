@@ -15,7 +15,30 @@ Image::Image()
     }
 }
 
-Image &Image::operator=(const Image &other)
+Image::Image(const Image &other)
+{
+    ClearImage();
+    surface = SDL_DuplicateSurface(other.surface);
+    if (surface != nullptr)
+        texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
+    width = other.width;
+    height = other.height;
+    for (int i = 0; i < MAX_VAL; i++)
+    {
+        lightValues[i] = other.lightValues[i];
+        valuesR[i] = other.valuesR[i];
+        valuesG[i] = other.valuesG[i];
+        valuesB[i] = other.valuesB[i];
+        distributorLight[i] = other.distributorLight[i];
+        distributorR[i] = other.distributorR[i];
+        distributorG[i] = other.distributorG[i];
+        distributorB[i] = other.distributorB[i];
+    }
+    sourceImageName = other.sourceImageName;
+    ext = other.ext;
+}
+
+Image Image::operator=(const Image &other)
 {
     ClearImage();
     surface = SDL_DuplicateSurface(other.surface);
