@@ -2,12 +2,11 @@
 
 FileSelector::FileSelector()
 {
-    currPath = std::filesystem::current_path();
-    for (const auto &entry : std::filesystem::directory_iterator(currPath))
+    currDirectoryPath = std::filesystem::current_path();
+    for (const auto &entry : std::filesystem::directory_iterator(currDirectoryPath))
     {
         currDir.emplace(currDir.end(), entry);
-        currDirEntryNames.emplace(currDirEntryNames.end(), entry.path().filename());
-        dirMaped.emplace(std::pair<std::string, bool>(entry.path().filename(), false));
+        dirMaped.emplace(std::pair<std::filesystem::path, bool>(entry.path(), false));
     }
 }
 
@@ -28,7 +27,7 @@ void FileSelector::DeselectCurrEntry()
     }
 }
 
-int FileSelector::SelectEntry(std::string entryname)
+int FileSelector::SelectEntry(std::filesystem::path entryname)
 {
     // empty
     if (currEntrySelected == "")
@@ -50,13 +49,13 @@ int FileSelector::SelectEntry(std::string entryname)
     else
     {
         dirMaped[currEntrySelected] = false;
-        if (std::filesystem::is_directory(currPath.string() + '/' + entryname))
+        if (std::filesystem::is_directory(entryname))
         {
-            currPath /= entryname;
+            currDirectoryPath = entryname;
             RefreshCurrDir();
             return DirEntry;
         }
-        else if (std::filesystem::is_regular_file(currPath.string() + '/' + entryname))
+        else if (std::filesystem::is_regular_file(entryname))
             return FileEntry;
         return Ignore;
     }
@@ -70,13 +69,13 @@ int FileSelector::SelectCurrEntry()
 
     else
     {
-        if (std::filesystem::is_directory(currPath.string() + '/' + currEntrySelected))
+        if (std::filesystem::is_directory(currEntrySelected))
         {
-            currPath /= currEntrySelected;
+            currDirectoryPath = currEntrySelected;
             RefreshCurrDir();
             return DirEntry;
         }
-        else if (std::filesystem::is_regular_file(currPath.string() + '/' + currEntrySelected))
+        else if (std::filesystem::is_regular_file(currEntrySelected))
             return FileEntry;
         return Ignore;
     }
@@ -84,7 +83,7 @@ int FileSelector::SelectCurrEntry()
 
 void FileSelector::GoUpADirectory()
 {
-    currPath = currPath.parent_path();
+    currDirectoryPath = currDirectoryPath.parent_path();
     RefreshCurrDir();
 }
 
@@ -92,12 +91,10 @@ void FileSelector::RefreshCurrDir()
 {
     currEntrySelected = "";
     currDir.clear();
-    currDirEntryNames.clear();
     dirMaped.clear();
-    for (const auto &entry : std::filesystem::directory_iterator(currPath))
+    for (const auto &entry : std::filesystem::directory_iterator(currDirectoryPath))
     {
         currDir.emplace(currDir.end(), entry);
-        currDirEntryNames.emplace(currDirEntryNames.end(), entry.path().filename());
-        dirMaped.emplace(std::pair<std::string, bool>(entry.path().filename(), false));
+        dirMaped.emplace(std::pair<std::filesystem::path, bool>(entry.path(), false));
     }
 }

@@ -176,7 +176,7 @@ void App::DrawMenuBar()
     {
         if (ImGui::MenuItem("Zapisz", NULL, false, !outputImage.NoSurface()))
         {
-            if (FileSelector::GetInstance().FileExists(outputImage.GetImageName() + outputImage.GetExtension()))
+            if (FileSelector::GetInstance().FileExists(outputImage.GetImagePath()))
                 warningPopupActive = true;
             else
                 outputImage.SaveImage();
@@ -525,14 +525,14 @@ void App::DrawLoadPopup()
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
+        auto dir = FileSelector::GetInstance().GetCurrDir();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrPath().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().c_str());
         ImGui::Separator();
-        for (auto name : dir)
-            if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
-                if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
+        for (auto entry : dir)
+            if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+                if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
                 {
                     if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
                     {
@@ -565,8 +565,6 @@ void App::DrawLoadPopup()
                     ImGui::CloseCurrentPopup();
                 }
             }
-            else if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::DirEntry)
-                FileSelector::GetInstance().GoUpADirectory();
         }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -611,14 +609,14 @@ void App::DrawSavePopup()
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("ZapiszPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        auto dir = FileSelector::GetInstance().GetCurrDirEntryNames();
+        auto dir = FileSelector::GetInstance().GetCurrDir();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrPath().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().c_str());
         ImGui::Separator();
-        for (auto name : dir)
-            if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
-                if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
+        for (auto entry : dir)
+            if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+                if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
                     warningPopupActive = true;
         ImGui::EndChild();
 
@@ -643,14 +641,14 @@ void App::DrawSavePopup()
             std::string buffStr = fileNameBuff;
             if (buffStr == "")
                 errorPopupActive = true;
-            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrPath().string() + '/' + fileNameBuff + ext[currExtension]))
+            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
             {
                 warningPopupActive = true;
                 customName = true;
             }
             else
             {
-                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExtension);
+                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrDirectoryPath(), fileNameBuff, currExtension);
                 saveAsPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
@@ -660,8 +658,6 @@ void App::DrawSavePopup()
         {
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 warningPopupActive = true;
-            else if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::DirEntry)
-                FileSelector::GetInstance().GoUpADirectory();
         }
         ImGui::SetCursorPosX(offset);
         if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -698,7 +694,7 @@ void App::DrawSaveWarningAndErrorPopup()
             {
                 if (customName)
                 {
-                    outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExtension);
+                    outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrDirectoryPath(), fileNameBuff, currExtension);
                     customName = false;
                 }
                 else

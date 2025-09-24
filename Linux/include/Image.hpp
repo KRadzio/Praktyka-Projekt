@@ -2,6 +2,7 @@
 #define IMAGE_HPP
 
 #include <string>
+#include <filesystem>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -31,7 +32,7 @@ public:
 
 public:
     Image();
-    Image(const Image & other);
+    Image(const Image &other);
     Image operator=(const Image &other);
     Image(std::string filename);
     ~Image();
@@ -51,16 +52,16 @@ public:
     inline float *GetDistributorB() { return distributorB; }
     inline int GetPixelCount() { return width * height; }
 
-    inline std::string GetImageName() { return sourceImageName; }
-    std::string GetExtension();
+    inline std::filesystem::path GetImagePath() { return filePath; }
+    inline std::string GetExtension() { return filePath.extension(); }
 
-    void CopyBrightnessHistogram(float* dst);
-    void CopyNormalisedBrightnessHistogram(float* dst);
+    void CopyBrightnessHistogram(float *dst);
+    void CopyNormalisedBrightnessHistogram(float *dst);
 
     void SaveImage();
-    void SaveImageAs(std::string filename);
-    void SaveImageAs(std::string path, char *filename, int extension);
-    int SetSourceImage(std::string filename);
+    void SaveImageAs(std::filesystem::path path);
+    void SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
+    int SetSourceImage(std::filesystem::path path);
     void ClearImage();
 
     inline bool NoSurface() { return surface == nullptr; }
@@ -106,8 +107,7 @@ private:
     float distributorR[MAX_VAL];
     float distributorG[MAX_VAL];
     float distributorB[MAX_VAL];
-    std::string sourceImageName = "";
-    Extension ext = UNKNOWN;
+    std::filesystem::path filePath = "";
 };
 
 #endif

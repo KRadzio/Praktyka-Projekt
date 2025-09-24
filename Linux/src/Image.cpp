@@ -34,8 +34,7 @@ Image::Image(const Image &other)
         distributorG[i] = other.distributorG[i];
         distributorB[i] = other.distributorB[i];
     }
-    sourceImageName = other.sourceImageName;
-    ext = other.ext;
+    filePath = other.filePath;
 }
 
 Image Image::operator=(const Image &other)
@@ -57,8 +56,7 @@ Image Image::operator=(const Image &other)
         distributorG[i] = other.distributorG[i];
         distributorB[i] = other.distributorB[i];
     }
-    sourceImageName = other.sourceImageName;
-    ext = other.ext;
+    filePath = other.filePath;
     return *this;
 }
 
@@ -72,19 +70,6 @@ Image::~Image()
     SDL_FreeSurface(surface);
     if (texture != nullptr)
         SDL_DestroyTexture(texture);
-}
-
-std::string Image::GetExtension()
-{
-    if (ext == PNG)
-        return ".png";
-    else if (ext == JPG)
-        return ".jpg";
-    else if (ext == BMP)
-        return ".bmp";
-    // default to png
-    else
-        return ".png";
 }
 
 void Image::CopyBrightnessHistogram(float *dst)
@@ -108,134 +93,79 @@ void Image::SaveImage()
         printf("Can not save \n");
     else
     {
-        if (ext == PNG)
-        {
-            std::string newFileName = sourceImageName + ".png";
-            IMG_SavePNG(surface, newFileName.c_str());
-        }
-        else if (ext == JPG)
-        {
-            std::string newFileName = sourceImageName + ".jpg";
-            IMG_SaveJPG(surface, newFileName.c_str(), 100);
-        }
-        else if (ext == BMP)
-        {
-            std::string newFileName = sourceImageName + ".bmp";
-            SDL_SaveBMP(surface, newFileName.c_str());
-        }
+        if (filePath.extension() == ".png")
+            IMG_SavePNG(surface, filePath.c_str());
+        else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
+            // std::string newFileName = sourceImageName + ".jpg";
+            IMG_SaveJPG(surface, filePath.c_str(), 100);
+        else if (filePath.extension() == ".bmp")
+            SDL_SaveBMP(surface, filePath.c_str());
         // default to png
         else
-        {
-            std::string newFileName = sourceImageName + ".png";
-            IMG_SavePNG(surface, newFileName.c_str());
-        }
+            IMG_SavePNG(surface, filePath.c_str());
     }
 }
 
-void Image::SaveImageAs(std::string filename)
+void Image::SaveImageAs(std::filesystem::path path)
 {
     if (surface == nullptr)
         printf("Can not save \n");
     else
     {
-        int pos = 0;
-        for (int i = filename.length() - 1; i >= 0; i--)
-            if (filename[i] == '.')
-            {
-                pos = i;
-                break;
-            }
-        std::string extS = filename.substr(pos);
-        sourceImageName = filename.substr(0, pos);
-        if (extS == ".png")
-        {
-            ext = PNG;
-            std::string newFileName = sourceImageName + ".png";
-            IMG_SavePNG(surface, newFileName.c_str());
-        }
-        else if (extS == ".jpg" || extS == "jpeg")
-        {
-            ext = JPG;
-            std::string newFileName = sourceImageName + ".jpg";
-            IMG_SaveJPG(surface, newFileName.c_str(), 100);
-        }
-        else if (extS == ".bmp")
-        {
-            ext = BMP;
-            std::string newFileName = sourceImageName + ".bmp";
-            SDL_SaveBMP(surface, newFileName.c_str());
-        }
+        filePath = path;
+        if (path.extension() == ".png")
+            IMG_SavePNG(surface, filePath.c_str());
+        else if (path.extension() == ".jpg" || path.extension() == "jpeg")
+            IMG_SaveJPG(surface, filePath.c_str(), 100);
+        else if (path.extension() == ".bmp")
+            SDL_SaveBMP(surface, filePath.c_str());
         // default to png
         else
-        {
-            ext = PNG;
-            std::string newFileName = sourceImageName + ".png";
-            IMG_SavePNG(surface, newFileName.c_str());
-        }
+            IMG_SavePNG(surface, filePath.c_str());
     }
 }
 
-void Image::SaveImageAs(std::string path, char *filename, int extension)
+void Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int extension)
 {
     if (surface == nullptr)
         printf("Can not save \n");
     else
     {
-        sourceImageName = path + '/' + filename;
+        filePath = dirPath;
+        filePath /= filename;
         if (extension == PNG)
         {
-            ext = PNG;
-            std::string newFileName = sourceImageName + ".png";
-            IMG_SavePNG(surface, newFileName.c_str());
+            filePath += ".png";
+            IMG_SavePNG(surface, filePath.c_str());
         }
         else if (extension == JPG)
         {
-            ext = JPG;
-            std::string newFileName = sourceImageName + ".jpg";
-            IMG_SaveJPG(surface, newFileName.c_str(), 100);
+            filePath += ".jpg";
+            IMG_SaveJPG(surface, filePath.c_str(), 100);
         }
         else if (extension == BMP)
         {
-            ext = BMP;
-            std::string newFileName = sourceImageName + ".bmp";
-            SDL_SaveBMP(surface, newFileName.c_str());
+            filePath += ".bmp";
+            SDL_SaveBMP(surface, filePath.c_str());
         }
         // default to png
         else
         {
-            ext = PNG;
-            std::string newFileName = sourceImageName + ".png";
-            IMG_SavePNG(surface, newFileName.c_str());
+            filePath += ".png";
+            IMG_SavePNG(surface, filePath.c_str());
         }
     }
 }
 
-int Image::SetSourceImage(std::string filename)
+int Image::SetSourceImage(std::filesystem::path path)
 {
     ClearImage();
-    surface = IMG_Load(filename.c_str());
+    surface = IMG_Load(path.c_str());
     if (surface == nullptr)
         return -1;
     else
     {
-        int pos = 0;
-        for (int i = filename.length() - 1; i >= 0; i--)
-            if (filename[i] == '.')
-            {
-                pos = i;
-                break;
-            }
-        std::string extS = filename.substr(pos);
-        sourceImageName = filename.substr(0, pos);
-        if (extS == ".png")
-            ext = PNG;
-        else if (extS == ".jpg" || extS == "jpeg")
-            ext = JPG;
-        else if (extS == ".bmp")
-            ext = BMP;
-        // default to png
-        else
-            ext = PNG;
+        filePath = path;
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
         // handle it in some way
         if (texture == nullptr)
@@ -267,8 +197,7 @@ void Image::ClearImage()
     }
     width = 0;
     height = 0;
-    sourceImageName = "";
-    ext = UNKNOWN;
+    filePath = "";
 }
 
 void Image::RefreshPixelValuesArrays()
@@ -451,8 +380,7 @@ void Image::Copy(Image &other)
         distributorG[i] = other.distributorG[i];
         distributorB[i] = other.distributorB[i];
     }
-    sourceImageName = other.sourceImageName;
-    ext = other.ext;
+    filePath = other.filePath;
 }
 
 void Image::CopyOnlySurfaceAndSize(Image &other)

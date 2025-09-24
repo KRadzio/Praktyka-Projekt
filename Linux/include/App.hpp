@@ -168,7 +168,6 @@ private:
     bool resetDonePopupActive = false;
 
     // add more algs (in progress)
-    // change how extension is checked in image?
     // add new directory button in save as window
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
