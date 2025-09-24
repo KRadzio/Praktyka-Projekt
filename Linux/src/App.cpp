@@ -74,9 +74,9 @@ int App::MainLoop()
         auto beg = std::chrono::high_resolution_clock::now();
 
         int eventsCode = HandleEvents();
-        if (eventsCode == -2)
+        if (eventsCode == MINIMIZED)
             continue;
-        if (eventsCode == -1)
+        if (eventsCode == QUIT)
             break;
 
         // Start the Dear ImGui frame
@@ -88,8 +88,11 @@ int App::MainLoop()
 
         DrawMenuBar();
         SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
-        DrawPictureSpace();
+        DrawPicturesAndMiddle();
         DrawHistogramsAndFunctions();
+
+        if (helpWindowActive)
+            DrawHelpMenu();
 
         ImGui::PopFont();
 
@@ -112,12 +115,16 @@ int App::MainLoop()
             counterRefreshHist = 0.0;
     }
 
+    Cleanup();
     return 0;
 }
 
 void App::Cleanup()
 {
     // Cleanup
+    inputImage.ClearImage();
+    outputImage.ClearImage();
+    io->Fonts->RemoveFont(lato);
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
@@ -134,20 +141,32 @@ int App::HandleEvents()
         if (event.type == SDL_QUIT)
         {
             runLoop = false;
-            return -1;
+            return QUIT;
         }
         if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(mainWindow))
         {
             runLoop = false;
-            return -1;
+            return QUIT;
         }
     }
     if (SDL_GetWindowFlags(mainWindow) & SDL_WINDOW_MINIMIZED)
     {
         SDL_Delay(10);
-        return -2;
+        return MINIMIZED;
     }
     return 0;
+}
+
+void App::Render()
+{
+    Mutex::GetInstance().Lock();
+    ImGui::Render();
+    SDL_RenderSetScale(Renderer::GetInstance().GetRenderer(), io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y);
+    SDL_SetRenderDrawColor(Renderer::GetInstance().GetRenderer(), (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+    SDL_RenderClear(Renderer::GetInstance().GetRenderer());
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), Renderer::GetInstance().GetRenderer());
+    SDL_RenderPresent(Renderer::GetInstance().GetRenderer());
+    Mutex::GetInstance().Unlock();
 }
 
 void App::DrawMenuBar()
@@ -187,13 +206,15 @@ void App::DrawMenuBar()
 
     if (ImGui::BeginMenu("Ustawienia"))
     {
-        ImGui::MenuItem("Czas odświerzania");
+        if (ImGui::MenuItem("Czas odświerzania"))
+            settingsPopupActive = true;
         ImGui::EndMenu();
     }
 
     if (ImGui::BeginMenu("Pomoc"))
     {
-        ImGui::MenuItem("O programie");
+        if (ImGui::MenuItem("O programie", NULL, helpWindowActive))
+            helpWindowActive = !helpWindowActive;
         ImGui::Separator();
         if (ImGui::MenuItem("Pokaż ImGui Demo", NULL, show_demo_window))
             show_demo_window = !show_demo_window;
@@ -210,9 +231,12 @@ void App::DrawMenuBar()
 
     if (warningPopupActive && !saveAsPopupActive)
         DrawSaveWarningPopup();
+
+    if (settingsPopupActive)
+        DrawSettingsPopup();
 }
 
-void App::DrawPictureSpace()
+void App::DrawPicturesAndMiddle()
 {
 
     float h = ImGui::GetFrameHeight();
@@ -254,34 +278,87 @@ void App::DrawPictureSpace()
     ImGui::End();
 
     if (errorPopupAlgActive)
+        DrawMiddleErrorPopup();
+}
+
+void App::DrawMiddleButtonsWindow(float h)
+{
+    ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
+    ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
+    ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Text("Wybrany algorytm:");
+    ImGui::Text("%s", selectedAlgorithmName.c_str());
+
+    ImGui::SeparatorText("Rozpocznij");
+    if (ImGui::Button("Przetwórz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
-        ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowSize(ImVec2(0, 100));
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        // not valid for transformation
+        if (algorithmSelected == None || inputImage.NoSurface())
+            errorPopupAlgActive = true;
+        else
         {
-            // no file loaded
-            if (inputImage.NoSurface())
-                ImGui::Text("Brak wczytanego obrazu");
-            // no alg selected
-            else if (algorithmSelected == None)
-                ImGui::Text("Brak wybranego algorytmu");
-            // not transformed
-            else if (errorCopying)
-                ImGui::Text("Błąd podczas kopiowania obrazu");
-            else if (outputImage.NoSurface())
-                ImGui::Text("Nie można odświerzyć obraz nie przetworzony");
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+            // can not be called if thread is execiting (no CS)
+            Mutex::GetInstance().ThreadRunning();
+            outputImage = inputImage;
+            if (outputImage.NoSurface())
             {
-                errorPopupAlgActive = false;
-                errorCopying = false;
-                ImGui::CloseCurrentPopup();
+                errorPopupAlgActive = true;
+                errorCopying = true;
             }
-            ImGui::EndPopup();
+            LaunchAlgorithms();
         }
     }
+
+    Mutex::GetInstance().Lock();
+    if (Mutex::GetInstance().IsThreadRunning())
+        inProgressPopupActive = true;
+    Mutex::GetInstance().Unlock();
+
+    if (inProgressPopupActive)
+        DrawInProgressPopup();
+
+    ImGui::SeparatorText("Opcje");
+    if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+        ImGui::OpenPopup("Parametry");
+    if (ImGui::Button("Odśwież obraz wyjściowy", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        // can not be opend if thread is running
+        if (!outputImage.NoSurface())
+        {
+            outputImage.RefreshPixelValuesArrays();
+            outputImage.RefreshTexture();
+        }
+        else
+            errorPopupAlgActive = true;
+    }
+
+    // only if output image is transformed
+    if (!outputImage.NoSurface())
+    {
+        ImGui::Separator();
+        ImGui::Text("Ustaw obraz przetworzony\n(wyjściowy) jako wejściowy");
+        if (ImGui::Button("Wejście = Wyjście", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+        { // can not be done if thread is running
+            inputImage = outputImage;
+            outputImage.ClearImage();
+        }
+    }
+
+    DisplayParametersPopup();
+
+    // can not be opend if thread is running
+    ImGui::SeparatorText("Reset");
+    if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        algorithmSelected = None;
+        selectedAlgorithmName = "Brak wybranego algorytmu";
+        outputImage.ClearImage();
+    }
+    // can not be opend if thread is running
+    if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+        ResetParameters();
+
+    ImGui::End();
 }
 
 void App::DrawHistogramsAndFunctions()
@@ -292,7 +369,7 @@ void App::DrawHistogramsAndFunctions()
 
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2(currWidth, HIST_BAR_HEIGHT));
-    ImGui::Begin("Histogramy", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+    ImGui::Begin("Funkcje i wykresy", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
     float freeSpace = currWidth - 3 * HIST_WINDOW_W;
     freeSpace -= 2 * BORDER_OFFSET;
 
@@ -308,15 +385,17 @@ void App::DrawHistogramsAndFunctions()
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeI, 3);
     if (modeI == Brightnes)
-        ImGui::PlotHistogram("##", inputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetLightValues(), MAX_VAL, 0, NULL, 0.0f, maxI + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == R)
-        ImGui::PlotHistogram("##", inputImage.GetRValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetRValues(), inputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetRValues(), MAX_VAL, 0, NULL, 0.0f, *(std::max_element(inputImage.GetRValues(), inputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == G)
-        ImGui::PlotHistogram("##", inputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetGValues(), inputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetGValues(), MAX_VAL, 0, NULL, 0.0f, *(std::max_element(inputImage.GetGValues(), inputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeI == B)
-        ImGui::PlotHistogram("##", inputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(inputImage.GetBValues(), inputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", inputImage.GetBValues(), MAX_VAL, 0, NULL, 0.0f, *(std::max_element(inputImage.GetBValues(), inputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     ImGui::EndChild();
+
     // func
+    // add a special function if needed
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Dystrybuanta Obrazu");
@@ -353,13 +432,13 @@ void App::DrawHistogramsAndFunctions()
         counterRefreshHist = refreshIntervalValue;
     }
     if (modeO == Brightnes)
-        ImGui::PlotHistogram("##", outputImage.GetLightValues(), 256, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetLightValues(), MAX_VAL, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == R)
-        ImGui::PlotHistogram("##", outputImage.GetRValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetRValues(), outputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetRValues(), MAX_VAL, 0, NULL, 0.0f, *(std::max_element(outputImage.GetRValues(), outputImage.GetRValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == G)
-        ImGui::PlotHistogram("##", outputImage.GetGValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetGValues(), outputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetGValues(), MAX_VAL, 0, NULL, 0.0f, *(std::max_element(outputImage.GetGValues(), outputImage.GetGValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == B)
-        ImGui::PlotHistogram("##", outputImage.GetBValues(), 256, 0, NULL, 0.0f, *(std::max_element(outputImage.GetBValues(), outputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
+        ImGui::PlotHistogram("##", outputImage.GetBValues(), MAX_VAL, 0, NULL, 0.0f, *(std::max_element(outputImage.GetBValues(), outputImage.GetBValues() + 255)) + 10, ImVec2(HIST_W, HIST_H));
     Mutex::GetInstance().Unlock();
     ImGui::EndChild();
     ImGui::End();
@@ -448,7 +527,6 @@ void App::DrawLoadPopup()
             if (ImGui::Selectable(name.c_str(), map[name], ImGuiSelectableFlags_NoAutoClosePopups))
                 if (FileSelector::GetInstance().SelectEntry(name) == FileSelector::FileEntry)
                 {
-
                     if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
                     {
                         errorPopupActive = true;
@@ -546,11 +624,11 @@ void App::DrawSavePopup()
         ImGui::Text("Rozszerzenie");
         ImGui::Combo("wybierz", &currExtension, ext, IM_ARRAYSIZE(ext));
 
-        ImGui::Text("Zapisz - jezeli chcemy nadac nazwe");
-        ImGui::Text("Wybierz jezeli chcemy wybrac \n istniejacy plik lub folder");
+        ImGui::Text("Zapisz - jeżeli chcemy nadać nazwę");
+        ImGui::Text("Wybierz - jeżeli chcemy wybrać \n istniejacy plik lub folder");
         ImGui::Separator();
 
-        int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W - 20) / 2;
+        int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
 
         ImGui::SetCursorPosX(offset);
         if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -570,7 +648,7 @@ void App::DrawSavePopup()
                 ImGui::CloseCurrentPopup();
             }
         }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+        ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
         if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
@@ -583,71 +661,75 @@ void App::DrawSavePopup()
         {
             FileSelector::GetInstance().GoUpADirectory();
         }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+        ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
         if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             saveAsPopupActive = false;
             ImGui::CloseCurrentPopup();
         }
-
-        if (warningPopupActive)
-        {
-            ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
-            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("OSTRZEŻENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-            {
-                ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
-                ImGui::Separator();
-
-                int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - 20) / 2;
-
-                ImGui::SetCursorPosX(offset);
-                if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
-                {
-                    if (customName)
-                    {
-                        outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExtension);
-                        customName = false;
-                    }
-                    else
-                        outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
-                    saveAsPopupActive = false;
-                    warningPopupActive = false;
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
-                if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
-                {
-                    warningPopupActive = false;
-                    FileSelector::GetInstance().DeselectCurrEntry();
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-            if (!saveAsPopupActive)
-                ImGui::CloseCurrentPopup();
-        }
-
-        if (errorPopupActive)
-        {
-            ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
-            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-            ImGui::SetNextWindowSize(ImVec2(0, 100));
-            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-            {
-                ImGui::Text("Nazwa pliku nie może być pusta");
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-                if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
-                {
-                    errorPopupActive = false;
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-        }
+        DrawSaveWarningAndErrorPopup();
         ImGui::EndPopup();
+    }
+}
+
+void App::DrawSaveWarningAndErrorPopup()
+{
+    if (warningPopupActive)
+    {
+        ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("OSTRZEŻENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
+            ImGui::Separator();
+
+            int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
+
+            ImGui::SetCursorPosX(offset);
+            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                if (customName)
+                {
+                    outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrPath(), fileNameBuff, currExtension);
+                    customName = false;
+                }
+                else
+                    outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
+                saveAsPopupActive = false;
+                warningPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                warningPopupActive = false;
+                FileSelector::GetInstance().DeselectCurrEntry();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        if (!saveAsPopupActive)
+            ImGui::CloseCurrentPopup();
+    }
+
+    if (errorPopupActive)
+    {
+        ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowSize(ImVec2(0, 100));
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Text("Nazwa pliku nie może być pusta");
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                errorPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
     }
 }
 
@@ -663,7 +745,7 @@ void App::DrawSaveWarningPopup()
         ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
         ImGui::Separator();
 
-        int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - 20) / 2;
+        int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
 
         ImGui::SetCursorPosX(offset);
         if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
@@ -672,7 +754,7 @@ void App::DrawSaveWarningPopup()
             warningPopupActive = false;
             ImGui::CloseCurrentPopup();
         }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W + 20);
+        ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
         if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             warningPopupActive = false;
@@ -682,164 +764,97 @@ void App::DrawSaveWarningPopup()
     }
 }
 
-void App::DrawMiddleButtonsWindow(float h)
+void App::DrawNewDirPopup()
 {
-    ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
-    ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-    ImGui::Text("Wybrany algorytm:");
-    ImGui::Text("%s", selectedAlgorithmName.c_str());
+}
 
-    ImGui::SeparatorText("Rozpocznij/Przerwij");
-    if (ImGui::Button("Przetwórz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+void App::DrawSettingsPopup()
+{
+}
+
+void App::DrawMiddleErrorPopup()
+{
+    ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowSize(ImVec2(0, POPUP_HEIGHT));
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        // not valid for transformation
-        if (algorithmSelected == None || inputImage.NoSurface())
-            errorPopupAlgActive = true;
+        // no file loaded
+        if (inputImage.NoSurface())
+            ImGui::Text("Brak wczytanego obrazu");
+        // no alg selected
+        else if (algorithmSelected == None)
+            ImGui::Text("Brak wybranego algorytmu");
+        // not transformed
+        else if (errorCopying)
+            ImGui::Text("Błąd podczas kopiowania obrazu");
+        else if (outputImage.NoSurface())
+            ImGui::Text("Nie można odświerzyć obraz nie przetworzony");
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+        if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+        {
+            errorPopupAlgActive = false;
+            errorCopying = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+}
+
+void App::DrawInProgressPopup()
+{
+    ImGui::OpenPopup("Przetwarzanie obrazu");
+    ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT));
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("Przetwarzanie obrazu"))
+    {
+        Mutex::GetInstance().Lock();
+        auto running = Mutex::GetInstance().IsThreadRunning();
+        Mutex::GetInstance().Unlock();
+        if (running)
+        {
+            ImGui::SetCursorPosX(10);
+            ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(180.0f, 0.0f), "Przetwarzanie...");
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                Mutex::GetInstance().Lock();
+                Mutex::GetInstance().ThreadStopped();
+                // outputImage.RefreshPixelValuesArrays();
+                // outputImage.RefreshTexture();
+                Mutex::GetInstance().Unlock();
+                inProgressPopupActive = false;
+                ImGui::CloseCurrentPopup();
+            }
+        }
         else
         {
-            // can not be called if thread is execiting (no CS)
-            Mutex::GetInstance().ThreadRunning();
-            outputImage = inputImage;
-            if (outputImage.NoSurface())
+            // refresh only once after
+            if (!justRefreshed)
             {
-                errorPopupAlgActive = true;
-                errorCopying = true;
+                justRefreshed = true;
+                Mutex::GetInstance().Lock();
+                outputImage.RefreshPixelValuesArrays();
+                outputImage.RefreshTexture();
+                Mutex::GetInstance().Unlock();
+            }
+            ImGui::Text("Ukończone");
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+            {
+                inProgressPopupActive = false;
+                justRefreshed = false;
+                ImGui::CloseCurrentPopup();
             }
         }
-
-        switch (algorithmSelected)
-        {
-        case Negative:
-            algorithmThread = std::thread(&Algorithms::CreateNegative, &outputImage);
-            algorithmThread.detach();
-            break;
-        case Brighten:
-            algorithmThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case Contrast:
-            algorithmThread = std::thread(&Algorithms::Contrast, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case Exponentiation:
-            algorithmThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case LeveledHistogram:
-            algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
-            algorithmThread.detach();
-            break;
-        case Binarization:
-            algorithmThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case LinearFilter:
-            algorithmThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case MedianFilter:
-            algorithmThread = std::thread(&Algorithms::MedianFilter, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case Erosion:
-            algorithmThread = std::thread(&Algorithms::Erosion, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case Dilatation:
-            algorithmThread = std::thread(&Algorithms::Dilatation, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case Skeletonization:
-            algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        case Hought:
-            algorithmThread = std::thread(&Algorithms::Hought, &outputImage, &params);
-            algorithmThread.detach();
-            break;
-        default:
-            break;
-        }
+        ImGui::EndPopup();
     }
+}
 
-    Mutex::GetInstance().Lock();
-    if (Mutex::GetInstance().IsThreadRunning())
-        inProgressPopupActive = true;
-    Mutex::GetInstance().Unlock();
-
-    if (inProgressPopupActive)
-    {
-        ImGui::OpenPopup("Przetwarzanie obrazu");
-        ImGui::SetNextWindowSize(ImVec2(200, 80));
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("Przetwarzanie obrazu"))
-        {
-            Mutex::GetInstance().Lock();
-            auto running = Mutex::GetInstance().IsThreadRunning();
-            Mutex::GetInstance().Unlock();
-            if (running)
-            {
-                ImGui::SetCursorPosX(10);
-                ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(180.0f, 0.0f), "Przetwarzanie...");
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-                if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
-                {
-                    Mutex::GetInstance().Lock();
-                    Mutex::GetInstance().ThreadStopped();
-                    // outputImage.RefreshPixelValuesArrays();
-                    // outputImage.RefreshTexture();
-                    Mutex::GetInstance().Unlock();
-                    inProgressPopupActive = false;
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            else
-            {
-                // refresh only once after
-                if (!justRefreshed)
-                {
-                    justRefreshed = true;
-                    Mutex::GetInstance().Lock();
-                    outputImage.RefreshPixelValuesArrays();
-                    outputImage.RefreshTexture();
-                    Mutex::GetInstance().Unlock();
-                }
-                ImGui::Text("Ukończone");
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-                if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
-                {
-                    inProgressPopupActive = false;
-                    justRefreshed = false;
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            ImGui::EndPopup();
-        }
-    }
-
-    ImGui::SeparatorText("Opcje");
-    if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
-        ImGui::OpenPopup("Parametry");
-    if (ImGui::Button("Odśwież obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
-    {
-        // can not be opend if thread is running
-        if (!outputImage.NoSurface())
-        {
-            outputImage.RefreshPixelValuesArrays();
-            outputImage.RefreshTexture();
-        }
-        else
-            errorPopupAlgActive = true;
-    }
-    if (!outputImage.NoSurface())
-        if (ImGui::Button("Wejście = Wyjście", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
-        { // can not be done if thread is running
-            inputImage = outputImage;
-            outputImage.ClearImage();
-        }
-
+void App::DisplayParametersPopup()
+{
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
@@ -855,141 +870,31 @@ void App::DrawMiddleButtonsWindow(float h)
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Brighten:
-            ImGui::SliderInt("O ile rozjaśnić?", &params.value, -255, 255);
+            ImGui::SliderInt("O ile rozjaśnić/przyciemnić?", &params.value, -255, 255);
             break;
         case Contrast:
-            ImGui::SliderFloat("O ile zmienić", &params.contrast, 0.1, 5.0);
+            ImGui::SliderFloat("O ile zmienić kontrast?", &params.contrast, 0.1, 5.0);
             break;
         case Exponentiation:
-            ImGui::SliderFloat("Alfa", &params.alfa, 0.1, 3.0);
+            ImGui::SliderFloat("Wartość alfa", &params.alfa, 0.1, 3.0);
             break;
         case LeveledHistogram:
             ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Binarization:
-
-            ImGui::RadioButton("Ręcznie ustaw próg", &params.method, Algorithms::None);
-            ImGui::SameLine();
-            ImGui::RadioButton("Metoda Gradientowa", &params.method, Algorithms::Gradient);
-            ImGui::SameLine();
-            ImGui::RadioButton("Metoda iteracyjna", &params.method, Algorithms::Histogram);
-            if (params.method == Algorithms::BinarizationMethod::None)
-            {
-                ImGui::RadioButton("Jeden próg", &params.boundCount, 1);
-                ImGui::SameLine();
-                ImGui::RadioButton("Dwa progi", &params.boundCount, 2);
-                ImGui::SliderInt("t", &params.lowerBound, 0, 255);
-                if (params.boundCount == 2)
-                    ImGui::SliderInt("t1", &params.upperBound, 0, 255);
-            }
+            DrawBinarizationParams();
             break;
         case LinearFilter:
-
-            ImGui::RadioButton("3x3", &params.linearFilterSize, Algorithms::MatrixSize::S3x3);
-            ImGui::SameLine();
-            ImGui::RadioButton("5x5", &params.linearFilterSize, Algorithms::MatrixSize::S5x5);
-            ImGui::SameLine();
-            ImGui::RadioButton("7x7", &params.linearFilterSize, Algorithms::MatrixSize::S7x7);
-
-            if (ImGui::RadioButton("Uśredniający", &params.linerFilterS, Algorithms::LinearFilters::Average))
-            {
-                params.linearMask3x3 = AVERAGE_3x3;
-                params.linearMask5x5 = AVERAGE_5x5;
-                params.linearMask7x7 = AVERAGE_7x7;
-            }
-            ImGui::SameLine();
-
-            if (ImGui::RadioButton("Gauss", &params.linerFilterS, Algorithms::LinearFilters::Gauss))
-            {
-                params.linearMask3x3 = GAUSS_3x3;
-                params.linearMask5x5 = GAUSS_5x5;
-                params.linearMask7x7 = GAUSS_7x7;
-            }
-            ImGui::SameLine();
-
-            if (ImGui::RadioButton("Sobel Poziomy", &params.linerFilterS, Algorithms::LinearFilters::SobelHorizontal))
-            {
-                params.linearMask3x3 = SOBEL_HORIZONTAL_3x3;
-                params.linearMask5x5 = SOBEL_HORIZONTAL_5x5;
-                params.linearMask7x7 = SOBEL_HORIZONTAL_7x7;
-            }
-            // in new line
-            if (ImGui::RadioButton("Sobel Pionowy", &params.linerFilterS, Algorithms::LinearFilters::SobelVertical))
-            {
-                params.linearMask3x3 = SOBEL_VERTICAL_3x3;
-                params.linearMask5x5 = SOBEL_VERTICAL_5x5;
-                params.linearMask7x7 = SOBEL_VERTICAL_7x7;
-            }
-            ImGui::SameLine();
-
-            if (ImGui::RadioButton("Laplasjan", &params.linerFilterS, Algorithms::LinearFilters::Laplasjan))
-            {
-                params.linearMask3x3 = LAPLACIAN_3x3;
-                params.linearMask5x5 = LAPLACIAN_5x5;
-                params.linearMask7x7 = LAPLACIAN_7x7;
-            }
-            ImGui::SameLine();
-
-            if (ImGui::RadioButton("Wyostrzający", &params.linerFilterS, Algorithms::LinearFilters::Sharpening))
-            {
-                params.linearMask3x3 = SHARPENING_3x3;
-                params.linearMask5x5 = SHARPENING_5x5;
-                params.linearMask7x7 = SHARPENING_7x7;
-            }
-
-            ImGui::RadioButton("Własna", &params.linerFilterS, Algorithms::LinearFilters::CustomL);
-            if (params.linerFilterS == Algorithms::LinearFilters::CustomL)
-            {
-                ImGui::Text("To może mieć ciekawe efekty");
-                DrawLinearInputArray();
-            }
-            else
-                DrawLinearDisplayArray();
-
+            DrawLinearFilterParams();
             break;
         case MedianFilter:
-            ImGui::RadioButton("3x3", &params.medianFilterSize, Algorithms::MatrixSize::S3x3);
-            ImGui::SameLine();
-            ImGui::RadioButton("5x5", &params.medianFilterSize, Algorithms::MatrixSize::S5x5);
-            ImGui::SameLine();
-            ImGui::RadioButton("7x7", &params.medianFilterSize, Algorithms::MatrixSize::S7x7);
-
-            if (ImGui::RadioButton("Pełny", &params.medianFilterS, Algorithms::MedianFilters::Full))
-            {
-                params.medianMask3x3 = MEDIAN_3x3;
-                params.medianMask5x5 = MEDIAN_5x5;
-                params.medianMask7x7 = MEDIAN_7x7;
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Krzyżowy", &params.medianFilterS, Algorithms::MedianFilters::Cross))
-            {
-                params.medianMask3x3 = MEDIAN_CROSS_3x3;
-                params.medianMask5x5 = MEDIAN_CROSS_5x5;
-                params.medianMask7x7 = MEDIAN_CROSS_7x7;
-            }
-            ImGui::SameLine();
-            ImGui::RadioButton("Własna", &params.medianFilterS, Algorithms::MedianFilters::CustomM);
-            if (params.medianFilterS == Algorithms::MedianFilters::CustomM)
-            {
-                ImGui::Text("To może mieć ciekawe efekty");
-                DrawMedianInputArray();
-            }
-            else
-                DrawMedianDisplayArray();
+            DrawMedianFilterParams();
             break;
         case Erosion:
-            ImGui::RadioButton("3x3", &params.erosionFilterSize, Algorithms::MatrixSize::S3x3);
-            ImGui::SameLine();
-            ImGui::RadioButton("5x5", &params.erosionFilterSize, Algorithms::MatrixSize::S5x5);
-            ImGui::SameLine();
-            ImGui::RadioButton("7x7", &params.erosionFilterSize, Algorithms::MatrixSize::S7x7);
+            DrawErosionParams();
             break;
         case Dilatation:
-            ImGui::RadioButton("3x3", &params.dilatationFilterSize, Algorithms::MatrixSize::S3x3);
-            ImGui::SameLine();
-            ImGui::RadioButton("5x5", &params.dilatationFilterSize, Algorithms::MatrixSize::S5x5);
-            ImGui::SameLine();
-            ImGui::RadioButton("7x7", &params.dilatationFilterSize, Algorithms::MatrixSize::S7x7);
+            DrawDilatationParams();
             break;
         case Skeletonization:
             ImGui::Text("Brak paramentrów dla tego algorytmu");
@@ -1005,62 +910,257 @@ void App::DrawMiddleButtonsWindow(float h)
         }
         ImGui::EndPopup();
     }
+}
 
-    // can not be opend if thread is running
-    ImGui::SeparatorText("Reset");
-    if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+void App::DrawBinarizationParams()
+{
+    ImGui::Text("Wybierz czy chcesz ustawić samemu\nczy automatycznie");
+    ImGui::RadioButton("Ręcznie ustaw próg", &params.method, Algorithms::None);
+    ImGui::SameLine();
+    ImGui::RadioButton("Metoda Gradientowa", &params.method, Algorithms::Gradient);
+    ImGui::SameLine();
+    ImGui::RadioButton("Metoda iteracyjna", &params.method, Algorithms::Histogram);
+    if (params.method == Algorithms::BinarizationMethod::None)
     {
-        algorithmSelected = None;
-        selectedAlgorithmName = "Brak wybranego algorytmu";
-        outputImage.ClearImage();
+        ImGui::Separator();
+        ImGui::Text("Wybierz ilość progów");
+        ImGui::RadioButton("Jeden próg", &params.boundCount, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Dwa progi", &params.boundCount, 2);
+        ImGui::Separator();
+        ImGui::Text("Ustwa progi");
+        ImGui::SliderInt("t", &params.lowerBound, 0, 255);
+        if (params.boundCount == 2)
+            ImGui::SliderInt("t1", &params.upperBound, 0, 255);
     }
-    // can not be opend if thread is running
-    if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+}
+
+void App::DrawLinearFilterParams()
+{
+    ImGui::Text("Wybierz rozmiar filtru");
+    ImGui::RadioButton("3x3", &params.linearFilterSize, Algorithms::MatrixSize::S3x3);
+    ImGui::SameLine();
+    ImGui::RadioButton("5x5", &params.linearFilterSize, Algorithms::MatrixSize::S5x5);
+    ImGui::SameLine();
+    ImGui::RadioButton("7x7", &params.linearFilterSize, Algorithms::MatrixSize::S7x7);
+
+    ImGui::Separator();
+    ImGui::Text("Wybierz rodzaj filtru");
+
+    if (ImGui::RadioButton("Uśredniający", &params.linerFilterS, Algorithms::LinearFilters::Average))
     {
-        params.value = 0;
-        params.contrast = 1.0;
-        params.alfa = 1.0;
-        params.boundCount = 1;
-        params.lowerBound = 0;
-        params.upperBound = 0;
-        params.method = Algorithms::BinarizationMethod::None;
-        // linear
-        params.linerFilterS = Algorithms::LinearFilters::Average;
-        params.linearFilterSize = Algorithms::MatrixSize::S3x3;
         params.linearMask3x3 = AVERAGE_3x3;
         params.linearMask5x5 = AVERAGE_5x5;
         params.linearMask7x7 = AVERAGE_7x7;
-        // median
-        params.medianFilterS = Algorithms::MedianFilters::Full;
-        params.medianFilterSize = Algorithms::MatrixSize::S3x3;
+    }
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Gauss", &params.linerFilterS, Algorithms::LinearFilters::Gauss))
+    {
+        params.linearMask3x3 = GAUSS_3x3;
+        params.linearMask5x5 = GAUSS_5x5;
+        params.linearMask7x7 = GAUSS_7x7;
+    }
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Sobel Poziomy", &params.linerFilterS, Algorithms::LinearFilters::SobelHorizontal))
+    {
+        params.linearMask3x3 = SOBEL_HORIZONTAL_3x3;
+        params.linearMask5x5 = SOBEL_HORIZONTAL_5x5;
+        params.linearMask7x7 = SOBEL_HORIZONTAL_7x7;
+    }
+    // in new line
+    if (ImGui::RadioButton("Sobel Pionowy", &params.linerFilterS, Algorithms::LinearFilters::SobelVertical))
+    {
+        params.linearMask3x3 = SOBEL_VERTICAL_3x3;
+        params.linearMask5x5 = SOBEL_VERTICAL_5x5;
+        params.linearMask7x7 = SOBEL_VERTICAL_7x7;
+    }
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Laplasjan", &params.linerFilterS, Algorithms::LinearFilters::Laplasjan))
+    {
+        params.linearMask3x3 = LAPLACIAN_3x3;
+        params.linearMask5x5 = LAPLACIAN_5x5;
+        params.linearMask7x7 = LAPLACIAN_7x7;
+    }
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Wyostrzający", &params.linerFilterS, Algorithms::LinearFilters::Sharpening))
+    {
+        params.linearMask3x3 = SHARPENING_3x3;
+        params.linearMask5x5 = SHARPENING_5x5;
+        params.linearMask7x7 = SHARPENING_7x7;
+    }
+
+    ImGui::RadioButton("Własna", &params.linerFilterS, Algorithms::LinearFilters::CustomL);
+    ImGui::Separator();
+
+    if (params.linerFilterS == Algorithms::LinearFilters::CustomL)
+    {
+        ImGui::Separator();
+        ImGui::Text("Ustaw własną maskę");
+        DrawLinearInputArray();
+    }
+    else
+        DrawLinearDisplayArray();
+}
+
+void App::DrawMedianFilterParams()
+{
+    ImGui::Text("Wybierz rozmiar filtru");
+    ImGui::RadioButton("3x3", &params.medianFilterSize, Algorithms::MatrixSize::S3x3);
+    ImGui::SameLine();
+    ImGui::RadioButton("5x5", &params.medianFilterSize, Algorithms::MatrixSize::S5x5);
+    ImGui::SameLine();
+    ImGui::RadioButton("7x7", &params.medianFilterSize, Algorithms::MatrixSize::S7x7);
+    ImGui::Separator();
+    ImGui::Text("Wybierz rodzaj filtru");
+    if (ImGui::RadioButton("Pełny", &params.medianFilterS, Algorithms::MedianFilters::Full))
+    {
         params.medianMask3x3 = MEDIAN_3x3;
         params.medianMask5x5 = MEDIAN_5x5;
         params.medianMask7x7 = MEDIAN_7x7;
-        // erosion
-        params.erosionFilterSize = Algorithms::MatrixSize::S3x3;
-        params.erosionElement3x3 = EMPTY_3x3;
-        params.erosionElement5x5 = EMPTY_5x5;
-        params.erosionElement7x7 = EMPTY_7x7;
-        // dilatation
-        params.dilatationFilterSize = Algorithms::MatrixSize::S3x3;
-        params.dilatationElement3x3 = EMPTY_3x3;
-        params.dilatationElement5x5 = EMPTY_5x5;
-        params.dilatationElement7x7 = EMPTY_7x7;
     }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Krzyżowy", &params.medianFilterS, Algorithms::MedianFilters::Cross))
+    {
+        params.medianMask3x3 = MEDIAN_CROSS_3x3;
+        params.medianMask5x5 = MEDIAN_CROSS_5x5;
+        params.medianMask7x7 = MEDIAN_CROSS_7x7;
+    }
+    ImGui::SameLine();
+    ImGui::RadioButton("Własna", &params.medianFilterS, Algorithms::MedianFilters::CustomM);
 
-    ImGui::End();
+    ImGui::Separator();
+    if (params.medianFilterS == Algorithms::MedianFilters::CustomM)
+    {
+
+        ImGui::Text("Ustaw własną maskę");
+        DrawInputArray("Maska", params.medianFilterSize, params.medianMask3x3, params.medianMask5x5, params.medianMask7x7);
+    }
+    else
+        DrawMedianDisplayArray();
 }
 
-void App::Render()
+void App::DrawErosionParams()
 {
-    Mutex::GetInstance().Lock();
-    ImGui::Render();
-    SDL_RenderSetScale(Renderer::GetInstance().GetRenderer(), io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y);
-    SDL_SetRenderDrawColor(Renderer::GetInstance().GetRenderer(), (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
-    SDL_RenderClear(Renderer::GetInstance().GetRenderer());
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), Renderer::GetInstance().GetRenderer());
-    SDL_RenderPresent(Renderer::GetInstance().GetRenderer());
-    Mutex::GetInstance().Unlock();
+    ImGui::Text("Wybierz rozmiar");
+    ImGui::RadioButton("3x3", &params.erosionElementSize, Algorithms::MatrixSize::S3x3);
+    ImGui::SameLine();
+    ImGui::RadioButton("5x5", &params.erosionElementSize, Algorithms::MatrixSize::S5x5);
+    ImGui::SameLine();
+    ImGui::RadioButton("7x7", &params.erosionElementSize, Algorithms::MatrixSize::S7x7);
+    ImGui::Separator();
+    ImGui::Text("Zaznacz pola, które mają \nbyć elementem strukturalnym");
+    DrawInputArray("Element strukturalny", params.erosionElementSize, params.erosionElement3x3, params.erosionElement5x5, params.erosionElement7x7);
+}
+
+void App::DrawDilatationParams()
+{
+    ImGui::Text("Wybierz rozmiar");
+    ImGui::RadioButton("3x3", &params.dilatationElementSize, Algorithms::MatrixSize::S3x3);
+    ImGui::SameLine();
+    ImGui::RadioButton("5x5", &params.dilatationElementSize, Algorithms::MatrixSize::S5x5);
+    ImGui::SameLine();
+    ImGui::RadioButton("7x7", &params.dilatationElementSize, Algorithms::MatrixSize::S7x7);
+    ImGui::Separator();
+    ImGui::Text("Zaznacz pola, które mają \nbyć elementem strukturalnym");
+    DrawInputArray("Element strukturalny", params.dilatationElementSize, params.dilatationElement3x3, params.dilatationElement5x5, params.dilatationElement7x7);
+}
+
+void App::DrawHelpMenu()
+{
+}
+
+void App::LaunchAlgorithms()
+{
+    switch (algorithmSelected)
+    {
+    case Negative:
+        algorithmThread = std::thread(&Algorithms::CreateNegative, &outputImage);
+        algorithmThread.detach();
+        break;
+    case Brighten:
+        algorithmThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case Contrast:
+        algorithmThread = std::thread(&Algorithms::Contrast, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case Exponentiation:
+        algorithmThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case LeveledHistogram:
+        algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
+        algorithmThread.detach();
+        break;
+    case Binarization:
+        algorithmThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case LinearFilter:
+        algorithmThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case MedianFilter:
+        algorithmThread = std::thread(&Algorithms::MedianFilter, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case Erosion:
+        algorithmThread = std::thread(&Algorithms::Erosion, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case Dilatation:
+        algorithmThread = std::thread(&Algorithms::Dilatation, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case Skeletonization:
+        algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    case Hought:
+        algorithmThread = std::thread(&Algorithms::Hought, &outputImage, &params);
+        algorithmThread.detach();
+        break;
+    default:
+        break;
+    }
+}
+
+void App::ResetParameters()
+{
+    params.value = 0;
+    params.contrast = 1.0;
+    params.alfa = 1.0;
+    params.boundCount = 1;
+    params.lowerBound = 0;
+    params.upperBound = 0;
+    params.method = Algorithms::BinarizationMethod::None;
+    // linear
+    params.linerFilterS = Algorithms::LinearFilters::Average;
+    params.linearFilterSize = Algorithms::MatrixSize::S3x3;
+    params.linearMask3x3 = AVERAGE_3x3;
+    params.linearMask5x5 = AVERAGE_5x5;
+    params.linearMask7x7 = AVERAGE_7x7;
+    // median
+    params.medianFilterS = Algorithms::MedianFilters::Full;
+    params.medianFilterSize = Algorithms::MatrixSize::S3x3;
+    params.medianMask3x3 = MEDIAN_3x3;
+    params.medianMask5x5 = MEDIAN_5x5;
+    params.medianMask7x7 = MEDIAN_7x7;
+    // erosion
+    params.erosionElementSize = Algorithms::MatrixSize::S3x3;
+    params.erosionElement3x3 = EMPTY_3x3;
+    params.erosionElement5x5 = EMPTY_5x5;
+    params.erosionElement7x7 = EMPTY_7x7;
+    // dilatation
+    params.dilatationElementSize = Algorithms::MatrixSize::S3x3;
+    params.dilatationElement3x3 = EMPTY_3x3;
+    params.dilatationElement5x5 = EMPTY_5x5;
+    params.dilatationElement7x7 = EMPTY_7x7;
 }
 
 void App::DrawLinearInputArray()
@@ -1115,33 +1215,6 @@ void App::DrawLinearDisplayArray()
     }
 }
 
-void App::DrawMedianInputArray()
-{
-    if (ImGui::BeginTable("Maska", params.medianFilterSize, ImGuiTableFlags_Borders))
-    {
-        for (int row = 0; row < params.medianFilterSize; row++)
-        {
-
-            ImGui::PushID(row);
-            ImGui::TableNextRow();
-            for (int col = 0; col < params.medianFilterSize; col++)
-            {
-                ImGui::TableSetColumnIndex(col);
-                ImGui::PushItemWidth(ARRAY_INPUT_WIDTH);
-                std::string s = "##" + std::to_string(col);
-                if (params.medianFilterSize == Algorithms::MatrixSize::S3x3)
-                    ImGui::Checkbox(s.c_str(), &params.medianMask3x3[row][col]);
-                else if (params.medianFilterSize == Algorithms::MatrixSize::S5x5)
-                    ImGui::Checkbox(s.c_str(), &params.medianMask5x5[row][col]);
-                else
-                    ImGui::Checkbox(s.c_str(), &params.medianMask7x7[row][col]);
-            }
-            ImGui::PopID();
-        }
-        ImGui::EndTable();
-    }
-}
-
 void App::DrawMedianDisplayArray()
 {
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - (ARRAY_FIELD_WIDTH * params.medianFilterSize) / 2);
@@ -1162,6 +1235,32 @@ void App::DrawMedianDisplayArray()
                 else
                     ImGui::Text("%d", params.medianMask7x7[row][col]);
             }
+        }
+        ImGui::EndTable();
+    }
+}
+
+void App::DrawInputArray(std::string name, int size, std::array<std::array<bool, 3>, 3> &a3x3, std::array<std::array<bool, 5>, 5> &a5x5, std::array<std::array<bool, 7>, 7> &a7x7)
+{
+    if (ImGui::BeginTable(name.c_str(), size, ImGuiTableFlags_Borders))
+    {
+        for (int row = 0; row < size; row++)
+        {
+            ImGui::PushID(row);
+            ImGui::TableNextRow();
+            for (int col = 0; col < size; col++)
+            {
+                ImGui::TableSetColumnIndex(col);
+                ImGui::PushItemWidth(ARRAY_INPUT_WIDTH);
+                std::string s = "##" + std::to_string(col);
+                if (size == Algorithms::MatrixSize::S3x3)
+                    ImGui::Checkbox(s.c_str(), &a3x3[row][col]);
+                else if (size == Algorithms::MatrixSize::S5x5)
+                    ImGui::Checkbox(s.c_str(), &a5x5[row][col]);
+                else
+                    ImGui::Checkbox(s.c_str(), &a7x7[row][col]);
+            }
+            ImGui::PopID();
         }
         ImGui::EndTable();
     }

@@ -18,6 +18,10 @@
 #include "Renderer.hpp"
 #include "Mutex.hpp"
 
+// events
+#define QUIT -1
+#define MINIMIZED -2
+
 // bottom bar
 #define MENU_ALG_HIST_H 329
 #define HIST_BAR_HEIGHT 310
@@ -34,10 +38,12 @@
 #define CANCEL_BUTTON_W 120
 
 // popups
-#define POPUP_SIZE 200
+#define POPUP_WIDTH 200
+#define POPUP_HEIGHT 100
 #define FILE_POPUP_WIDTH 300
 #define FILE_POPUP_HEIGHT 340
 #define SAVE_POPUP_HEIGHT 480
+#define BUTTON_OFFSET 20
 
 // dir items
 #define DIR_LIST_WIDTH 290
@@ -96,19 +102,45 @@ private:
 private:
     void Cleanup();
     int HandleEvents();
+    void Render();
+
+    // main parts
     void DrawMenuBar();
-    void DrawPictureSpace();
+    void DrawPicturesAndMiddle();
+    void DrawMiddleButtonsWindow(float h);
     void DrawHistogramsAndFunctions();
+
+    // menus
     void DrawAlgMenuElements();
+
+    // popups
     void DrawLoadPopup();
     void DrawSavePopup();
+    void DrawSaveWarningAndErrorPopup();
     void DrawSaveWarningPopup();
-    void DrawMiddleButtonsWindow(float h);
-    void Render();
+    void DrawNewDirPopup();
+    void DrawSettingsPopup();
+    void DrawMiddleErrorPopup();
+    void DrawInProgressPopup();
+    void DisplayParametersPopup();
+
+    // parameters popup split
+    void DrawBinarizationParams();
+    void DrawLinearFilterParams();
+    void DrawMedianFilterParams();
+    void DrawErosionParams();
+    void DrawDilatationParams();
+
+    // other
+    void DrawHelpMenu();
+    void LaunchAlgorithms();
+    void ResetParameters();
+
+    // input and display arrays
     void DrawLinearInputArray();
     void DrawLinearDisplayArray();
-    void DrawMedianInputArray();
     void DrawMedianDisplayArray();
+    void DrawInputArray(std::string name, int size, std::array<std::array<bool, 3>, 3> &a3x3, std::array<std::array<bool, 5>, 5> &a5x5, std::array<std::array<bool, 7>, 7> &a7x7);
 
 private:
     // App
@@ -127,6 +159,7 @@ private:
     bool settingsPopupActive = false;
     bool newDirPopupActive = false;
     bool helpWindowActive = false;
+    bool drawExtraFunctionDiagram = false;
 
     // add more algs (in progress)
     // change how extension is checked in image?
@@ -135,7 +168,6 @@ private:
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
     // make a help window
-    // resize some windows
     // change how critical section is handled (copy then work on copy)
 
     // image histograms and plot flags
@@ -182,7 +214,7 @@ private:
     // ImGui
     ImGuiIO *io = nullptr;
     ImGuiStyle *style = nullptr;
-    ImFont* lato = nullptr;
+    ImFont *lato = nullptr;
 };
 
 #endif
