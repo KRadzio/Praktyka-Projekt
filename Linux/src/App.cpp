@@ -634,7 +634,7 @@ void App::DrawSavePopup()
             std::string buffStr = fileNameBuff;
             if (buffStr == "")
                 errorPopupActive = true;
-            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string() + '/' + fileNameBuff + ext[currExtension]))
+            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
             {
                 warningPopupActive = true;
                 customName = true;
