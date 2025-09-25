@@ -173,10 +173,12 @@ private:
     bool drawExtraFunctionDiagram = false;
     bool resetDonePopupActive = false;
 
+    // TODO
     // add more algs (in progress)
     // add new directory button in save as window
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
+    // write docs in code, in pdf and in help menu
 
     // image histograms and plot flags
     int modeI = Brightnes;

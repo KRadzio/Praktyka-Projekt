@@ -353,11 +353,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                 Mutex::GetInstance().Unlock();
                 return;
             }
-            if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
-            {
-                *outputImage = copy;
-                Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
-            }
             Mutex::GetInstance().Unlock();
         }
         lowerBound = sum_JG / sum_G;
@@ -431,11 +426,6 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                 copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
-            }
-            if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
-            {
-                *outputImage = copy;
-                Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
             }
             Mutex::GetInstance().Unlock();
         }
