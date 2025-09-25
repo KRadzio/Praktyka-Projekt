@@ -305,7 +305,9 @@ void App::DrawMiddleButtonsWindow(float h)
                 errorPopupAlgActive = true;
                 errorCopying = true;
             }
-            LaunchAlgorithms();
+            // not running
+            if(!algorithmThread.joinable())
+                LaunchAlgorithms();
         }
     }
 
@@ -362,7 +364,7 @@ void App::DrawMiddleButtonsWindow(float h)
         resetDonePopupActive = true;
     }
 
-    if(resetDonePopupActive)
+    if (resetDonePopupActive)
         DrawResetDonePopup();
 
     ImGui::End();
@@ -844,9 +846,14 @@ void App::DrawInProgressPopup()
             {
                 Mutex::GetInstance().Lock();
                 Mutex::GetInstance().ThreadStopped();
-                // outputImage.RefreshPixelValuesArrays();
-                // outputImage.RefreshTexture();
                 Mutex::GetInstance().Unlock();
+
+                if (algorithmThread.joinable())
+                    algorithmThread.join();
+
+                outputImage.RefreshPixelValuesArrays();
+                outputImage.RefreshTexture();
+
                 inProgressPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
@@ -866,6 +873,8 @@ void App::DrawInProgressPopup()
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
             {
+                if (algorithmThread.joinable())
+                    algorithmThread.join();
                 inProgressPopupActive = false;
                 justRefreshed = false;
                 ImGui::CloseCurrentPopup();
@@ -1128,51 +1137,39 @@ void App::LaunchAlgorithms()
     {
     case Negative:
         algorithmThread = std::thread(&Algorithms::CreateNegative, &outputImage);
-        algorithmThread.detach();
         break;
     case Brighten:
         algorithmThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case Contrast:
         algorithmThread = std::thread(&Algorithms::Contrast, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case Exponentiation:
         algorithmThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case LeveledHistogram:
         algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
-        algorithmThread.detach();
         break;
     case Binarization:
         algorithmThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case LinearFilter:
         algorithmThread = std::thread(&Algorithms::LinearFilter, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case MedianFilter:
         algorithmThread = std::thread(&Algorithms::MedianFilter, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case Erosion:
         algorithmThread = std::thread(&Algorithms::Erosion, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case Dilatation:
         algorithmThread = std::thread(&Algorithms::Dilatation, &outputImage, &params);
-        algorithmThread.detach();
         break;
     case Skeletonization:
         algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage);
-        algorithmThread.detach();
         break;
     case Hought:
         algorithmThread = std::thread(&Algorithms::Hought, &outputImage);
-        algorithmThread.detach();
         break;
     default:
         break;
