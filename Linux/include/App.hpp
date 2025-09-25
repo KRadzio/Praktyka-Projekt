@@ -62,7 +62,7 @@
 #define HELP_WINDOW_WIDTH 400
 #define HELP_WINDOW_HEIGHT 300
 
-#define DEFAULT_REFRESH_INTERVAL 15.0
+#define DEFAULT_REFRESH_INTERVAL 5.0
 
 class App
 {
@@ -172,9 +172,10 @@ private:
     bool resetDonePopupActive = false;
 
     // TODO
-    // add more algs (in progress)
+    // add more algs (two more)
     // add a transformation function diragram in the middle of the bottom bar
-    // ^^^ nat all algorithms need this
+    // (negative, contrast, brighten, exponentiation, leveledHistogram, binarization, and Hought)
+    // may have a function (Hought is special case)
     // rename some methods (there is more than just drawing in some parts)
     // write docs in code, in pdf and in help menu
 
