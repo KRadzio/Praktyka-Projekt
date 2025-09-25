@@ -178,6 +178,7 @@ private:
     // add new directory button in save as window
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
+    // rename some methods (there is more than just drawing in some parts)
     // write docs in code, in pdf and in help menu
 
     // image histograms and plot flags

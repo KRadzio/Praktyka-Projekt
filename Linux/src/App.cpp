@@ -1222,6 +1222,7 @@ void App::AutoRefreshOutputImage()
     if (counterRefreshImage == 0 && Mutex::GetInstance().GetState() == Mutex::MainThreadRefresh)
     {
         outputImage.RefreshTexture();
+        outputImage.RefreshPixelValuesArrays();
         counterRefreshImage = refreshIntervalValue;
         Mutex::GetInstance().SetState(Mutex::WaitingForCounter);
         Mutex::GetInstance().Unlock();
