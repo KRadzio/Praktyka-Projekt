@@ -592,7 +592,7 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
         }
         if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
         {
-            *outputImage = copy;
+            *outputImage = fullCopy;
             Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
         }
         Mutex::GetInstance().Unlock();
@@ -687,7 +687,7 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
         }
         if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
         {
-            *outputImage = copy;
+            *outputImage = fullCopy;
             Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
         }
         Mutex::GetInstance().Unlock();
