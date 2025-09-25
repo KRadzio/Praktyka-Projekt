@@ -126,7 +126,6 @@ private:
     void DrawSavePopup();
     void DrawSaveWarningAndErrorPopup();
     void DrawSaveWarningPopup();
-    void DrawNewDirPopup();
     void DrawSettingsPopup();
     void DrawMiddleErrorPopup();
     void DrawInProgressPopup();
@@ -168,14 +167,12 @@ private:
     bool errorCopying = false;
     bool autoRefreshPictureEnabled = false;
     bool settingsPopupActive = false;
-    bool newDirPopupActive = false;
     bool helpWindowActive = false;
     bool drawExtraFunctionDiagram = false;
     bool resetDonePopupActive = false;
 
     // TODO
     // add more algs (in progress)
-    // add new directory button in save as window
     // add a transformation function diragram in the middle of the bottom bar
     // ^^^ nat all algorithms need this
     // rename some methods (there is more than just drawing in some parts)

@@ -10,6 +10,9 @@
 #include "Renderer.hpp"
 
 #define MAX_VAL 256
+#define BLACK 0
+#define WHITE 255
+
 
 class Image
 {

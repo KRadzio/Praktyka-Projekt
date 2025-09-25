@@ -760,10 +760,6 @@ void App::DrawSaveWarningPopup()
     }
 }
 
-void App::DrawNewDirPopup()
-{
-}
-
 void App::DrawSettingsPopup()
 {
     if (settingsPopupActive)
