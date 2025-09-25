@@ -521,10 +521,10 @@ void App::DrawLoadPopup()
         auto dir = FileSelector::GetInstance().GetCurrDir();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().string().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string().c_str());
         ImGui::Separator();
         for (auto entry : dir)
-            if (ImGui::Selectable(entry.path().filename().string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().generic_u8string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
                 if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
                 {
                     if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
@@ -605,10 +605,10 @@ void App::DrawSavePopup()
         auto dir = FileSelector::GetInstance().GetCurrDir();
         auto map = FileSelector::GetInstance().GetDirMaped();
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().string().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string().c_str());
         ImGui::Separator();
         for (auto entry : dir)
-            if (ImGui::Selectable(entry.path().filename().string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().generic_u8string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
                 if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
                     warningPopupActive = true;
         ImGui::EndChild();

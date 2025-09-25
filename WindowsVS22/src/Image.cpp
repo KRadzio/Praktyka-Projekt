@@ -94,15 +94,14 @@ void Image::SaveImage()
     else
     {
         if (filePath.extension() == ".png")
-            IMG_SavePNG(surface, filePath.string().c_str());
+            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
         else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
-            // std::string newFileName = sourceImageName + ".jpg";
-            IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+            IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
         else if (filePath.extension() == ".bmp")
-            SDL_SaveBMP(surface, filePath.string().c_str());
+            SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
         // default to png
         else
-            IMG_SavePNG(surface, filePath.string().c_str());
+            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
     }
 }
 
@@ -114,14 +113,14 @@ void Image::SaveImageAs(std::filesystem::path path)
     {
         filePath = path;
         if (path.extension() == ".png")
-            IMG_SavePNG(surface, filePath.string().c_str());
+            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
         else if (path.extension() == ".jpg" || path.extension() == "jpeg")
-            IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+            IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
         else if (path.extension() == ".bmp")
-            SDL_SaveBMP(surface, filePath.string().c_str());
+            SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
         // default to png
         else
-            IMG_SavePNG(surface, filePath.string().c_str());
+            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
     }
 }
 
@@ -136,23 +135,23 @@ void Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int exten
         if (extension == PNG)
         {
             filePath += ".png";
-            IMG_SavePNG(surface, filePath.string().c_str());
+            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
         }
         else if (extension == JPG)
         {
             filePath += ".jpg";
-            IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+            IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
         }
         else if (extension == BMP)
         {
             filePath += ".bmp";
-            SDL_SaveBMP(surface, filePath.string().c_str());
+            SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
         }
         // default to png
         else
         {
             filePath += ".png";
-            IMG_SavePNG(surface, filePath.string().c_str());
+            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
         }
     }
 }
@@ -160,7 +159,7 @@ void Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int exten
 int Image::SetSourceImage(std::filesystem::path path)
 {
     ClearImage();
-    surface = IMG_Load(path.string().c_str());
+    surface = IMG_Load(path.generic_u8string().c_str());
     if (surface == nullptr)
         return -1;
     else
