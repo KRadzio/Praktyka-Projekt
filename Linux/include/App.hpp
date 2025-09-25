@@ -144,6 +144,7 @@ private:
     void DrawHelpMenu();
     void LaunchAlgorithms();
     void ResetParameters();
+    void AutoRefreshOutputImage();
 
     // input and display arrays
     void DrawLinearInputArray();
@@ -165,6 +166,7 @@ private:
     bool inProgressPopupActive = false;
     bool justRefreshed = false;
     bool errorCopying = false;
+    bool autoRefreshPictureEnabled = false;
     bool settingsPopupActive = false;
     bool newDirPopupActive = false;
     bool helpWindowActive = false;

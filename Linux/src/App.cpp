@@ -113,6 +113,9 @@ int App::MainLoop()
             counterRefreshHist -= duration.count();
         if (counterRefreshHist < 0)
             counterRefreshHist = 0.0;
+
+        if (autoRefreshPictureEnabled)
+            AutoRefreshOutputImage();
     }
 
     Cleanup();
@@ -206,8 +209,8 @@ void App::DrawMenuBar()
 
     if (ImGui::BeginMenu("Ustawienia"))
     {
-        if (ImGui::MenuItem("Czas odświerzania"))
-            settingsPopupActive = true;
+        ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled);
+        ImGui::MenuItem("Czas odświerzania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
         ImGui::EndMenu();
     }
 
@@ -262,12 +265,6 @@ void App::DrawPicturesAndMiddle()
     Mutex::GetInstance().Lock();
     if (!outputImage.NoTexture())
     {
-        // refresh it only if is getting transformed and in intervals
-        if (Mutex::GetInstance().IsThreadRunning() && counterRefreshImage == 0.0)
-        {
-            outputImage.RefreshTexture();
-            counterRefreshImage = refreshIntervalValue;
-        }
         if (outputImage.GetWidth() < ImGui::GetWindowWidth())
             ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
         if (outputImage.GetHeight() < ImGui::GetWindowHeight())
@@ -300,13 +297,14 @@ void App::DrawMiddleButtonsWindow(float h)
             // can not be called if thread is execiting (no CS)
             Mutex::GetInstance().ThreadRunning();
             outputImage = inputImage;
+            counterRefreshImage = refreshIntervalValue;
             if (outputImage.NoSurface())
             {
                 errorPopupAlgActive = true;
                 errorCopying = true;
             }
             // not running
-            if(!algorithmThread.joinable())
+            if (!algorithmThread.joinable())
                 LaunchAlgorithms();
         }
     }
@@ -434,12 +432,6 @@ void App::DrawHistogramsAndFunctions()
     ImGui::RadioButton("B", &modeO, 3);
     // CS
     Mutex::GetInstance().Lock();
-    // refresh it only if is getting transformed and in intervals
-    if (!outputImage.NoSurface() && Mutex::GetInstance().IsThreadRunning() && counterRefreshHist == 0.0)
-    {
-        outputImage.RefreshPixelValuesArrays();
-        counterRefreshHist = refreshIntervalValue;
-    }
     if (modeO == Brightnes)
         ImGui::PlotHistogram("##", outputImage.GetLightValues(), MAX_VAL, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
     if (modeO == R)
@@ -1207,6 +1199,37 @@ void App::ResetParameters()
     params.dilatationElement3x3 = EMPTY_3x3;
     params.dilatationElement5x5 = EMPTY_5x5;
     params.dilatationElement7x7 = EMPTY_7x7;
+}
+
+void App::AutoRefreshOutputImage()
+{
+    Mutex::GetInstance().Lock();
+    // do not refresh
+    if (outputImage.NoTexture() || !Mutex::GetInstance().IsThreadRunning())
+    {
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    // notify the thread to update output image
+    if (counterRefreshImage == 0 && Mutex::GetInstance().GetState() == Mutex::WaitingForCounter)
+    {
+        Mutex::GetInstance().SetState(Mutex::AlgorithmThreadRefresh);
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    // image reasigned time to refresh texture
+    if (counterRefreshImage == 0 && Mutex::GetInstance().GetState() == Mutex::MainThreadRefresh)
+    {
+        outputImage.RefreshTexture();
+        counterRefreshImage = refreshIntervalValue;
+        Mutex::GetInstance().SetState(Mutex::WaitingForCounter);
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    Mutex::GetInstance().Unlock();
 }
 
 void App::DrawLinearInputArray()

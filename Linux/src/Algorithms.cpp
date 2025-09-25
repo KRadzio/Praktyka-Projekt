@@ -24,6 +24,11 @@ void Algorithms::CreateNegative(Image *outputImage)
             Mutex::GetInstance().Unlock();
             return;
         }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        }
         Mutex::GetInstance().Unlock();
     }
 
@@ -80,6 +85,11 @@ void Algorithms::BrightenImage(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Unlock();
             return;
         }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        }
         Mutex::GetInstance().Unlock();
     }
 
@@ -129,6 +139,11 @@ void Algorithms::Contrast(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Unlock();
             return;
         }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        }
         Mutex::GetInstance().Unlock();
     }
 
@@ -168,6 +183,11 @@ void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Unlock();
             return;
         }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        }
         Mutex::GetInstance().Unlock();
     }
 
@@ -205,6 +225,11 @@ void Algorithms::LevelHistogram(Image *outputImage)
             copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
+        }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
         }
         Mutex::GetInstance().Unlock();
     }
@@ -292,6 +317,11 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                 Mutex::GetInstance().Unlock();
                 return;
             }
+            if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+            {
+                *outputImage = copy;
+                Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+            }
             Mutex::GetInstance().Unlock();
         }
     }
@@ -322,6 +352,11 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                 copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
+            }
+            if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+            {
+                *outputImage = copy;
+                Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
             }
             Mutex::GetInstance().Unlock();
         }
@@ -397,6 +432,11 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                 Mutex::GetInstance().Unlock();
                 return;
             }
+            if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+            {
+                *outputImage = copy;
+                Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+            }
             Mutex::GetInstance().Unlock();
         }
     }
@@ -422,6 +462,11 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
                 copy.ClearImage();
                 Mutex::GetInstance().Unlock();
                 return;
+            }
+            if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+            {
+                *outputImage = copy;
+                Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
             }
             Mutex::GetInstance().Unlock();
         }
@@ -545,6 +590,11 @@ void Algorithms::LinearFilter(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Unlock();
             return;
         }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        }
         Mutex::GetInstance().Unlock();
     }
 
@@ -634,6 +684,11 @@ void Algorithms::MedianFilter(Image *outputImage, ParametersStruct *params)
             copy.ClearImage();
             Mutex::GetInstance().Unlock();
             return;
+        }
+        if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+        {
+            *outputImage = copy;
+            Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
         }
         Mutex::GetInstance().Unlock();
     }
