@@ -109,11 +109,6 @@ int App::MainLoop()
         if (counterRefreshImage < 0)
             counterRefreshImage = 0.0;
 
-        if (counterRefreshHist > 0)
-            counterRefreshHist -= duration.count();
-        if (counterRefreshHist < 0)
-            counterRefreshHist = 0.0;
-
         if (autoRefreshPictureEnabled)
             AutoRefreshOutputImage();
     }
@@ -297,7 +292,11 @@ void App::DrawMiddleButtonsWindow(float h)
             // can not be called if thread is execiting (no CS)
             Mutex::GetInstance().ThreadRunning();
             outputImage = inputImage;
-            counterRefreshImage = refreshIntervalValue;
+            if (autoRefreshPictureEnabled)
+            {
+                counterRefreshImage = refreshIntervalValue;
+                Mutex::GetInstance().SetState(Mutex::WaitingForCounter);
+            }
             if (outputImage.NoSurface())
             {
                 errorPopupAlgActive = true;

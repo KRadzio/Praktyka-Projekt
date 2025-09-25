@@ -198,7 +198,6 @@ private:
     // Thread
     std::thread algorithmThread;
     float counterRefreshImage = 0.0;
-    float counterRefreshHist = 0.0;
     float refreshIntervalValue = DEFAULT_REFRESH_INTERVAL;
 
     // Params
