@@ -2,11 +2,17 @@
 #define IMAGE_HPP
 
 #include <string>
+#include <filesystem>
 
 #include <SDL.h>
 #include <SDL_image.h>
 
+#include "Renderer.hpp"
+
 #define MAX_VAL 256
+#define BLACK 0
+#define WHITE 255
+
 
 class Image
 {
@@ -16,6 +22,7 @@ public:
         uint8_t b;
         uint8_t g;
         uint8_t r;
+        int brightnes; // set auto
     };
 
     enum Extension
@@ -28,10 +35,9 @@ public:
 
 public:
     Image();
-    // the texture is not copied so use RefreshTexture after this one
-    // IT CHANGES THE FILEPATH
-    Image &operator=(const Image &other);
-    Image(std::string filename, SDL_Renderer *renderer);
+    Image(const Image &other);
+    Image operator=(const Image &other);
+    Image(std::string filename);
     ~Image();
 
 public:
@@ -43,31 +49,53 @@ public:
     inline float *GetRValues() { return valuesR; }
     inline float *GetGValues() { return valuesG; }
     inline float *GetBValues() { return valuesB; }
-    inline float *GetDistributor() { return distributor; }
-    inline std::string GetImageName() { return sourceImageName; }
-    std::string GetExtension();
+    inline float *GetDistributor() { return distributorLight; }
+    inline float *GetDistributorR() { return distributorR; }
+    inline float *GetDistributorG() { return distributorG; }
+    inline float *GetDistributorB() { return distributorB; }
+    inline int GetPixelCount() { return width * height; }
 
-    // if save as was not used, it will save it as <filaname>.png
-    // IT CAN SAVE AS EXISTING IMAGE
+    inline std::filesystem::path GetImagePath() { return filePath; }
+    inline std::string GetExtension() { return filePath.extension().string(); }
+
+    void CopyBrightnessHistogram(float *dst);
+    void CopyNormalisedBrightnessHistogram(float *dst);
+
     void SaveImage();
-    void SaveImageAs(std::string filename);
-    void SaveImageAs(std::string path, char *filename, int extension);
-    int SetSourceImage(std::string filename, SDL_Renderer *renderer);
+    void SaveImageAs(std::filesystem::path path);
+    void SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
+    int SetSourceImage(std::filesystem::path path);
     void ClearImage();
 
     inline bool NoSurface() { return surface == nullptr; }
     inline bool NoTexture() { return texture == nullptr; }
 
     void RefreshPixelValuesArrays();
-    void RefreshTexture(SDL_Renderer *renderer);
+    void RefreshTexture();
 
     Pixel GetPixel(int x, int y);
     void SetPixel(int x, int y, Pixel pix);
 
-    inline void LockImage() {SDL_LockSurface(surface);}
-    inline void UnlockImage() {SDL_UnlockSurface(surface);}
+    Pixel GetPixelNoLock(int x, int y);
+    void SetPixelNoLock(int x, int y, Pixel pix);
 
-    void Copy(Image& other);
+    void SetPixelWhite(int x, int y);
+    void SetPixelWhiteNoLock(int x, int y);
+
+    void SetPixelBlack(int x, int y);
+    void SetPixelBlackNoLock(int x, int y);
+
+    void SetPixelByBrightness(int x, int y, uint8_t bright);
+
+    // unused
+    inline void LockImage() { SDL_LockSurface(surface); }
+    // unused
+    inline void UnlockImage() { SDL_UnlockSurface(surface); }
+
+    void Copy(Image &other);
+
+    // use only if pixels and size info is needed
+    void CopyOnlySurfaceAndSize(Image &other);
 
 private:
     SDL_Surface *surface = nullptr;
@@ -78,9 +106,11 @@ private:
     float valuesR[MAX_VAL];
     float valuesG[MAX_VAL];
     float valuesB[MAX_VAL];
-    float distributor[MAX_VAL];
-    std::string sourceImageName = "";
-    Extension ext = UNKNOWN;
+    float distributorLight[MAX_VAL];
+    float distributorR[MAX_VAL];
+    float distributorG[MAX_VAL];
+    float distributorB[MAX_VAL];
+    std::filesystem::path filePath = "";
 };
 
 #endif

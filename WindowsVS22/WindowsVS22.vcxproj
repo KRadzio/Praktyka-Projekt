@@ -106,7 +106,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)SDL2_image-2.8.8\lib\x64;$(SolutionDir)SDL2-2.32.8\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -139,6 +139,8 @@
     <ClCompile Include="src\FileSelector.cpp" />
     <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Mutex.cpp" />
+    <ClCompile Include="src\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -153,6 +155,8 @@
     <ClInclude Include="include\App.hpp" />
     <ClInclude Include="include\FileSelector.hpp" />
     <ClInclude Include="include\Image.hpp" />
+    <ClInclude Include="include\Mutex.hpp" />
+    <ClInclude Include="include\Renderer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
