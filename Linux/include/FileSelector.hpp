@@ -30,7 +30,6 @@ public:
     void GoUpADirectory();
     void RefreshCurrDir();
 
-    inline bool FileExists(std::string filename) { return std::filesystem::exists(filename); }
     inline bool FileExists(std::filesystem::path path) { return std::filesystem::exists(path); }
 
 private:
