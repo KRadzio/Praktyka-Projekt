@@ -259,7 +259,7 @@ namespace Algorithms
         int boundCount = 1;
         int lowerBound = 0;
         int upperBound = 0;
-        int method;
+        int method = None;
         // Linear Filters
         int linerFilterS = Average;
         int linearFilterSize = S3x3;

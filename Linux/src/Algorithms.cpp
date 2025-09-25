@@ -331,9 +331,9 @@ void Algorithms::Binarization(Image *outputImage, ParametersStruct *params)
         float sum_JG = 0;
         float sum_G = 0;
 
-        for (int row = 0; row < copy.GetHeight(); row++)
+        for (int row = 1; row < copy.GetHeight() - 1; row++)
         {
-            for (int col = 0; col < copy.GetWidth(); col++)
+            for (int col = 1; col < copy.GetWidth() - 1; col++)
             {
                 Image::Pixel pix = copy.GetPixel(col, row);
                 Gx = copy.GetPixel(col + 1, row).brightnes - copy.GetPixel(col - 1, row).brightnes;
