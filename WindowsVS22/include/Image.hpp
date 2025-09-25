@@ -63,7 +63,7 @@ public:
 
     void SaveImage();
     void SaveImageAs(std::filesystem::path path);
-    void SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
+    void SaveImageAs(std::filesystem::path dirPath, const char *filename, int extension);
     int SetSourceImage(std::filesystem::path path);
     void ClearImage();
 
