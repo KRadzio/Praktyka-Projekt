@@ -22,8 +22,7 @@ public:
     inline std::filesystem::path GetCurrDirectoryPath() { return currDirectoryPath; }
     inline std::vector<std::filesystem::directory_entry> GetCurrDir() { return currDir; }
     inline std::map<std::filesystem::path, bool> &GetDirMaped() { return dirMaped; }
-    inline std::string GetCurrEntry() { return currEntrySelected; }
-    inline std::string GetFullPathToFile() { return currEntrySelected; }
+    inline std::filesystem::path GetFullPathToFile() { return currEntrySelected; }
     void DeselectCurrEntry();
 
     int SelectEntry(std::filesystem::path entryname);
@@ -43,7 +42,7 @@ private:
     std::vector<std::filesystem::directory_entry> currDir; // the dircetory
     std::map<std::filesystem::path, bool> dirMaped; // maped by full path
 
-    std::filesystem::path currEntrySelected = ""; // relative path
+    std::filesystem::path currEntrySelected = ""; // full path
 };
 
 #endif
