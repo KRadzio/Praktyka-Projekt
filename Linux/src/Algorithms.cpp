@@ -1020,6 +1020,9 @@ void Algorithms::Skeletonization(Image *outputImage)
         {
             *outputImage = fullCopy;
             fullCopy.ClearImage();
+            for (int i = 0; i < h; i++)
+                pixelsStatus[i].clear();
+            pixelsStatus.clear();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -1103,6 +1106,9 @@ void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
             params->maxIndexTheta = maxThetaIndex;
             params->maxHoughtVal = max;
             copy.ClearImage();
+            for (int i = 0; i < 2 * roMax; i++)
+                acumulator[i].clear();
+            acumulator.clear();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -1140,6 +1146,10 @@ void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
             pix.r = 255 - tmp;
             outputImage->SetPixel(j, i, pix);
         }
+
+    for (int i = 0; i < 2 * roMax; i++)
+        acumulator[i].clear();
+    acumulator.clear();
 
     params->maxIndexRo = maxRoIndex;
     params->maxIndexTheta = maxThetaIndex;
