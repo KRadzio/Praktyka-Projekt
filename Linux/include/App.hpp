@@ -144,7 +144,7 @@ private:
     void LaunchAlgorithms();
     void ResetParameters();
     void AutoRefreshOutputImage();
-    void RefreshSkel();
+    void RefreshSkelAndHought();
 
     // input and display arrays
     void DrawLinearInputArray();
@@ -173,8 +173,6 @@ private:
     bool resetDonePopupActive = false;
 
     // TODO
-    // add more algs (one more)
-    // add display for Hought transformation
     // rename some methods (there is more than just drawing in some parts)
     // write docs in code, in pdf and in help menu
 

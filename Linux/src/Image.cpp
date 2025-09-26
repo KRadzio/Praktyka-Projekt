@@ -200,6 +200,20 @@ void Image::ClearImage()
     filePath = "";
 }
 
+void Image::SetBlankSurface(int width, int height)
+{
+    SDL_FreeSurface(surface);
+    if (texture != nullptr)
+        SDL_DestroyTexture(texture);
+    surface = nullptr;
+    texture = nullptr;
+    this->width = width;
+    this->height = height;
+    surface = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+    texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
+    RefreshPixelValuesArrays();
+}
+
 void Image::RefreshPixelValuesArrays()
 {
     for (int i = 0; i < MAX_VAL; i++)

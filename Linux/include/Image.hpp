@@ -70,6 +70,9 @@ public:
     inline bool NoSurface() { return surface == nullptr; }
     inline bool NoTexture() { return texture == nullptr; }
 
+    // sets a white surface of specified dimensions
+    void SetBlankSurface(int width, int height);
+
     void RefreshPixelValuesArrays();
     void RefreshTexture();
 

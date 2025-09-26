@@ -112,8 +112,8 @@ int App::MainLoop()
         if (autoRefreshPictureEnabled)
             AutoRefreshOutputImage();
 
-        if(algorithmSelected == Skeletonization)
-            RefreshSkel();
+        if (algorithmSelected == Skeletonization || algorithmSelected == Hought)
+            RefreshSkelAndHought();
     }
 
     Cleanup();
@@ -207,7 +207,7 @@ void App::DrawMenuBar()
 
     if (ImGui::BeginMenu("Ustawienia"))
     {
-        ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled, algorithmSelected != Skeletonization);
+        ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled, algorithmSelected != Skeletonization && algorithmSelected != Hought);
         ImGui::MenuItem("Czas odświerzania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
         ImGui::EndMenu();
     }
@@ -258,19 +258,43 @@ void App::DrawPicturesAndMiddle()
 
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Obraz wyjściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    // CS
-    Mutex::GetInstance().Lock();
-    if (!outputImage.NoTexture())
+    if (algorithmSelected != Hought)
     {
-        if (outputImage.GetWidth() < ImGui::GetWindowWidth())
-            ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
-        if (outputImage.GetHeight() < ImGui::GetWindowHeight())
-            ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
-        ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
+        ImGui::Begin("Obraz wyjściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+        // CS
+        Mutex::GetInstance().Lock();
+        if (!outputImage.NoTexture())
+        {
+            if (outputImage.GetWidth() < ImGui::GetWindowWidth())
+                ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
+            if (outputImage.GetHeight() < ImGui::GetWindowHeight())
+                ImGui::SetCursorPosY((ImGui::GetWindowHeight() - outputImage.GetHeight()) / 2);
+            ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
+        }
+        Mutex::GetInstance().Unlock();
+        ImGui::End();
     }
-    Mutex::GetInstance().Unlock();
-    ImGui::End();
+    // for Hought transormation it has to be drawn a bit diffrent
+    else
+    {
+        ImGui::Begin("Tablica akumulatorów", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+        // CS
+        Mutex::GetInstance().Lock();
+        ImGui::Text("Wartość maksymalna tablicy akumulatorów: %d", params.maxHoughtVal);
+        ImGui::Text("Wartość ro: %d", params.maxIndexRo);
+        ImGui::Text("Wartość theta: %d", params.maxIndexTheta);
+        ImGui::Separator();
+        if (!outputImage.NoTexture())
+        {
+            if (outputImage.GetWidth() < ImGui::GetWindowWidth())
+                ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
+            if (outputImage.GetHeight() < ImGui::GetWindowHeight() - ImGui::GetCursorPosY())
+                ImGui::SetCursorPosY((ImGui::GetWindowHeight() + ImGui::GetCursorPosY() - outputImage.GetHeight()) / 2);
+            ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
+        }
+        Mutex::GetInstance().Unlock();
+        ImGui::End();
+    }
 
     if (errorPopupAlgActive)
         DrawMiddleErrorPopup();
@@ -1160,7 +1184,7 @@ void App::LaunchAlgorithms()
         algorithmThread = std::thread(&Algorithms::Skeletonization, &outputImage);
         break;
     case Hought:
-        algorithmThread = std::thread(&Algorithms::Hought, &outputImage);
+        algorithmThread = std::thread(&Algorithms::Hought, &outputImage, &params);
         break;
     default:
         break;
@@ -1198,6 +1222,10 @@ void App::ResetParameters()
     params.dilatationElement3x3 = EMPTY_3x3;
     params.dilatationElement5x5 = EMPTY_5x5;
     params.dilatationElement7x7 = EMPTY_7x7;
+    // Hought
+    params.maxIndexRo = 0;
+    params.maxIndexTheta = 0;
+    params.maxHoughtVal = 0;
 }
 
 void App::AutoRefreshOutputImage()
@@ -1232,7 +1260,7 @@ void App::AutoRefreshOutputImage()
     Mutex::GetInstance().Unlock();
 }
 
-void App::RefreshSkel()
+void App::RefreshSkelAndHought()
 {
     Mutex::GetInstance().Lock();
     // do not refresh

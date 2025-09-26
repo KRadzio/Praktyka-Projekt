@@ -1007,8 +1007,6 @@ void Algorithms::Skeletonization(Image *outputImage)
             {
                 for (int col = 0; col < fullCopy.GetWidth(); col++)
                 {
-                    if (row == 37)
-                        row = 37;
                     if (pixelsStatus[row][col] == REMOVE)
                     {
                         fullCopy.SetPixelWhite(col, row);
@@ -1041,11 +1039,112 @@ void Algorithms::Skeletonization(Image *outputImage)
     Mutex::GetInstance().Unlock();
 }
 
-void Algorithms::Hought(Image *outputImage)
+void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
 {
+    std::vector<std::vector<int>> acumulator;
+    // max val
+    int max = INT_MIN;
+    // max coords
+    int maxThetaIndex = 0;
+    int maxRoIndex = 0;
+
     Mutex::GetInstance().Lock();
-    auto o = *outputImage;
-    o.ClearImage();
+    auto copy = *outputImage;
+    int roMax = sqrt(copy.GetHeight() * copy.GetHeight() + copy.GetWidth() * copy.GetWidth());
+    outputImage->SetBlankSurface(THETA_NUM, 2 * roMax);
+    Mutex::GetInstance().Unlock();
+
+    acumulator = std::vector<std::vector<int>>(2 * roMax);
+    for (int i = 0; i < 2 * roMax; i++)
+        acumulator[i] = std::vector<int>(THETA_NUM);
+
+    for (int i = 0; i < 2 * roMax; i++)
+        for (int j = 0; j < THETA_NUM; j++)
+            acumulator[i][j] = 0;
+
+    for (int row = 0; row < copy.GetHeight(); row++)
+    {
+        for (int col = 0; col < copy.GetWidth(); col++)
+        {
+            auto pix = copy.GetPixel(col, row);
+            if (pix.brightnes == BLACK)
+            {
+                int currRo;
+                for (int t = 0; t < THETA_NUM; t++)
+                {
+                    currRo = col * cos(t * (M_PIf / 180)) + row * sin(t * (M_PIf / 180));
+                    acumulator[currRo + roMax][t]++;
+                    if (acumulator[currRo + roMax][t] > max)
+                    {
+                        max = acumulator[currRo + roMax][t];
+                        maxThetaIndex = t;
+                        maxRoIndex = currRo;
+                    }
+                }
+            }
+        }
+        // refresh for every line
+        Mutex::GetInstance().Lock();
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            for (int i = 0; i < 2 * roMax; i++)
+                for (int j = 0; j < THETA_NUM; j++)
+                {
+                    float tmp = acumulator[i][j];
+                    tmp /= max;
+                    tmp *= 255;
+                    Image::Pixel pix;
+                    pix.g = 255 - tmp;
+                    pix.b = 255 - tmp;
+                    pix.r = 255 - tmp;
+                    outputImage->SetPixel(j, i, pix);
+                }
+            params->maxIndexRo = maxRoIndex;
+            params->maxIndexTheta = maxThetaIndex;
+            params->maxHoughtVal = max;
+            copy.ClearImage();
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        for (int i = 0; i < 2 * roMax; i++)
+            for (int j = 0; j < THETA_NUM; j++)
+            {
+                float tmp = acumulator[i][j];
+                tmp /= max;
+                tmp *= 255;
+                Image::Pixel pix;
+                pix.g = 255 - tmp;
+                pix.b = 255 - tmp;
+                pix.r = 255 - tmp;
+                outputImage->SetPixel(j, i, pix);
+            }
+        params->maxIndexRo = maxRoIndex;
+        params->maxIndexTheta = maxThetaIndex;
+        params->maxHoughtVal = max;
+        Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        Mutex::GetInstance().Unlock();
+    }
+
+    // refresh after the end
+    Mutex::GetInstance().Lock();
+
+    for (int i = 0; i < 2 * roMax; i++)
+        for (int j = 0; j < THETA_NUM; j++)
+        {
+            float tmp = acumulator[i][j];
+            tmp /= max;
+            tmp *= 255;
+            Image::Pixel pix;
+            pix.g = 255 - tmp;
+            pix.b = 255 - tmp;
+            pix.r = 255 - tmp;
+            outputImage->SetPixel(j, i, pix);
+        }
+
+    params->maxIndexRo = maxRoIndex;
+    params->maxIndexTheta = maxThetaIndex;
+    params->maxHoughtVal = max;
+    copy.ClearImage();
     Mutex::GetInstance().ThreadStopped();
     Mutex::GetInstance().Unlock();
 }
