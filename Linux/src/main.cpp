@@ -1,6 +1,6 @@
 #include "App.hpp"
 
-
+// entry point
 int main()
 {  
     int returnCode = App::GetInstance().Init();

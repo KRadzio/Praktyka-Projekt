@@ -555,7 +555,7 @@ void App::DrawLoadPopup()
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
                 if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
                 {
-                    if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
+                    if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToEntry()) == -1)
                     {
                         errorPopupActive = true;
                         outputImage.ClearImage();
@@ -574,7 +574,7 @@ void App::DrawLoadPopup()
         {
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
             {
-                if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToFile()) == -1)
+                if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToEntry()) == -1)
                 {
                     errorPopupActive = true;
                     outputImage.ClearImage();
@@ -719,7 +719,7 @@ void App::DrawSaveWarningAndErrorPopup()
                     customName = false;
                 }
                 else
-                    outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToFile());
+                    outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToEntry());
                 saveAsPopupActive = false;
                 warningPopupActive = false;
                 ImGui::CloseCurrentPopup();

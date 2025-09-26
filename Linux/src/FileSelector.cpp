@@ -2,6 +2,7 @@
 
 FileSelector::FileSelector()
 {
+    // set vector and map
     currDirectoryPath = std::filesystem::current_path();
     for (const auto &entry : std::filesystem::directory_iterator(currDirectoryPath))
     {
@@ -20,6 +21,7 @@ FileSelector &FileSelector::GetInstance()
 
 void FileSelector::DeselectCurrEntry()
 {
+    // set to none
     if (currEntrySelected != "")
     {
         dirMaped[currEntrySelected] = false;
@@ -29,7 +31,7 @@ void FileSelector::DeselectCurrEntry()
 
 int FileSelector::SelectEntry(std::filesystem::path entryname)
 {
-    // empty
+    // empty select the new one
     if (currEntrySelected == "")
     {
         currEntrySelected = entryname;
@@ -37,7 +39,7 @@ int FileSelector::SelectEntry(std::filesystem::path entryname)
         return Ignore;
     }
 
-    // change selection
+    // change selection to the new one
     if (entryname != currEntrySelected)
     {
         dirMaped[currEntrySelected] = false;
@@ -45,16 +47,19 @@ int FileSelector::SelectEntry(std::filesystem::path entryname)
         dirMaped[currEntrySelected] = true;
         return Ignore;
     }
+
     // confirm selection
     else
     {
         dirMaped[currEntrySelected] = false;
+        // dir
         if (std::filesystem::is_directory(entryname))
         {
             currDirectoryPath = entryname;
             RefreshCurrDir();
             return DirEntry;
         }
+        // file
         else if (std::filesystem::is_regular_file(entryname))
             return FileEntry;
         return Ignore;
@@ -63,18 +68,19 @@ int FileSelector::SelectEntry(std::filesystem::path entryname)
 
 int FileSelector::SelectCurrEntry()
 {
-    // empty
+    // empty do nothing
     if (currEntrySelected == "")
         return Ignore;
-
     else
     {
+        // dir
         if (std::filesystem::is_directory(currEntrySelected))
         {
             currDirectoryPath = currEntrySelected;
             RefreshCurrDir();
             return DirEntry;
         }
+        // file
         else if (std::filesystem::is_regular_file(currEntrySelected))
             return FileEntry;
         return Ignore;
@@ -89,9 +95,11 @@ void FileSelector::GoUpADirectory()
 
 void FileSelector::RefreshCurrDir()
 {
+    // set entry to none
     currEntrySelected = "";
     currDir.clear();
     dirMaped.clear();
+    // refresh the vector and map
     for (const auto &entry : std::filesystem::directory_iterator(currDirectoryPath))
     {
         currDir.emplace(currDir.end(), entry);
