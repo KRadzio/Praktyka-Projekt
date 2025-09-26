@@ -144,6 +144,7 @@ private:
     void LaunchAlgorithms();
     void ResetParameters();
     void AutoRefreshOutputImage();
+    void RefreshSkel();
 
     // input and display arrays
     void DrawLinearInputArray();
@@ -172,10 +173,8 @@ private:
     bool resetDonePopupActive = false;
 
     // TODO
-    // add more algs (two more)
-    // add a transformation function diragram in the middle of the bottom bar
-    // (negative, contrast, brighten, exponentiation, leveledHistogram, binarization, and Hought)
-    // may have a function (Hought is special case)
+    // add more algs (one more)
+    // add display for Hought transformation
     // rename some methods (there is more than just drawing in some parts)
     // write docs in code, in pdf and in help menu
 

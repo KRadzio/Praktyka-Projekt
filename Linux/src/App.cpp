@@ -111,6 +111,9 @@ int App::MainLoop()
 
         if (autoRefreshPictureEnabled)
             AutoRefreshOutputImage();
+
+        if(algorithmSelected == Skeletonization)
+            RefreshSkel();
     }
 
     Cleanup();
@@ -204,7 +207,7 @@ void App::DrawMenuBar()
 
     if (ImGui::BeginMenu("Ustawienia"))
     {
-        ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled);
+        ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled, algorithmSelected != Skeletonization);
         ImGui::MenuItem("Czas odświerzania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
         ImGui::EndMenu();
     }
@@ -500,6 +503,7 @@ void App::DrawAlgMenuElements()
     {
         selectedAlgorithmName = "Szkieletyzacja";
         algorithmSelected = Skeletonization;
+        autoRefreshPictureEnabled = false;
     }
     if (ImGui::MenuItem("Transformacja Houghta", NULL, algorithmSelected == Hought))
     {
@@ -1216,6 +1220,30 @@ void App::AutoRefreshOutputImage()
 
     // image reasigned time to refresh texture
     if (counterRefreshImage == 0 && Mutex::GetInstance().GetState() == Mutex::MainThreadRefresh)
+    {
+        outputImage.RefreshTexture();
+        outputImage.RefreshPixelValuesArrays();
+        counterRefreshImage = refreshIntervalValue;
+        Mutex::GetInstance().SetState(Mutex::WaitingForCounter);
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    Mutex::GetInstance().Unlock();
+}
+
+void App::RefreshSkel()
+{
+    Mutex::GetInstance().Lock();
+    // do not refresh
+    if (outputImage.NoTexture() || !Mutex::GetInstance().IsThreadRunning())
+    {
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    // image reasigned time to refresh texture
+    if (Mutex::GetInstance().GetState() == Mutex::MainThreadRefresh)
     {
         outputImage.RefreshTexture();
         outputImage.RefreshPixelValuesArrays();

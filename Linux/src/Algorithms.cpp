@@ -936,10 +936,108 @@ void Algorithms::Dilatation(Image *outputImage, ParametersStruct *params)
 
 void Algorithms::Skeletonization(Image *outputImage)
 {
+    int S[8];
+    bool remain = true;
+    bool skel = false;
+
     Mutex::GetInstance().Lock();
-    auto o = *outputImage;
-    o.ClearImage();
+    auto fullCopy = *outputImage;
+
+    if (fullCopy.NoSurface())
+    {
+        Mutex::GetInstance().ThreadStopped();
+        Mutex::GetInstance().Unlock();
+        return;
+    }
+
+    Mutex::GetInstance().Unlock();
+
+    int h = fullCopy.GetHeight();
+    int w = fullCopy.GetWidth();
+
+    std::vector<std::vector<int>> pixelsStatus = std::vector<std::vector<int>>(h);
+
+    for (int i = 0; i < h; i++)
+        pixelsStatus[i] = std::vector<int>(w);
+
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            pixelsStatus[i][j] = NONE;
+
+    while (remain)
+    {
+        remain = false;
+        for (int i = 0; i < 8; i += 2)
+        {
+            for (int row = 1; row < fullCopy.GetHeight() - 1; row++)
+            {
+                for (int col = 1; col < fullCopy.GetWidth() - 1; col++)
+                {
+                    auto pix = fullCopy.GetPixel(col, row);
+                    // set neighbours
+                    S[0] = fullCopy.GetPixel(col + 1, row).brightnes;
+                    S[1] = fullCopy.GetPixel(col + 1, row - 1).brightnes;
+                    S[2] = fullCopy.GetPixel(col, row - 1).brightnes;
+                    S[3] = fullCopy.GetPixel(col - 1, row - 1).brightnes;
+                    S[4] = fullCopy.GetPixel(col - 1, row).brightnes;
+                    S[5] = fullCopy.GetPixel(col - 1, row + 1).brightnes;
+                    S[6] = fullCopy.GetPixel(col, row + 1).brightnes;
+                    S[7] = fullCopy.GetPixel(col + 1, row + 1).brightnes;
+
+                    if ((pix.brightnes == BLACK) && (S[i] == WHITE))
+                    {
+                        bool W1 = W1_CHECK;
+                        bool W2 = W2_CHECK;
+                        bool W3 = W3_CHECK;
+                        bool W4 = W4_CHECK;
+                        bool W5 = W5_CHECK;
+                        bool W6 = W6_CHECK;
+                        skel = W1 || W2 || W3 || W4 || W5 || W6;
+                        if (skel)
+                            pixelsStatus[row][col] = SKELETON;
+                        else
+                        {
+                            pixelsStatus[row][col] = REMOVE;
+                            remain = true;
+                        }
+                    }
+                }
+            }
+            for (int row = 0; row < fullCopy.GetHeight(); row++)
+            {
+                for (int col = 0; col < fullCopy.GetWidth(); col++)
+                {
+                    if (row == 37)
+                        row = 37;
+                    if (pixelsStatus[row][col] == REMOVE)
+                    {
+                        fullCopy.SetPixelWhite(col, row);
+                        pixelsStatus[row][col] = NONE;
+                    }
+                }
+            }
+        }
+        Mutex::GetInstance().Lock();
+        if (!Mutex::GetInstance().IsThreadRunning())
+        {
+            *outputImage = fullCopy;
+            fullCopy.ClearImage();
+            Mutex::GetInstance().Unlock();
+            return;
+        }
+        *outputImage = fullCopy;
+        Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+        Mutex::GetInstance().Unlock();
+    }
+
+    for (int i = 0; i < h; i++)
+        pixelsStatus[i].clear();
+    pixelsStatus.clear();
+
+    Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
+    *outputImage = fullCopy;
+    fullCopy.ClearImage();
     Mutex::GetInstance().Unlock();
 }
 
