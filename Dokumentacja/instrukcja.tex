@@ -22,6 +22,7 @@
 
 \subsection{}
 Krokiem numer jeden jest uruchomienie Microsoft Visual Studio 22.
+I otworzenie pliku projektu.
 
 \subsection{}
 Następnie należy otworzyć \textbf{Właściwości projektu}.
@@ -32,70 +33,39 @@ Najpierw w zakładcę \textbf{General} należy sprawdzić czy standard jest usta
     \caption{Wybór standardu}
 \end{figure}
 
-\subsection{}
-Kolejnym krokiem jest wejście w zakładkę \textbf{C/C++/General}.
-
 \newpage
 
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.8\textwidth]{General.png}
-  \caption{Zakładka C/C++/General}
-\end{figure}
+\subsection{}
+Kolejnym krokiem jest sprawdzenie czy zakaładki:
+\begin{itemize}
+  \item C/C++/General/Additional Include Directories
+  \item Linker/General/Additional Library Directories
+  \item Linker/Input/Additional Dependecies
+\end{itemize}
 
-Oraz wybrać \textbf{Additional Include Directories}.
+wyglądają tak jak na obrazkach
+
 
 \begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.8\textwidth]{IncludePath.png}
-  \caption{Okno dodawania flderów z plikami nagłówkowymi}
+  \caption{C/C++/General/Additional Include Directories}
 \end{figure}
-
-I sprawdzić czy ścieżki się zgadzają.
-
-\subsection{}
-Następnie należy przejść do zakładki \textbf{Linker/General}
 
 \newpage
-
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.8\textwidth]{GeneralL.png}
-  \caption{Zakładka Linker/General}
-\end{figure}
-
-Oraz wybrać \textbf{Additional Library Directories}
 
 \begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.8\textwidth]{LibPath.png}
-  \caption{Ścieżki do folderów z bibliotekami}
+  \caption{Linker/General/Additional Library Directories}
 \end{figure}
 
-I sprawdzić czy ścieżki się zgadzają.
-
-\newpage
-
-\subsection{}
-Dalej należy wejść w zakładcę \textbf{Linker/Input}.
-
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.8\textwidth]{Input.png}
-  \caption{Zakładka Linker/Input}
-\end{figure}
-
-Orazk kliknąć  \textbf{Additional Dependecies}
 
 \begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.8\textwidth]{Deps.png}
-  \caption{Nazwy bibliotek}
+  \caption{Linker/Input/Additional Dependecies}
 \end{figure}
-
-I sprawdzić czy pliki się zgadzają.
-
-\newpage
 
 \subsection{}
 Teraz należy sprawdzić czy możemy edytować zmienne środowiskowe. Należy wpisać w wyszukiwarkę systemową \textbf{Edytuj zmienne środowiskowe}
@@ -109,11 +79,11 @@ Należy wybrać opcje \textbf{Zmienne środowiskowe}
   \caption{Okienko}
 \end{figure}
 
-\newpage
-
 Następnie należy znaleść zminną Path w sekcji zmiennych systemowych.
 \newline
 I kliknąć \textbf{Edytuj}
+
+\newpage
 
 \begin{figure}[htbp!]
   \centering
@@ -133,7 +103,7 @@ Otworzy się takie okienko.
 
 Należy wybrać opcje \textbf{Nowa} i wpisać ścieżki do folderów zawierających pliki .dll.
 \newline
-\textbf{SĄ TO FOLDERY Z SEKCJI 1.4}
+\textbf{SĄ TO FOLDERY PODANE W Linker/General/Additional Library Directories}
 
 \subsection{}
 Jeżeli nie można edytować zmiennych środowiskowych (a w laboratorium nie można) to należy otworzyć \textbf{Wiersz poleceń} i wpisać \textbf{path}
@@ -149,8 +119,10 @@ Wyświetli się zmienna Path.
 \end{figure}
 
 Należy wybrać jeden z folderów i wkleić tam pliki .dll.
-\textbf{RÓWNIEŻ SĄ TO FOLDERY Z SEKCJI 1.4}
+\newline
+\textbf{SĄ TO FOLDERY PODANE W Linker/General/Additional Library Directories}
 
+\newpage
 \section{Linux}
 
 \subsection{}
@@ -174,8 +146,11 @@ I zainstalować odpowiadające wymienionym powyżej pakiety (mogą mieć końcó
 \textbf{Jeżeli dalej brakuje jakiś pakietów, albo przy uruchomieniu pojawi się błąd, że brakuje biblioteki, to należy ją pobrać.}
 
 \subsection{}
-Następnie należy uruchomić terminal w folderze z wersją programu na Linuxa i wpisać \textbf{make} w terminalu.
+Następnie należy uruchomić terminal w folderze z wersją programu na Linuxa i wpisać \textbf{make} w terminalu dla wersji relase.
+Lub \textbf{make debug} dla wersji debug.
 \newline
-Aby uruchomić należy wpisać \textbf{./bin/relase/prog}
+Aby uruchomić należy wpisać \textbf{./bin/relase/prog} dla wersji relase.
+\newline
+Albo \textbf{./bin/debug/prog} dla wersji debug.
 
 \end{document}

@@ -1,0 +1,134 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{lato}
+\usepackage{graphicx}
+\RequirePackage{polski}
+\graphicspath{ {./images/} }
+
+\title{Laboratorium przetwarzanie obrazów}
+\date{}
+
+
+\begin{document}
+\maketitle
+
+\begin{center}
+    \large{ Informacje potrzebne do implementacji }
+\end{center}
+
+\newpage
+
+
+\section{Gdzie znajdują się interesujące nas rzeczy.}
+Wszystkie algorytmy należy implementować w \textbf{Algorithms.cpp}.
+\newline
+W \textbf{Algorithms.hpp} znajdują się wszyskie deklaracje funkcji.
+\newline
+W \textbf{Algorithms.hpp} znajduje się również definicja struktury z prarametrami do algorytmów (niektóre nie wymagają parametrów).
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{declarations.png}
+    \caption{Deklaracje funkcji}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{params.png}
+    \caption{Struktura danych z parametrami}
+\end{figure}
+
+\newpage
+
+\section{Co jest potrzebne przy implementacji algorytmu}
+
+Algorytmy wykonują się w oddzielnym wątku w związku z czym w funkcji muszą znaleźć się dwie rzeczy.
+
+\subsection{Lokalna kopia obrazu i parametrów}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{CopyToLocal2.png}
+    \caption{Kopiowanie potrzebnych zasobów}
+\end{figure}
+
+\subsection{Skopiowanie wyników do zasobów współdzielonych oraz informacja że wątek się zakończył}
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{SaveAtTheEnd.png}
+    \caption{Zatrzymanie, i skopiowanie wyników}
+\end{figure}
+
+Moża też opcjonalnie dodać odświeżanie i możliwość przerwania wykonywania.
+\newline
+\textbf{ Natomiast nie jest to wymagane.}
+\newline
+Automatyczne odświerzanie można włączyć w zkładcę Ustawienia.
+Tam również można ustawić co ile sekund ma się odświerzać
+
+\newpage
+
+\subsection{Jak dodać przerwanie i odświerzanie do funkcji}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{RefreshAndCancel.png}
+    \caption{Odświerzanie i anulowanie}
+\end{figure}
+
+W niektórych algorytmach efekt jest lepszy jeżeli ustawimy ręczne odświerzanie.
+Wtedy można to zrobić w ten sposób.
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{CancelAndManualRefresh.png}
+    \caption{Zatrzymanie, i ręczne kopiowanie}
+\end{figure}
+
+\newpage
+
+\section{Opis klas i przydatnych metod}
+
+\subsection{Klasa Image}
+Klasa Image jest kontenerem na obrazy które będziemy przetwarzać.
+\newline
+Najbardziej interesuje nas w niej SDLSurface, czyli struktura z informacjami o pikselach w obrazie.
+\newline
+Zawiera takie przydatne metody metody jak:
+\begin{itemize}
+    \item  \textbf{Image} operator=(const Image other) - kopiuje całą zawartość innego obiektu
+    \item \textbf{int} GetWidth() - zwraca szerokość obrazu
+    \item \textbf{int} GetHeight() - zwraca wysokość obrazu
+    \item \textbf{int} GetPixelCount() - zwraca ilość pikseli
+    \item \textbf{float*} GetLightValues() - zwraca tablice float o długości 256 z wartościami jasności (są też wersje dla poszczególnych składowych)
+    \item \textbf{float*} GetDistributor() - zwraca tablice float o długości 256 z wartościami dystrybuanty (są też wersje dla poszczególnych składowych)
+    \item \textbf{void} CopyBrightnessHistogram(float *dst) - kopiuje histogram do podanej tablicy
+    \item \textbf{void} CopyNormalisedBrightnessHistogram(float *dst) - kopiuje histogram (unormowany do wartości 0.0 - 1.0) do podanej tablicy
+    \item \textbf{bool} NoSurface() - czy obraz zawiera poprawnie zainicjowane SDLSurface (jeśli nie to źle)
+    \item \textbf{void} SetBlankSurface(int width, int height) - ustaw obraz na biały prostokąt o wymiarach
+    \item \textbf{void} RefreshPixelValuesArrays() - odświerz tablice z historamami i dystrybuantami (po poprawnym zakończeniu wątku z algorytmem wątek główny automatycznie odświerzy)
+    \item \textbf{Pixel} GetPixel(int x, int y) - zwraca Strukturę Pixel z informacjami o pikselu w danym punkcie
+    \item \textbf{void} SetPixel(int x, int y, Pixel pix) - ustawia pixel w danym punkcie na podany
+    \item \textbf{void} SetPixelWhite(int x, int y) - ustawia pixel w danym punkcie na kolor biały
+    \item \textbf{void} SetPixelBlack(int x, int y) - istawia pixel w danym punkcie na kolor czarny
+    \item \textbf{void} CopyOnlySurfaceAndSize(Image other) - kopiuje tylko surface i wymiary (użyteczne w algorytmach w których wartość jendego piksela zależy od wartości jego sąsiadów)
+\end{itemize}
+
+\subsection{Struktura Pixel}
+Ta struktura zawiera wartości R, G, B oraz jasność piksela.
+\newline
+\textbf{Należy pamiętać że gdy modyfikujemy piksel należy ustawić wszystkie 3 składowe}
+\newline
+\textbf{WARTOŚĆ JASNOŚCI JEST TYLKO DO ODCZYTU. METODA SetPixel NIE BIERZE JEJ POD UWAGĘ}
+
+\subsection{Klasa Mutex}
+Semafor do synchronizacji wątków
+\begin{itemize}
+    \item  \textbf{void} Lock() - opuść semafor
+    \item \textbf{void} Unlock() - podnieś semafor
+    \item \textbf{bool} IsThreadRunning() - czy wątek przetwarzający ma się dalej wykonywać (używane przy przerwaniu wykonywnia wątku)
+    \item \textbf{void} ThreadStopped() - ustwaia że wątek przetwarzający zakończył wykonywanie
+\end{itemize}
+
+
+
+\end{document}

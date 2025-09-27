@@ -1,6 +1,9 @@
 DIR=./
-TEXFILES=$(foreach D, $(DIR), $(wildcard $(D)/*.tex))
+TEXFILES=$(foreach D, $(DIR), $(wildcard $(D)*.tex))
+PDFS=$(addsuffix .pdf, $(basename $(notdir $(TEXFILES))))
 LATEXCOM=pdflatex
 
-all: $(TEXFILES)
+all: $(PDFS)
+
+%.pdf:%.tex
 	$(LATEXCOM) $<
