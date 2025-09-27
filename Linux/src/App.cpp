@@ -17,6 +17,7 @@ int App::Init()
         printf("Error: %s\n", SDL_GetError());
         return -1;
     }
+    // IMG Init
     if (!IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG | IMG_INIT_WEBP))
     {
         printf("Error: %s\n", IMG_GetError());
@@ -25,12 +26,14 @@ int App::Init()
 
     mainScale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
     windowFlags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    // create window
     mainWindow = SDL_CreateWindow("Praktyka letnia WETI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * mainScale), (int)(720 * mainScale), windowFlags);
     if (mainWindow == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
         return -1;
     }
+    // create renderer
     bool r = Renderer::GetInstance().Init(mainWindow);
     if (!r)
     {
@@ -46,6 +49,7 @@ int App::Init()
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
+    // load font
     lato = io->Fonts->AddFontFromFileTTF("./resources/Lato-Regular.ttf");
     if (lato == nullptr)
         return -1;
@@ -71,8 +75,10 @@ int App::MainLoop()
 {
     while (runLoop)
     {
+        // for auto refresh
         auto beg = std::chrono::high_resolution_clock::now();
 
+        // handle input
         int eventsCode = HandleEvents();
         if (eventsCode == MINIMIZED)
             continue;
@@ -84,9 +90,11 @@ int App::MainLoop()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        // use font
         ImGui::PushFont(lato, 18.0f);
 
         DrawMenuBar();
+        // for resize
         SDL_GetWindowSize(mainWindow, &currWidth, &currHeight);
         DrawPicturesAndMiddle();
         DrawHistogramsAndFunctions();
@@ -102,6 +110,7 @@ int App::MainLoop()
 
         Render();
 
+        // calculate time passed
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration<float>(end - beg);
         if (counterRefreshImage > 0)
@@ -109,9 +118,11 @@ int App::MainLoop()
         if (counterRefreshImage < 0)
             counterRefreshImage = 0.0;
 
+        // auto refresh
         if (autoRefreshPictureEnabled)
             AutoRefreshOutputImage();
 
+        // special case refresh
         if (algorithmSelected == Skeletonization || algorithmSelected == Hought)
             RefreshSkelAndHought();
     }
@@ -138,6 +149,7 @@ int App::HandleEvents()
 {
     while (SDL_PollEvent(&event))
     {
+        // window closed
         ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT)
         {
@@ -150,6 +162,7 @@ int App::HandleEvents()
             return QUIT;
         }
     }
+    // window minimized
     if (SDL_GetWindowFlags(mainWindow) & SDL_WINDOW_MINIMIZED)
     {
         SDL_Delay(10);
@@ -160,6 +173,7 @@ int App::HandleEvents()
 
 void App::Render()
 {
+    // render the window
     Mutex::GetInstance().Lock();
     ImGui::Render();
     SDL_RenderSetScale(Renderer::GetInstance().GetRenderer(), io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y);
@@ -175,6 +189,7 @@ void App::DrawMenuBar()
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("Plik"))
     {
+        // save with the same name as input
         if (ImGui::MenuItem("Zapisz", NULL, false, !outputImage.NoSurface()))
         {
             if (FileSelector::GetInstance().FileExists(outputImage.GetImagePath()))
@@ -182,29 +197,33 @@ void App::DrawMenuBar()
             else
                 outputImage.SaveImage();
         }
+        // save as a file or with custom name
         if (ImGui::MenuItem("Zapisz jako", NULL, false, !outputImage.NoSurface()))
         {
             saveAsPopupActive = true;
             FileSelector::GetInstance().RefreshCurrDir();
         }
+        // load a file
         if (ImGui::MenuItem("Wczytaj"))
         {
             loadPopupActive = true;
             FileSelector::GetInstance().RefreshCurrDir();
         }
+        // quit
         ImGui::Separator();
         if (ImGui::MenuItem("Wyjdź"))
             runLoop = false;
         ImGui::EndMenu();
     }
 
-    // this one will get longer can be moved to func
+    // all algs
     if (ImGui::BeginMenu("Algorytmy"))
     {
         DrawAlgMenuElements();
         ImGui::EndMenu();
     }
 
+    // settings
     if (ImGui::BeginMenu("Ustawienia"))
     {
         ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled, algorithmSelected != Skeletonization && algorithmSelected != Hought);
@@ -212,6 +231,7 @@ void App::DrawMenuBar()
         ImGui::EndMenu();
     }
 
+    // help menu and imgui demo
     if (ImGui::BeginMenu("Pomoc"))
     {
         if (ImGui::MenuItem("O programie", NULL, helpWindowActive))
@@ -224,12 +244,14 @@ void App::DrawMenuBar()
 
     ImGui::EndMainMenuBar();
 
+    // popups
     if (loadPopupActive)
         DrawLoadPopup();
 
     if (saveAsPopupActive)
         DrawSavePopup();
 
+    // if save is used
     if (warningPopupActive && !saveAsPopupActive)
         DrawSaveWarningPopup();
 
@@ -239,13 +261,14 @@ void App::DrawMenuBar()
 
 void App::DrawPicturesAndMiddle()
 {
-
+    // input image
     float h = ImGui::GetFrameHeight();
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     ImGui::Begin("Obraz wejściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
     if (!inputImage.NoTexture())
     {
+        // if fits in space set it to middle
         if (inputImage.GetWidth() < ImGui::GetWindowWidth())
             ImGui::SameLine((ImGui::GetWindowWidth() - inputImage.GetWidth()) / 2);
         if (inputImage.GetHeight() < ImGui::GetWindowHeight())
@@ -254,17 +277,20 @@ void App::DrawPicturesAndMiddle()
     }
     ImGui::End();
 
+    // middle buttons
     DrawMiddleButtonsWindow(h);
 
+    // output image
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
     if (algorithmSelected != Hought)
     {
         ImGui::Begin("Obraz wyjściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-        // CS
+        // shared resources
         Mutex::GetInstance().Lock();
         if (!outputImage.NoTexture())
         {
+            // if fits in space set it to middle
             if (outputImage.GetWidth() < ImGui::GetWindowWidth())
                 ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
             if (outputImage.GetHeight() < ImGui::GetWindowHeight())
@@ -286,6 +312,7 @@ void App::DrawPicturesAndMiddle()
         ImGui::Separator();
         if (!outputImage.NoTexture())
         {
+            // if fits in space set it to middle and below text
             if (outputImage.GetWidth() < ImGui::GetWindowWidth())
                 ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
             if (outputImage.GetHeight() < ImGui::GetWindowHeight() - ImGui::GetCursorPosY())
@@ -316,7 +343,7 @@ void App::DrawMiddleButtonsWindow(float h)
             errorPopupAlgActive = true;
         else
         {
-            // can not be called if thread is execiting (no CS)
+            // can not be called if thread is execiting
             Mutex::GetInstance().ThreadRunning();
             outputImage = inputImage;
             if (autoRefreshPictureEnabled)
@@ -364,7 +391,8 @@ void App::DrawMiddleButtonsWindow(float h)
         ImGui::Separator();
         ImGui::Text("Ustaw obraz przetworzony\n(wyjściowy) jako wejściowy");
         if (ImGui::Button("Wejście = Wyjście", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
-        { // can not be done if thread is running
+        {
+            // can not be done if thread is running
             inputImage = outputImage;
             outputImage.ClearImage();
         }
@@ -396,6 +424,7 @@ void App::DrawMiddleButtonsWindow(float h)
 
 void App::DrawHistogramsAndFunctions()
 {
+    // set it to three subwindows
     float h = ImGui::GetFrameHeight() + (currHeight - MENU_ALG_HIST_H);
     float maxO = *(std::max_element(outputImage.GetLightValues(), outputImage.GetLightValues() + 255));
     float maxI = *(std::max_element(inputImage.GetLightValues(), inputImage.GetLightValues() + 255));
@@ -428,7 +457,6 @@ void App::DrawHistogramsAndFunctions()
     ImGui::EndChild();
 
     // func
-    // add a special function if needed
     ImGui::SameLine(HIST_WINDOW_W + BORDER_OFFSET + freeSpace / 2);
     ImGui::BeginChild("Funkcja transformacji", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Dystrybuanta Obrazu");
@@ -444,8 +472,8 @@ void App::DrawHistogramsAndFunctions()
         Mutex::GetInstance().Unlock();
     }
     ImGui::EndChild();
-    // out
 
+    // out
     ImGui::SameLine(HIST_WINDOW_W * 2 + BORDER_OFFSET + freeSpace);
     ImGui::BeginChild("Histogram wyjściowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Obraz wyjściowy");
@@ -456,7 +484,7 @@ void App::DrawHistogramsAndFunctions()
     ImGui::RadioButton("G", &modeO, 2);
     ImGui::SameLine();
     ImGui::RadioButton("B", &modeO, 3);
-    // CS
+    // shared resources
     Mutex::GetInstance().Lock();
     if (modeO == Brightnes)
         ImGui::PlotHistogram("##", outputImage.GetLightValues(), MAX_VAL, 0, NULL, 0.0f, maxO + 10, ImVec2(HIST_W, HIST_H));
@@ -473,6 +501,7 @@ void App::DrawHistogramsAndFunctions()
 
 void App::DrawAlgMenuElements()
 {
+    // if new needed just add it
     if (ImGui::MenuItem("Negatyw", NULL, algorithmSelected == Negative))
     {
         selectedAlgorithmName = "Negatyw";
@@ -539,7 +568,6 @@ void App::DrawAlgMenuElements()
 void App::DrawLoadPopup()
 {
     // can not be opend if thread is running
-
     ImGui::OpenPopup("WczytajPlik", ImGuiPopupFlags_NoReopen);
     ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -548,13 +576,16 @@ void App::DrawLoadPopup()
     {
         auto dir = FileSelector::GetInstance().GetCurrDir();
         auto map = FileSelector::GetInstance().GetDirMaped();
+        // curr dir path
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
         ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().c_str());
         ImGui::Separator();
+        // display entries as selectebles
         for (auto entry : dir)
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
                 if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
                 {
+                    // could not be loaded
                     if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToEntry()) == -1)
                     {
                         errorPopupActive = true;
@@ -574,6 +605,7 @@ void App::DrawLoadPopup()
         {
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
             {
+                // could not be loaded
                 if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToEntry()) == -1)
                 {
                     errorPopupActive = true;
@@ -632,9 +664,11 @@ void App::DrawSavePopup()
     {
         auto dir = FileSelector::GetInstance().GetCurrDir();
         auto map = FileSelector::GetInstance().GetDirMaped();
+        // curr dir path
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
         ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().c_str());
         ImGui::Separator();
+        // display dir as selectables
         for (auto entry : dir)
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
                 if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
@@ -659,9 +693,11 @@ void App::DrawSavePopup()
         ImGui::SetCursorPosX(offset);
         if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
         {
+            // can not be empty
             std::string buffStr = fileNameBuff;
             if (buffStr == "")
                 errorPopupActive = true;
+            // already exists
             else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
             {
                 warningPopupActive = true;
@@ -677,6 +713,7 @@ void App::DrawSavePopup()
         ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
         if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W, 0)))
         {
+            // save as existing
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 warningPopupActive = true;
         }
@@ -711,6 +748,7 @@ void App::DrawSaveWarningAndErrorPopup()
             int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
 
             ImGui::SetCursorPosX(offset);
+            // override
             if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
             {
                 if (customName)
@@ -737,6 +775,7 @@ void App::DrawSaveWarningAndErrorPopup()
             ImGui::CloseCurrentPopup();
     }
 
+    // can not be empty
     if (errorPopupActive)
     {
         ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
@@ -760,7 +799,6 @@ void App::DrawSaveWarningAndErrorPopup()
 void App::DrawSaveWarningPopup()
 {
     // can not be opend if thread is running
-
     ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -772,6 +810,7 @@ void App::DrawSaveWarningPopup()
         int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
 
         ImGui::SetCursorPosX(offset);
+        // override
         if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
         {
             outputImage.SaveImage();
@@ -798,6 +837,7 @@ void App::DrawSettingsPopup()
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("Ustawienia", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
+            // how often
             ImGui::Text("Ustaw co ile sekund obraz\nwyjściowy ma się odświerzać");
             ImGui::InputFloat("##", &refreshIntervalValue, 1);
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -843,6 +883,7 @@ void App::DrawMiddleErrorPopup()
 
 void App::DrawInProgressPopup()
 {
+    // the algorithm thread is running
     ImGui::OpenPopup("Przetwarzanie obrazu");
     ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -852,6 +893,7 @@ void App::DrawInProgressPopup()
         Mutex::GetInstance().Lock();
         auto running = Mutex::GetInstance().IsThreadRunning();
         Mutex::GetInstance().Unlock();
+        // if running display an option to cancel
         if (running)
         {
             ImGui::SetCursorPosX(10);
@@ -863,9 +905,11 @@ void App::DrawInProgressPopup()
                 Mutex::GetInstance().ThreadStopped();
                 Mutex::GetInstance().Unlock();
 
+                // remember to join
                 if (algorithmThread.joinable())
                     algorithmThread.join();
 
+                // refresh
                 outputImage.RefreshPixelValuesArrays();
                 outputImage.RefreshTexture();
 
@@ -873,6 +917,7 @@ void App::DrawInProgressPopup()
                 ImGui::CloseCurrentPopup();
             }
         }
+        // if not inform that it is done
         else
         {
             // refresh only once after
@@ -888,6 +933,7 @@ void App::DrawInProgressPopup()
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
             if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
             {
+                // remember to join
                 if (algorithmThread.joinable())
                     algorithmThread.join();
                 inProgressPopupActive = false;
@@ -907,6 +953,7 @@ void App::DrawParametersPopup()
     // can not be opend if thread is running
     if (ImGui::BeginPopupModal("Parametry", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
+        // if new needed just add it
         switch (algorithmSelected)
         {
         case None:
@@ -960,6 +1007,7 @@ void App::DrawParametersPopup()
 
 void App::DrawResetDonePopup()
 {
+    // reset done
     ImGui::OpenPopup("INFORMACJA");
     ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -979,6 +1027,7 @@ void App::DrawResetDonePopup()
 
 void App::DrawBinarizationParams()
 {
+    // set if auto or manual
     ImGui::Text("Wybierz czy chcesz ustawić samemu\nczy automatycznie");
     ImGui::RadioButton("Ręcznie ustaw próg", &params.method, Algorithms::None);
     ImGui::SameLine();
@@ -1011,6 +1060,8 @@ void App::DrawLinearFilterParams()
 
     ImGui::Separator();
     ImGui::Text("Wybierz rodzaj filtru");
+
+    // set to predefined ones
 
     if (ImGui::RadioButton("Uśredniający", &params.linerFilterS, Algorithms::LinearFilters::Average))
     {
@@ -1081,6 +1132,7 @@ void App::DrawMedianFilterParams()
     ImGui::RadioButton("7x7", &params.medianFilterSize, Algorithms::MatrixSize::S7x7);
     ImGui::Separator();
     ImGui::Text("Wybierz rodzaj filtru");
+    // set to predefined
     if (ImGui::RadioButton("Pełny", &params.medianFilterS, Algorithms::MedianFilters::Full))
     {
         params.medianMask3x3 = MEDIAN_3x3;
@@ -1136,6 +1188,7 @@ void App::DrawDilatationParams()
 
 void App::DrawHelpMenu()
 {
+    // not finished
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(HELP_WINDOW_WIDTH, HELP_WINDOW_HEIGHT));
@@ -1148,6 +1201,7 @@ void App::DrawHelpMenu()
 
 void App::LaunchAlgorithms()
 {
+    // if new needed just add a new one
     switch (algorithmSelected)
     {
     case Negative:
