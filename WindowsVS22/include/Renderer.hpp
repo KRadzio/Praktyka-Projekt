@@ -3,10 +3,12 @@
 
 #include <SDL.h>
 
+// singleton
 class Renderer
 {
 public:
     static Renderer &GetInstance();
+    // create renderer for window
     bool Init(SDL_Window *mainWindow);
     inline SDL_Renderer *GetRenderer() { return renderer; }
 

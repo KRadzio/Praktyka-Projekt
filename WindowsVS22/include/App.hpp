@@ -8,7 +8,6 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
@@ -65,6 +64,7 @@
 
 #define DEFAULT_REFRESH_INTERVAL 5.0
 
+// singleton
 class App
 {
 public:
@@ -82,6 +82,11 @@ public:
         OutputDist
     };
 
+    // if new needed just add it
+    // then update DrawAlgMenuElements
+    // DrawParametersPopup
+    // LaunchAlgorithms
+    // then implement the function in Algorithms.hpp Algorithms.cpp
     enum AlgSelected
     {
         None,
@@ -109,28 +114,47 @@ private:
     ~App();
 
 private:
+    // clean when quiting
     void Cleanup();
+    // read player input
     int HandleEvents();
+    // render things on window
     void Render();
 
     // main parts
+
+    // draw and handle logic for menu at the top
     void DrawMenuBar();
+    // draw and handle logic for the picutres space and call DrawMiddleButtonsWindow
     void DrawPicturesAndMiddle();
+    // draw and handle logic for the middle buttons
     void DrawMiddleButtonsWindow(float h);
+    // draw and handle logic for bottom bar
     void DrawHistogramsAndFunctions();
 
     // menus
+    // display the algorithms menu
     void DrawAlgMenuElements();
 
     // popups
+    // draw and handle logic for load popup
     void DrawLoadPopup();
+    // draw and handle logic for save AS popup
     void DrawSavePopup();
+    // draw and handle logic save warning and error popups
     void DrawSaveWarningAndErrorPopup();
+    // draw and handle logic for save popup
     void DrawSaveWarningPopup();
+    // draw and handle logic for settings popup
     void DrawSettingsPopup();
+    // draw and handle logic middle buttons errors popups
     void DrawMiddleErrorPopup();
+    // draw and handle logic for in progress popup
+    // if this one is on the algorithm thread is running
     void DrawInProgressPopup();
+    // draw and handle logic for parameters popup
     void DrawParametersPopup();
+    // draw and handle logic for resets buttons
     void DrawResetDonePopup();
 
     // parameters popup split
@@ -142,14 +166,19 @@ private:
 
     // other
     void DrawHelpMenu();
+    // here the algorithm thread is started
     void LaunchAlgorithms();
     void ResetParameters();
+    // refresh logic
     void AutoRefreshOutputImage();
+    // special refresh logic
+    void RefreshSkelAndHought();
 
     // input and display arrays
     void DrawLinearInputArray();
     void DrawLinearDisplayArray();
     void DrawMedianDisplayArray();
+    // helper for median, erosion and dilatation
     void DrawInputArray(std::string name, int size, std::array<std::array<bool, 3>, 3> &a3x3, std::array<std::array<bool, 5>, 5> &a5x5, std::array<std::array<bool, 7>, 7> &a7x7);
 
 private:
@@ -162,23 +191,14 @@ private:
     bool errorPopupActive = false;
     bool errorPopupAlgActive = false;
     bool warningPopupActive = false;
-    bool customName = false;
+    bool customName = false; // in save as
     bool inProgressPopupActive = false;
-    bool justRefreshed = false;
+    bool justRefreshed = false; // used after algorithm thread is done
     bool errorCopying = false;
     bool autoRefreshPictureEnabled = false;
     bool settingsPopupActive = false;
     bool helpWindowActive = false;
-    bool drawExtraFunctionDiagram = false;
     bool resetDonePopupActive = false;
-
-    // TODO
-    // add more algs (two more)
-    // add a transformation function diragram in the middle of the bottom bar
-    // (negative, contrast, brighten, exponentiation, leveledHistogram, binarization, and Hought)
-    // may have a function (Hought is special case)
-    // rename some methods (there is more than just drawing in some parts)
-    // write docs in code, in pdf and in help menu
 
     // image histograms and plot flags
     int modeI = Brightnes;
@@ -203,11 +223,11 @@ private:
     float refreshIntervalValue = DEFAULT_REFRESH_INTERVAL;
 
     // Params
-    Algorithms::ParametersStruct params; // CS
+    Algorithms::ParametersStruct params; // shared
 
     // Images
     Image inputImage;
-    Image outputImage; // CS
+    Image outputImage; // shared
 
     // Scale
     float mainScale;
