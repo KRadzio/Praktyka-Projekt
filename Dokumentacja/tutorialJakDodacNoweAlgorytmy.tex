@@ -21,12 +21,12 @@
 
 
 \section{Gdzie znajdują się interesujące nas rzeczy.}
-Jeżeli chcemy dodać nowy algorytm należy wprowadzić zmiany w plikach:
+Jeżeli chcemy dodać nowy algorytm, należy wprowadzić zmiany w plikach:
 \begin{itemize}
-    \item \textbf{App.hpp} - dodanie do enum \textbf{AlgSelected}, nowgo algorytmu. Oraz opcjonalnie deklaracje metod pomocniczych.
-    \item \textbf{App.cpp} - dokonanie zmian w metodach \textbf{DrawAlgMenuElements, DrawParametersPopup, LaunchAlgorithms, ResetParameters(opcjonalne)}
-    \item \textbf{Algorithms.hpp} - dodanie deklaracji nowej funkcji analogicznie do już tam zawartych. Dodanie nowych parametrów do \textbf{ParametersStruct} jeżeli są wymagane. Dodanie kolejego enum, jeżeli będzie potrzebne.
-    \item \textbf{Algorithms.cpp} - implementacja nowego algorytmu.
+    \item \textbf{App.hpp} \- dodanie do enum \textbf{AlgSelected}, nowego algorytmu. Oraz opcjonalnie deklaracje metod pomocniczych.
+    \item \textbf{App.cpp} \- dokonanie zmian w metodach \textbf{DrawAlgMenuElements, DrawParametersPopup, LaunchAlgorithms, ResetParameters(opcjonalne)}
+    \item \textbf{Algorithms.hpp} \- dodanie deklaracji nowej funkcji analogicznie do już tam zawartych. Dodanie nowych parametrów do \textbf{ParametersStruct}, jeżeli są wymagane. Dodanie kolejnego enum, jeżeli będzie potrzebne.
+    \item \textbf{Algorithms.cpp} \- implementacja nowego algorytmu.
 \end{itemize}
 
 \section{App.hpp}
@@ -52,7 +52,7 @@ Następnie należy wprowadzić zmiany w metodach.
 
 Tutaj należy dodać na końcu kolejny \textbf{if} analogicznie do już zawartych.
 \newline
-Każdy \textbf{if} jest po to aby wykryć kliknięcie w dany element w menu wyboru algorytmów.
+Każdy \textbf{if} jest po to, aby wykryć kliknięcie w dany element w menu wyboru algorytmów.
 
 \newpage
 
@@ -73,7 +73,7 @@ Tutaj należy do \textbf{switch} dodać nowy przypadek. W zależności od algory
     \caption{Metoda DrawParametersPopup}
 \end{figure}
 
-Jeżeli algorytm nie ma parametrów należy dodać: \textbf{ImGui::Text("Brak parametrów dla tego algorytmu.")}
+Jeżeli algorytm nie ma parametrów, należy dodać: \textbf{ImGui::Text("Brak parametrów dla tego algorytmu.")}
 \newline
 Tak będzie wyglądało okienko.
 \begin{figure}[htbp!]
@@ -85,22 +85,22 @@ Tak będzie wyglądało okienko.
 \newpage
 
 W innym przypadku należy dostosować okienko. Oto kilka przykładów:
-\subsubsection{Pojedyńczy parametr.}
+\subsubsection{Pojedynczy parametr.}
 Na Rysunku 4 było widać, że dla niektórych algorytmów pojawiała się obsługa tylko jednego parametru na przykład:
 \newline
 \textbf{ImGui::SliderInt("O ile rozjaśnić/przyciemnić?", \&params.value, -255, 255)}
 \newline
-Najpierw jest opis slidera, potem wartość do której zapisany będzie wynik, następnie ograniczenia dolne i górne.
+Najpierw jest opis slidera, potem wartość, do której zapisany będzie wynik, następnie ograniczenia dolne i górne.
 \newline
 A tak będzie wyglądało okienko.
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{SimpleParam.png}
-    \caption{Pojedyńczy parametr}
+    \caption{Pojedynczy parametr}
 \end{figure}
 
 \subsubsection{Kilka parametrów}
-Czasami może być potrzebne kilka prametrów do algorytmu. Takich jak rodzaj metody lub liczba progów.
+Czasami może być potrzebne kilka parametrów do algorytmu. Takich jak rodzaj metody lub liczba progów.
 Wtedy można do zrobić w ten sposób.
 
 \newpage
@@ -114,17 +114,17 @@ Wtedy można do zrobić w ten sposób.
 Na początku metody pomocniczej znajduje się pierwszy wybór (metody), obsługiwany jest przez funkcje \textbf{ImGui::RadioButton()}.
 Funkcja ta przyjmuje jako parametry:
 \begin{itemize}
-    \item  \textbf{const char *label} - nazwa opcji
-    \item  \textbf{int *v} - wskaźnik do zmiennej z obecnie wybranym stanem
-    \item  \textbf{int v\_button} - numer stanu przypisany do opcji (najlepiej zdefiniowany w enum)
+    \item  \textbf{const char *label} \- nazwa opcji
+    \item  \textbf{int *v} \- wskaźnik do zmiennej z obecnie wybranym stanem
+    \item  \textbf{int v\_button} \- numer stanu przypisany do opcji (najlepiej zdefiniowany w enum)
 \end{itemize}
 
-\textbf{ImGui::SameLine()} - informuje żeby umieścić elementy w tej samej lini.
+\textbf{ImGui::SameLine()} \- informuje, żeby umieścić elementy w tej samej linii.
 \newline
-\textbf{ImGui::Separator()} - tworzy linię separującą elementy.
+\textbf{ImGui::Separator()} \- tworzy linię separującą elementy.
 \newline
 Następnie znajduje się kolejny wybór (ilości progów), zrobiony analogicznie do wyboru metody. Jedak pojawi się on tylko wtedy gdy ustawiamy progi ręcznie.
-Również jeżeli ustawiamy progi ręcznie pojawią się dwa slidery do wyboru wartości progu.
+Również, jeżeli ustawiamy progi ręcznie pojawią się dwa slidery do wyboru wartości progu.
 \newpage
 Okienko będzie wyglądało tak:
 
@@ -143,30 +143,30 @@ Przy niektórych algorytmach parametrem jest macierz (maska albo element struktu
     \caption{Tabelka w kodzie}
 \end{figure}
 
-Aby rozpocząć tabelkę należy użyć funkcji ImGui::BeginTable(), i musi się ona znajdować w instrukcji warunkowej.
+Aby rozpocząć tabelkę, należy użyć funkcji ImGui::BeginTable(), i musi się ona znajdować w instrukcji warunkowej.
 Funkcja ta przyjmuje następujące parametry:
 \begin{itemize}
-    \item \textbf{const char *str\_id} - nazwa tablicy
-    \item \textbf{int columns} - ilość kolumn
-    \item \textbf{ImGuiTableFlags flags} - flagi dotyczące wyglądu tablicy
-    \item \textbf{const ImVec2 \&outer\_size} - rozmiar tablicy
-    \item \textbf{float inner\_width} - wewnętrzna szerokość komórek
+    \item \textbf{const char *str\_id} \- nazwa tablicy
+    \item \textbf{int columns} \- ilość kolumn
+    \item \textbf{ImGuiTableFlags flags} \- flagi dotyczące wyglądu tablicy
+    \item \textbf{const ImVec2 \&outer\_size} \- rozmiar tablicy
+    \item \textbf{float inner\_width} \- wewnętrzna szerokość komórek
 \end{itemize}
 W naszym przypadku interesować będą nas pierwsze 3-4 parametry.
 
 Następnie należy w pętli podwójnej utworzyć wszystkie elementy.
 
 W zewnętrznej pętli (dla wierszy) używamy ImGui::TableNextRow() aby przejść do kolejnego wiersza.
-Następnie w wewnętrzej pętli (dla kolumn) ustawiamy kursor na kolumnę przy użyciu ImGui::TableSetColumnIndex(col), i dodajemy element.
+Następnie w wewnętrznej pętli (dla kolumn) ustawiamy kursor na kolumnę przy użyciu ImGui::TableSetColumnIndex(col) i dodajemy element.
 \newline
-Aby dodać nowy element moża użyć różnych elementów na przykład:
+Aby dodać nowy element, można użyć różnych elementów na przykład:
 \begin{itemize}
     \item ImGui::Text() - do wyświetlenia elementu bez możliwości wprowadzenia.
     \item ImGui::InputInt() - do wprowadzenia liczby całkowitej z powiązaniem do elementu o odpowiednim indeksie.
-    \item ImGui::Checkbox() - do oznaczenia elementu którego wartości mogą przyjąć true/false.
+    \item ImGui::Checkbox() - do oznaczenia elementu, którego wartości mogą przyjąć true/false.
 \end{itemize}
 
-Tak będą wyglądać tablice w kolejności takiej jak na liście:
+Tak będą wyglądać tablice w kolejności takiej, jak na liście:
 
 \newpage
 
@@ -192,23 +192,23 @@ Tak będą wyglądać tablice w kolejności takiej jak na liście:
 
 Na koniec tablice należy zakończyć używając ImGui::EndTable().
 
-\textbf{Dodatkowe uwagi}
+\textbf{Dodatkowe uwagi:}
 \begin{itemize}
     \item Jeżeli tablica ma służyć do wprowadzania danych należy użyć \textbf{ImGui::PushID(nr wiersza)} - przed ImGui::TableNextRow() i \textbf{ImGui::PopID()} - po wewnętrznej pętli.
-    \item Jeżeli ustawiamy ID należy najpierw użyć \textbf{std::string s = "\#\#" + std::to\_string(col)} aby ustalić to ID, a następnie przkazać je do funkcji od elemenmtu na przykład \textbf{ImGui::Checkbox(s.c\_str(), \&a3x3[row][col])}.
+    \item Jeżeli ustawiamy ID należy najpierw użyć \textbf{std::string s = "\#\#" + std::to\_string(col)}, aby ustalić to ID, a następnie przekazać je do funkcji od elementu na przykład \textbf{ImGui::Checkbox(s.c\_str(), \&a3x3[row][col])}.
     \item Jeżeli nie potrzebujemy opisów kolumn, można użyć \textbf{ ImGui::TableSetupColumn("\#\#")} dla każdej kolumny.
-    \item Jeżeli chcemu ustawić szerokość elementu użyjemy \textbf{ImGui::TableSetupColumn("\#\#", ImGuiTableColumnFlags\_WidthFixed, ARRAY\_ITEM\_WIDTH)} \textbf{Tablica powinna mieć podany stały rozmiar w ImGui::BeginTable()}.
+    \item Jeżeli chcemy ustawić szerokość elementu użyjemy \textbf{ImGui::TableSetupColumn("\#\#", ImGuiTableColumnFlags\_WidthFixed, ARRAY\_ITEM\_WIDTH)} \textbf{Tablica powinna mieć podany stały rozmiar w ImGui::BeginTable()}.
     \item Jeżeli tablica nie ma ustawionego rozmiaru na początku można określić szerokość elementu możemy użyć \textbf{ImGui::PushItemWidth(ARRAY\_INPUT\_WIDTH)}.
-    \item Metoda \textbf{DrawInputArray()}, może być wykorzystywana jeżeli chcemy utworzyć kolejne tablice z checboxami.
-    \item \textbf{Jeżeli fragment kodu od obsługi parametrów jest zbyt długi można go przenieść do metody pomocniczej.}
+    \item Metoda \textbf{DrawInputArray()}, może być wykorzystywana, jeżeli chcemy utworzyć kolejne tablice z checboxami.
+    \item \textbf{Jeżeli fragment kodu od obsługi parametrów jest zbyt długi, można go przenieść do metody pomocniczej.}
 \end{itemize}
 
 
 
 \subsection{LaunchAlgorithms}
-W tej metodzie należy dodać kolejny przypadek analogicznie do już instniejących.
+W tej metodzie należy dodać kolejny przypadek analogicznie do już istniejących.
 \newline
-\textbf{Można też wywołać funkcje w wątku głównym natomiast wtedy nie będzie możliwości przerwania, a interfejs nie będzie odpowiadał. Należy też użyć Mutex::GetInstance().ThreadStopped(), aby popup pokazujący się w trakcie wykonywania nie wyświetlał się. }
+\textbf{Można też wywołać funkcje w wątku głównym, natomiast wtedy nie będzie możliwości przerwania, a interfejs nie będzie odpowiadał. Należy też użyć Mutex::GetInstance().ThreadStopped(), aby popup pokazujący się w trakcie wykonywania nie wyświetlał. }
 
 \newpage
 
@@ -230,7 +230,7 @@ W tej metodzie należy ustawić parametry na wartości domyślne (ustalane w str
 \end{figure}
 
 \section{Algorithms.hpp}
-Tutaj należy zadeklarować nową funkcję dla kolejnego algorytmu. Tutaj również znajduje się definicja struktury z parametrami, więc jeżeli trzeba dodać nowe to również tutaj się znajdują. Można też dodać pomocniczy enum jeżeli będzie potrzebny.
+Tutaj należy zadeklarować nową funkcję dla kolejnego algorytmu. Tutaj również znajduje się definicja struktury z parametrami, więc jeżeli trzeba dodać nowe, to również tutaj się znajdują. Można też dodać pomocniczy enum, jeżeli będzie potrzebny.
 \newline
 \textbf{Najlepiej zacząć dodanie nowego algorytmu od tego pliku.}
 
@@ -260,7 +260,7 @@ Tutaj należy zadeklarować nową funkcję dla kolejnego algorytmu. Tutaj równi
 \newpage
 
 \section{Algorithms.cpp}
-Tutaj należy zdefiniwać nowy algorytm. Należy pamiętać, że domyślnie powinien się wykonywać w oddzielnym wątku. Natomiast moża funkcje wywołać w wątku głównym.
+Tutaj należy zdefiniować nowy algorytm. Należy pamiętać, że domyślnie powinien się wykonywać w oddzielnym wątku. Natomiast można funkcje wywołać w wątku głównym.
 \newline
 Należy zwrócić uwagę na:
 
@@ -272,36 +272,36 @@ Należy zwrócić uwagę na:
     \caption{Kopiowanie potrzebnych zasobów}
 \end{figure}
 
-\subsection{Skopiowanie wyników do zasobów współdzielonych oraz informacja że wątek się zakończył}
+\subsection{Skopiowanie wyników do zasobów współdzielonych oraz informacja, że wątek się zakończył}
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{SaveAtTheEnd.png}
-    \caption{Zatrzymanie, i skopiowanie wyników}
+    \caption{Zatrzymanie i skopiowanie wyników}
 \end{figure}
 
 Moża też opcjonalnie dodać odświeżanie i możliwość przerwania wykonywania.
 \newline
 \textbf{ Natomiast nie jest to wymagane.}
 \newline
-Automatyczne odświerzanie można włączyć w zkładcę Ustawienia.
-Tam również można ustawić co ile sekund ma się odświerzać
+Automatyczne odświeżanie można włączyć w zakładce Ustawienia.
+Tam również można ustawić, co ile sekund ma się odświeżać.
 
 \newpage
 
-\subsection{Jak dodać przerwanie i odświerzanie do funkcji}
+\subsection{Jak dodać przerwanie i odświeżanie do funkcji}
 
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{RefreshAndCancel.png}
-    \caption{Odświerzanie i anulowanie}
+    \caption{Odświeżanie i anulowanie}
 \end{figure}
 
-W niektórych algorytmach efekt jest lepszy jeżeli ustawimy ręczne odświerzanie.
+W niektórych algorytmach efekt jest lepszy, jeżeli ustawimy ręczne odświeżanie.
 Wtedy można to zrobić w ten sposób.
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{CancelAndManualRefresh.png}
-    \caption{Zatrzymanie, i ręczne kopiowanie}
+    \caption{Zatrzymanie i ręczne kopiowanie}
 \end{figure}
 
 \section{ImGui}
@@ -320,9 +320,9 @@ Okno wygląda tak:
 
 \newpage
 
-Przykłady w kodzie znajdują się w pliku \textbf{imgui\_demo.cpp.} Plik ten znaduje się w folderze ImGui.
+Przykłady w kodzie znajdują się w pliku \textbf{imgui\_demo.cpp.} Plik ten znajduje się w folderze ImGui.
 \newline
-W tym pliku powinno znajdować się wszystko co może być potrzebne przy zapozanawaniu się z biblioteką. Ponadto twórcy ImGui zachęcają do zachowania tego pliku w projektach w celu posiadania przykładów implemetacji funkcjonalności.
+W tym pliku powinno znajdować się wszystko, co może być potrzebne przy zapoznawaniu się z biblioteką. Ponadto twórcy ImGui zachęcają do zachowania tego pliku w projektach w celu posiadania przykładów implementacji funkcjonalności.
 
 \begin{figure}[htbp!]
     \centering

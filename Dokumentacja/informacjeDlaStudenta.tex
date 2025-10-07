@@ -22,9 +22,9 @@
 \section{Gdzie znajdują się interesujące nas rzeczy.}
 Wszystkie algorytmy należy implementować w \textbf{Algorithms.cpp}.
 \newline
-W \textbf{Algorithms.hpp} znajdują się wszyskie deklaracje funkcji.
+W \textbf{Algorithms.hpp} znajdują się wszystkie deklaracje funkcji.
 \newline
-W \textbf{Algorithms.hpp} znajduje się również definicja struktury z prarametrami do algorytmów (niektóre nie wymagają parametrów).
+W \textbf{Algorithms.hpp} znajduje się również definicja struktury z parametrami do algorytmów (niektóre nie wymagają parametrów).
 
 \begin{figure}[htbp!]
     \centering
@@ -42,7 +42,7 @@ W \textbf{Algorithms.hpp} znajduje się również definicja struktury z praramet
 
 \section{Co jest potrzebne przy implementacji algorytmu}
 
-Algorytmy wykonują się w oddzielnym wątku w związku z czym w funkcji muszą znaleźć się dwie rzeczy.
+Algorytmy wykonują się w oddzielnym wątku, w związku z czym w funkcji muszą znaleźć się dwie rzeczy.
 
 \subsection{Lokalna kopia obrazu i parametrów}
 
@@ -52,36 +52,36 @@ Algorytmy wykonują się w oddzielnym wątku w związku z czym w funkcji muszą 
     \caption{Kopiowanie potrzebnych zasobów}
 \end{figure}
 
-\subsection{Skopiowanie wyników do zasobów współdzielonych oraz informacja że wątek się zakończył}
+\subsection{Skopiowanie wyników do zasobów współdzielonych oraz informacja, że wątek się zakończył}
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{SaveAtTheEnd.png}
-    \caption{Zatrzymanie, i skopiowanie wyników}
+    \caption{Zatrzymanie i skopiowanie wyników}
 \end{figure}
 
-Moża też opcjonalnie dodać odświeżanie i możliwość przerwania wykonywania.
+Można też opcjonalnie dodać odświeżanie i możliwość przerwania wykonywania.
 \newline
 \textbf{ Natomiast nie jest to wymagane.}
 \newline
-Automatyczne odświerzanie można włączyć w zkładcę Ustawienia.
-Tam również można ustawić co ile sekund ma się odświerzać
+Automatyczne odświeżanie można włączyć w zakładce Ustawienia.
+Tam również można ustawić co ile sekund ma się odświeżać
 
 \newpage
 
-\subsection{Jak dodać przerwanie i odświerzanie do funkcji}
+\subsection{Jak dodać przerwanie i odświeżanie do funkcji}
 
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{RefreshAndCancel.png}
-    \caption{Odświerzanie i anulowanie}
+    \caption{Odświeżanie i anulowanie}
 \end{figure}
 
-W niektórych algorytmach efekt jest lepszy jeżeli ustawimy ręczne odświerzanie.
+W niektórych algorytmach efekt jest lepszy, jeżeli ustawimy ręczne odświeżanie.
 Wtedy można to zrobić w ten sposób.
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.8\textwidth]{CancelAndManualRefresh.png}
-    \caption{Zatrzymanie, i ręczne kopiowanie}
+    \caption{Zatrzymanie i ręczne kopiowanie}
 \end{figure}
 
 \newpage
@@ -89,11 +89,11 @@ Wtedy można to zrobić w ten sposób.
 \section{Opis klas i przydatnych metod}
 
 \subsection{Klasa Image}
-Klasa Image jest kontenerem na obrazy które będziemy przetwarzać.
+Klasa Image jest kontenerem na obrazy, które będziemy przetwarzać.
 \newline
 Najbardziej interesuje nas w niej SDLSurface, czyli struktura z informacjami o pikselach w obrazie.
 \newline
-Zawiera takie przydatne metody metody jak:
+Zawiera takie przydatne metody jak:
 \begin{itemize}
     \item  \textbf{Image} operator=(const Image other) - kopiuje całą zawartość innego obiektu
     \item \textbf{int} GetWidth() - zwraca szerokość obrazu
@@ -105,28 +105,28 @@ Zawiera takie przydatne metody metody jak:
     \item \textbf{void} CopyNormalisedBrightnessHistogram(float *dst) - kopiuje histogram (unormowany do wartości 0.0 - 1.0) do podanej tablicy
     \item \textbf{bool} NoSurface() - czy obraz zawiera poprawnie zainicjowane SDLSurface (jeśli nie to źle)
     \item \textbf{void} SetBlankSurface(int width, int height) - ustaw obraz na biały prostokąt o wymiarach
-    \item \textbf{void} RefreshPixelValuesArrays() - odświerz tablice z historamami i dystrybuantami (po poprawnym zakończeniu wątku z algorytmem wątek główny automatycznie odświerzy)
+    \item \textbf{void} RefreshPixelValuesArrays() - odśwież tablice z histogramami i dystrybuantami (po poprawnym zakończeniu wątku z algorytmem wątek główny automatycznie odświeży)
     \item \textbf{Pixel} GetPixel(int x, int y) - zwraca Strukturę Pixel z informacjami o pikselu w danym punkcie
     \item \textbf{void} SetPixel(int x, int y, Pixel pix) - ustawia pixel w danym punkcie na podany
     \item \textbf{void} SetPixelWhite(int x, int y) - ustawia pixel w danym punkcie na kolor biały
-    \item \textbf{void} SetPixelBlack(int x, int y) - istawia pixel w danym punkcie na kolor czarny
-    \item \textbf{void} CopyOnlySurfaceAndSize(Image other) - kopiuje tylko surface i wymiary (użyteczne w algorytmach w których wartość jendego piksela zależy od wartości jego sąsiadów)
+    \item \textbf{void} SetPixelBlack(int x, int y) - ustawia pixel w danym punkcie na kolor czarny
+    \item \textbf{void} CopyOnlySurfaceAndSize(Image other) - kopiuje tylko surface i wymiary (użyteczne w algorytmach, w których wartość jednego piksela zależy od wartości jego sąsiadów)
 \end{itemize}
 
 \subsection{Struktura Pixel}
 Ta struktura zawiera wartości R, G, B oraz jasność piksela.
 \newline
-\textbf{Należy pamiętać że gdy modyfikujemy piksel należy ustawić wszystkie 3 składowe}
+\textbf{Należy pamiętać, że gdy modyfikujemy piksel, należy ustawić wszystkie 3 składowe.}
 \newline
-\textbf{WARTOŚĆ JASNOŚCI JEST TYLKO DO ODCZYTU. METODA SetPixel NIE BIERZE JEJ POD UWAGĘ}
+\textbf{WARTOŚĆ JASNOŚCI JEST TYLKO DO ODCZYTU. METODA SetPixel NIE BIERZE JEJ POD UWAGĘ.}
 
 \subsection{Klasa Mutex}
 Semafor do synchronizacji wątków
 \begin{itemize}
     \item  \textbf{void} Lock() - opuść semafor
     \item \textbf{void} Unlock() - podnieś semafor
-    \item \textbf{bool} IsThreadRunning() - czy wątek przetwarzający ma się dalej wykonywać (używane przy przerwaniu wykonywnia wątku)
-    \item \textbf{void} ThreadStopped() - ustwaia że wątek przetwarzający zakończył wykonywanie
+    \item \textbf{bool} IsThreadRunning() - czy wątek przetwarzający ma się dalej wykonywać (używane przy przerwaniu wykonywania wątku)
+    \item \textbf{void} ThreadStopped() - ustawia, że wątek przetwarzający zakończył wykonywanie
 \end{itemize}
 
 
