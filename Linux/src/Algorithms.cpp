@@ -253,11 +253,12 @@ void Algorithms::Exponentiation(Image *outputImage, ParametersStruct *params)
     Mutex::GetInstance().Unlock();
 }
 
-void Algorithms::LevelHistogram(Image *outputImage)
+void Algorithms::LevelHistogram(Image *outputImage, ParametersStruct *params)
 {
     // local copy
     Mutex::GetInstance().Lock();
     auto copy = *outputImage;
+    bool grayScale = params->grayScale;
     Mutex::GetInstance().Unlock();
 
     // copy disttributors
@@ -265,14 +266,26 @@ void Algorithms::LevelHistogram(Image *outputImage)
     float *distG = copy.GetDistributorG();
     float *distB = copy.GetDistributorB();
 
+    auto dist = copy.GetDistributor();
+
     for (int row = 0; row < copy.GetHeight(); row++)
     {
         for (int col = 0; col < copy.GetWidth(); col++)
         {
             Image::Pixel pix = copy.GetPixel(col, row);
-            pix.b = distB[pix.b];
-            pix.g = distG[pix.g];
-            pix.r = distR[pix.r];
+            if (!grayScale)
+            {
+                pix.r = distR[pix.r];
+                pix.g = distG[pix.g];
+                pix.b = distB[pix.b];
+            }
+            else
+            {
+                pix.r = dist[pix.r];
+                pix.b = pix.r;
+                pix.g = pix.r;
+            }
+
             copy.SetPixel(col, row, pix);
         }
         Mutex::GetInstance().Lock();
@@ -1117,7 +1130,7 @@ void Algorithms::Skeletonization(Image *outputImage)
             Mutex::GetInstance().Unlock();
             return;
         }
-        //manualy refreshed
+        // manualy refreshed
         *outputImage = fullCopy;
         Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
         Mutex::GetInstance().Unlock();
@@ -1182,7 +1195,7 @@ void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
                 }
             }
         }
-       
+
         Mutex::GetInstance().Lock();
         // if canceled
         if (!Mutex::GetInstance().IsThreadRunning())
@@ -1209,7 +1222,7 @@ void Algorithms::Hought(Image *outputImage, ParametersStruct *params)
             Mutex::GetInstance().Unlock();
             return;
         }
-         // refresh for every line
+        // refresh for every line
         for (int i = 0; i < 2 * roMax; i++)
             for (int j = 0; j < THETA_NUM; j++)
             {

@@ -274,6 +274,8 @@ namespace Algorithms
         int lowerBound = 0;
         int upperBound = 0;
         int method = None;
+        // level histogram
+        bool grayScale = false;
         // Linear Filters
         int linerFilterS = Average;
         int linearFilterSize = S3x3;
@@ -311,7 +313,7 @@ namespace Algorithms
 
     void Exponentiation(Image *outputImage, ParametersStruct *params);
 
-    void LevelHistogram(Image *outputImage);
+    void LevelHistogram(Image *outputImage, ParametersStruct *params);
 
     void Binarization(Image *outputImage, ParametersStruct *params);
 

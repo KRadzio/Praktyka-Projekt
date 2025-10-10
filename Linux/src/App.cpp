@@ -972,7 +972,7 @@ void App::DrawParametersPopup()
             ImGui::SliderFloat("Wartość alfa", &params.alfa, 0.1, 3.0);
             break;
         case LeveledHistogram:
-            ImGui::Text("Brak parametrów do tego algorytmu");
+            ImGui::Checkbox("Obraz w odcieniach szarości", &params.grayScale);
             break;
         case Binarization:
             DrawBinarizationParams();
@@ -1217,7 +1217,7 @@ void App::LaunchAlgorithms()
         algorithmThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
         break;
     case LeveledHistogram:
-        algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
+        algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage, &params);
         break;
     case Binarization:
         algorithmThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
