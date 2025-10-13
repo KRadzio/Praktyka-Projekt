@@ -385,6 +385,14 @@ void App::DrawMiddleButtonsWindow(float h)
             errorPopupAlgActive = true;
     }
 
+    if (!inputImage.NoSurface())
+    {
+        ImGui::Separator();
+        ImGui::Text("Zamień obraz na odcienie\nszarości");
+        if (ImGui::Button("Odcień szarości", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+            inputImage.TurnToGrayScale();
+    }
+
     // only if output image is transformed
     if (!outputImage.NoSurface())
     {
@@ -972,7 +980,7 @@ void App::DrawParametersPopup()
             ImGui::SliderFloat("Wartość alfa", &params.alfa, 0.1, 3.0);
             break;
         case LeveledHistogram:
-            ImGui::Checkbox("Obraz w odcieniach szarości", &params.grayScale);
+            ImGui::Text("Brak parametrów do tego algorytmu");
             break;
         case Binarization:
             DrawBinarizationParams();
@@ -1217,7 +1225,7 @@ void App::LaunchAlgorithms()
         algorithmThread = std::thread(&Algorithms::Exponentiation, &outputImage, &params);
         break;
     case LeveledHistogram:
-        algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage, &params);
+        algorithmThread = std::thread(&Algorithms::LevelHistogram, &outputImage);
         break;
     case Binarization:
         algorithmThread = std::thread(&Algorithms::Binarization, &outputImage, &params);
