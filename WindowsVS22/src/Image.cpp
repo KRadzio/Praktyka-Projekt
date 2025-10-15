@@ -165,16 +165,65 @@ int Image::SetSourceImage(std::filesystem::path path)
         return -1;
     else
     {
+        width = surface->w;
+        height = surface->h;
+        if (surface->format->BytesPerPixel < 3)
+        {
+            // change the numbver of bytes per pixel
+            SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+            SDL_LockSurface(surface);
+            SDL_LockSurface(newSurface);
+            uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+            uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
+                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
+                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
+                }
+            }
+            SDL_UnlockSurface(newSurface);
+            SDL_UnlockSurface(surface);
+            SDL_FreeSurface(surface);
+            surface = newSurface;
+        }
         filePath = path;
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
         // handle it in some way
         if (texture == nullptr)
             printf("%s\n", SDL_GetError());
-        width = surface->w;
-        height = surface->h;
         RefreshPixelValuesArrays();
         return 0;
     }
+}
+
+
+void Image::TurnToGrayScale()
+{
+    if (texture != nullptr)
+        SDL_DestroyTexture(texture);
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            uint8_t b = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            uint8_t g = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1];
+            uint8_t r = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2];
+
+            int brightness = (b + g + r) / 3;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = brightness;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = brightness;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = brightness;
+        }
+    }
+    SDL_UnlockSurface(surface);
+    texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
+    RefreshPixelValuesArrays();
 }
 
 void Image::ClearImage()

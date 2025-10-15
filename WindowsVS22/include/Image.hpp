@@ -93,6 +93,9 @@ public:
     // sets width and height based on surface
     // refreshes arrays
     int SetSourceImage(std::filesystem::path path);
+
+     void TurnToGrayScale();
+
     // frees the surface and texture
     // sets arrays to 0
     // sets width and height to 0
