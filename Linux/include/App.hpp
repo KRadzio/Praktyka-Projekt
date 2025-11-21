@@ -64,6 +64,25 @@
 
 #define DEFAULT_REFRESH_INTERVAL 5.0
 
+// TODO
+// all params menu should be functions
+// alg methods sould be stored in something
+// saving params struct state and selected alg state, maybe also picture loaded?
+// change how params are stored?
+// the whole alg might be a class that contains the alg func, param func, and params
+// map <alg name, alg class>
+// slected by name, name can be saved
+// params can be accesed and saeved
+// erosion + dilatation is possible but think if it could be simplified
+// otherwise write a WARNING to not attempt it
+// the solutions are:
+// 1) do not do it in a thread
+// 2) make a special case while launching or after finishing one operation
+// 3) just write it again
+// load image should be reusable for loading extra image
+// minor ui improvements
+
+
 // singleton
 class App
 {

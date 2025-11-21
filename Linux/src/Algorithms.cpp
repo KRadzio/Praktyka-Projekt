@@ -1041,19 +1041,6 @@ void Algorithms::Skeletonization(Image *outputImage)
 
     Mutex::GetInstance().Unlock();
 
-    int h = fullCopy.GetHeight();
-    int w = fullCopy.GetWidth();
-
-    // to set pixels to remove
-    std::vector<std::vector<int>> pixelsStatus = std::vector<std::vector<int>>(h);
-
-    for (int i = 0; i < h; i++)
-        pixelsStatus[i] = std::vector<int>(w);
-
-    for (int i = 0; i < h; i++)
-        for (int j = 0; j < w; j++)
-            pixelsStatus[i][j] = NONE;
-
     while (remain)
     {
         remain = false;
@@ -1084,26 +1071,29 @@ void Algorithms::Skeletonization(Image *outputImage)
                         bool W6 = W6_CHECK;
                         skel = W1 || W2 || W3 || W4 || W5 || W6;
                         if (skel)
-                            pixelsStatus[row][col] = SKELETON;
+                        {
+                            Image::Pixel pix;
+                            pix.b = SKELETON;
+                            pix.g = SKELETON;
+                            pix.r = SKELETON;
+                            fullCopy.SetPixel(col,row,pix);
+                        }
                         else
                         {
-                            pixelsStatus[row][col] = REMOVE;
+                           Image::Pixel pix;
+                            pix.b = REMOVE;
+                            pix.g = REMOVE;
+                            pix.r = REMOVE;
+                            fullCopy.SetPixel(col,row,pix);
                             remain = true;
                         }
                     }
                 }
             }
             for (int row = 0; row < fullCopy.GetHeight(); row++)
-            {
                 for (int col = 0; col < fullCopy.GetWidth(); col++)
-                {
-                    if (pixelsStatus[row][col] == REMOVE)
-                    {
+                    if (fullCopy.GetPixel(col,row).brightnes == REMOVE)
                         fullCopy.SetPixelWhite(col, row);
-                        pixelsStatus[row][col] = NONE;
-                    }
-                }
-            }
         }
         Mutex::GetInstance().Lock();
         // if canceled
@@ -1111,9 +1101,6 @@ void Algorithms::Skeletonization(Image *outputImage)
         {
             *outputImage = fullCopy;
             fullCopy.ClearImage();
-            for (int i = 0; i < h; i++)
-                pixelsStatus[i].clear();
-            pixelsStatus.clear();
             Mutex::GetInstance().Unlock();
             return;
         }
@@ -1122,10 +1109,6 @@ void Algorithms::Skeletonization(Image *outputImage)
         Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
         Mutex::GetInstance().Unlock();
     }
-
-    for (int i = 0; i < h; i++)
-        pixelsStatus[i].clear();
-    pixelsStatus.clear();
 
     // copy back to output
     Mutex::GetInstance().Lock();
