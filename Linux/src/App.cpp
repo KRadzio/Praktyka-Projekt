@@ -68,6 +68,10 @@ int App::Init()
     ImGui_ImplSDLRenderer2_Init(Renderer::GetInstance().GetRenderer());
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new NEGATIVE_HPP::Negative());
+
     return 0;
 }
 
@@ -134,6 +138,9 @@ int App::MainLoop()
 void App::Cleanup()
 {
     // Cleanup
+    for(u_int64_t it = 0; it < algorithmsAvailable.size(); it++)
+        algorithmsAvailable[it]->~Algorithm();
+    algorithmsAvailable.clear();
     inputImage.ClearImage();
     outputImage.ClearImage();
     io->Fonts->RemoveFont(lato);
@@ -1213,7 +1220,7 @@ void App::LaunchAlgorithms()
     switch (algorithmSelected)
     {
     case Negative:
-        algorithmThread = std::thread(&Algorithms::CreateNegative, &outputImage);
+        algorithmThread = std::thread(&Algorithm::AlgorithmFunction, algorithmsAvailable[0], &outputImage);
         break;
     case Brighten:
         algorithmThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);

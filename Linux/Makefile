@@ -2,13 +2,17 @@
 CC=g++
 #include directories
 IMGUI_DIR=./lib/imgui
+ALGS_DIR=/algorithms
 #project include dir
 INCLUDE=./include
-INCLUDE+=$(IMGUI_DIR)
+INCLUDE_DIRS=$(INCLUDE)
+INCLUDE_DIRS+=$(IMGUI_DIR)
+INCLUDE_DIRS+=$(INCLUDE)$(ALGS_DIR)
 #project src dir
 SRC=./src
 SRC_DIRS=$(SRC)
 SRC_DIRS+=$(IMGUI_DIR)
+SRC_DIRS+=$(SRC)$(ALGS_DIR)
 # libs
 # `pkg-config --cflags --libs opencv` (if opencv)
 LIBS=-ldl -lSDL2_image `sdl2-config --libs`
@@ -23,7 +27,7 @@ DEPFLAGS=-MP -MD
 #debug flag
 DEBUGFLAG=-g
 #all flags exept debug flag
-CFLAGS=$(foreach D, $(INCLUDE), -I$(D)) $(STD) $(WARN) $(DEPFLAGS) `sdl2-config --cflags` 
+CFLAGS=$(foreach D, $(INCLUDE_DIRS), -I$(D)) $(STD) $(WARN) $(DEPFLAGS) `sdl2-config --cflags` 
 CPPFILES=$(foreach D, $(SRC_DIRS), $(wildcard $(D)/*.cpp))
 CPPFILES+=$(SRC_BACKEND)
 
@@ -55,6 +59,9 @@ $(RELASE)%.o:$(SRC)/%.cpp
 $(RELASE)%.o:$(IMGUI_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+$(RELASE)%.o:$(SRC)$(ALGS_DIR)/%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 
 debug: $(DEBUG)
 
@@ -65,6 +72,9 @@ $(DEBUG)%.o:$(SRC)/%.cpp
 	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
 
 $(DEBUG)%.o:$(IMGUI_DIR)/%.cpp
+	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
+
+$(DEBUG)%.o:$(SRC)$(ALGS_DIR)/%.cpp
 	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
 
 clean:

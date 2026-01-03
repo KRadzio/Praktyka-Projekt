@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -17,6 +18,7 @@
 #include "Algorithms.hpp"
 #include "Renderer.hpp"
 #include "Mutex.hpp"
+#include "Negative.hpp"
 
 // window size
 #define WINDOW_WIDTH 1280
@@ -101,6 +103,19 @@ public:
         OutputDist
     };
 
+
+    // zrobić klasę Algorithm(po której będą dziedziczyć algorytmy), 
+    // klasa będzie zawierać funkcje od parametrów, paremetry 
+    // do algorytmu, (i flagę czy algorytm wgl ma parametry) i funkcje 
+    // algorymu, oraz metodę od ustawienia parametrów. i potem można 
+    // zmapować <nazwa, klasa>, co powoduje, że można jednocześnie łatwo
+    //  zapisać stan programu (parametry i algorytm wybrany), jak i 
+    // sprawić, że trzeba tylko w jednym miejscu wprowadzić modyfikacje 
+    // (dodać do mapy). Co prawda powoduje to że trzeba stowrzyć 
+    // nowyAlgortm.hpp i nowy Algorytm.cpp gdzie algorytm dziedziczy
+    //  po klasie nadrzędniej ale jest to chyba w miarę eleganckie
+    //  rozwiązanie
+
     // if new needed just add it
     // then update DrawAlgMenuElements
     // DrawParametersPopup
@@ -139,6 +154,10 @@ private:
     int HandleEvents();
     // render things on window
     void Render();
+
+    // SAVE AND LOAD
+    // EXTRA IMAGE
+
 
     // main parts
 
@@ -230,7 +249,9 @@ private:
 
     // algorithm state
     std::string selectedAlgorithmName = "Brak wybranego algorytmu";
-    int algorithmSelected = None;
+    int algorithmSelected = None; // change to pos in vector
+    NEGATIVE_HPP::Negative neg;
+    std::vector<Algorithm*> algorithmsAvailable; // algorithm objects
 
     // File name and extension
     char fileNameBuff[64];
