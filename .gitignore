@@ -582,3 +582,5 @@ Linux/bin/debug/Brighten.d
 Linux/bin/debug/Brighten.o
 Linux/bin/relase/Brighten.d
 Linux/bin/relase/Brighten.o
+Linux/leak.txt
+Linux/addr.txt
