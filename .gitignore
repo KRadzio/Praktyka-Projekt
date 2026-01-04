@@ -578,3 +578,7 @@ Linux/bin/debug/Algorithm.d
 Linux/bin/debug/Algorithm.o
 Linux/bin/debug/Negative.d
 Linux/bin/debug/Negative.o
+Linux/bin/debug/Brighten.d
+Linux/bin/debug/Brighten.o
+Linux/bin/relase/Brighten.d
+Linux/bin/relase/Brighten.o

@@ -25,7 +25,7 @@ WARNEXTRA=-Wshadow -Wcast-align -Wconversion -Wsign-conversion
 # dependency flags
 DEPFLAGS=-MP -MD
 #debug flag
-DEBUGFLAG=-g
+DEBUGFLAG=-g -fsanitize=address
 #all flags exept debug flag
 CFLAGS=$(foreach D, $(INCLUDE_DIRS), -I$(D)) $(STD) $(WARN) $(DEPFLAGS) `sdl2-config --cflags` 
 CPPFILES=$(foreach D, $(SRC_DIRS), $(wildcard $(D)/*.cpp))

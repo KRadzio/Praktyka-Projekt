@@ -13,31 +13,31 @@
 
 class Algorithm
 {
-    public:
-        Algorithm();
-        virtual ~Algorithm(); // some may need an extra image
+public:
+    Algorithm();
+    virtual ~Algorithm(); // some may need an extra image
 
-        // called when params menu opend
-        virtual void ParamsMenu() = 0;
-        // called when processing the image
-        virtual void AlgorithmFunction(Image* outputImage) = 0;
-        // called when params needs to be reset
-        virtual void ResetToDefaults() = 0;
+    // called when params menu opend
+    virtual void ParamsMenu() = 0;
+    // called when processing the image
+    virtual void AlgorithmFunction(Image *outputImage) = 0;
+    // called when params needs to be reset
+    virtual void ResetToDefaults() = 0;
 
-        // TODO
-        // virtual void Save();
-        // virtual void Load();
+    inline std::string GetName() { return algorithmName; }
+    // TODO
+    // virtual void Save();
+    // virtual void Load();
 
-    protected:
-        void CopyToLocalVariable(Image* outputImage);
-        bool Canceled(Image* outputImage);
-        void AutoRefresh(Image* outputImage);
-        void SaveToOutput(Image* outputImage);
+protected:
+    void CopyToLocalVariable(Image *outputImage);
+    bool Canceled(Image *outputImage);
+    void AutoRefresh(Image *outputImage);
+    void SaveToOutput(Image *outputImage);
 
-    protected:
-        std::string algorithmName = "None";
-        Image copy;
+protected:
+    std::string algorithmName = "None";
+    Image copy;
 };
-
 
 #endif

@@ -71,6 +71,7 @@ int App::Init()
 
 
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new NEGATIVE_HPP::Negative());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new BRIGHTEN_HPP::Brighten());
 
     return 0;
 }
@@ -139,7 +140,7 @@ void App::Cleanup()
 {
     // Cleanup
     for(u_int64_t it = 0; it < algorithmsAvailable.size(); it++)
-        algorithmsAvailable[it]->~Algorithm();
+        delete algorithmsAvailable[it];
     algorithmsAvailable.clear();
     inputImage.ClearImage();
     outputImage.ClearImage();
@@ -346,7 +347,7 @@ void App::DrawMiddleButtonsWindow(float h)
     if (ImGui::Button("Przetwórz obraz", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         // not valid for transformation
-        if (algorithmSelected == None || inputImage.NoSurface())
+        if (currAlgorithm == nullptr || inputImage.NoSurface())
             errorPopupAlgActive = true;
         else
         {
@@ -365,7 +366,8 @@ void App::DrawMiddleButtonsWindow(float h)
             }
             // not running
             if (!algorithmThread.joinable())
-                LaunchAlgorithms();
+                // LaunchAlgorithms();
+                algorithmThread = std::thread(&Algorithm::AlgorithmFunction, currAlgorithm, &outputImage);
         }
     }
 
@@ -421,6 +423,7 @@ void App::DrawMiddleButtonsWindow(float h)
     {
         algorithmSelected = None;
         selectedAlgorithmName = "Brak wybranego algorytmu";
+        currAlgorithm = nullptr;
         outputImage.ClearImage();
         resetDonePopupActive = true;
     }
@@ -516,68 +519,78 @@ void App::DrawHistogramsAndFunctions()
 
 void App::DrawAlgMenuElements()
 {
-    // if new needed just add it
-    if (ImGui::MenuItem("Negatyw", NULL, algorithmSelected == Negative))
+    for(auto alg : algorithmsAvailable)
     {
-        selectedAlgorithmName = "Negatyw";
-        algorithmSelected = Negative;
+        if(ImGui::MenuItem(alg->GetName().c_str(), NULL, selectedAlgorithmName == alg->GetName()))
+        {
+            currAlgorithm = alg;
+            selectedAlgorithmName = alg->GetName();
+            // algorithmSelected = Negative;
+        }
     }
-    if (ImGui::MenuItem("Rozjaśnij", NULL, algorithmSelected == Brighten))
-    {
-        selectedAlgorithmName = "Rozjaśnij";
-        algorithmSelected = Brighten;
-    }
-    if (ImGui::MenuItem("Kontrast", NULL, algorithmSelected == Contrast))
-    {
-        selectedAlgorithmName = "Kontrast";
-        algorithmSelected = Contrast;
-    }
-    if (ImGui::MenuItem("Potęgowanie", NULL, algorithmSelected == Exponentiation))
-    {
-        selectedAlgorithmName = "Potęgowanie";
-        algorithmSelected = Exponentiation;
-    }
-    if (ImGui::MenuItem("Wyrównanie histogramu", NULL, algorithmSelected == LeveledHistogram))
-    {
-        selectedAlgorithmName = "Wyrównanie histogramu";
-        algorithmSelected = LeveledHistogram;
-    }
-    if (ImGui::MenuItem("Binaryzacja", NULL, algorithmSelected == Binarization))
-    {
-        selectedAlgorithmName = "Binaryzacja";
-        algorithmSelected = Binarization;
-    }
-    if (ImGui::MenuItem("Filtry Liniowe", NULL, algorithmSelected == LinearFilter))
-    {
-        selectedAlgorithmName = "Filtry Liniowe";
-        algorithmSelected = LinearFilter;
-    }
-    if (ImGui::MenuItem("Filtry medianowe", NULL, algorithmSelected == MedianFilter))
-    {
-        selectedAlgorithmName = "Filtry medianowe";
-        algorithmSelected = MedianFilter;
-    }
-    if (ImGui::MenuItem("Erozja", NULL, algorithmSelected == Erosion))
-    {
-        selectedAlgorithmName = "Erozja";
-        algorithmSelected = Erosion;
-    }
-    if (ImGui::MenuItem("Dylatacja", NULL, algorithmSelected == Dilatation))
-    {
-        selectedAlgorithmName = "Dylatacja";
-        algorithmSelected = Dilatation;
-    }
-    if (ImGui::MenuItem("Szkieletyzacja", NULL, algorithmSelected == Skeletonization))
-    {
-        selectedAlgorithmName = "Szkieletyzacja";
-        algorithmSelected = Skeletonization;
-        autoRefreshPictureEnabled = false;
-    }
-    if (ImGui::MenuItem("Transformacja Houghta", NULL, algorithmSelected == Hought))
-    {
-        selectedAlgorithmName = "Transformacja Houghta";
-        algorithmSelected = Hought;
-    }
+
+    // // if new needed just add it
+    // if (ImGui::MenuItem("Negatyw1", NULL, algorithmSelected == Negative))
+    // {
+    //     selectedAlgorithmName = "Negatyw";
+    //     algorithmSelected = Negative;
+    // }
+    // if (ImGui::MenuItem("Rozjaśnij", NULL, algorithmSelected == Brighten))
+    // {
+    //     selectedAlgorithmName = "Rozjaśnij";
+    //     algorithmSelected = Brighten;
+    // }
+    // if (ImGui::MenuItem("Kontrast", NULL, algorithmSelected == Contrast))
+    // {
+    //     selectedAlgorithmName = "Kontrast";
+    //     algorithmSelected = Contrast;
+    // }
+    // if (ImGui::MenuItem("Potęgowanie", NULL, algorithmSelected == Exponentiation))
+    // {
+    //     selectedAlgorithmName = "Potęgowanie";
+    //     algorithmSelected = Exponentiation;
+    // }
+    // if (ImGui::MenuItem("Wyrównanie histogramu", NULL, algorithmSelected == LeveledHistogram))
+    // {
+    //     selectedAlgorithmName = "Wyrównanie histogramu";
+    //     algorithmSelected = LeveledHistogram;
+    // }
+    // if (ImGui::MenuItem("Binaryzacja", NULL, algorithmSelected == Binarization))
+    // {
+    //     selectedAlgorithmName = "Binaryzacja";
+    //     algorithmSelected = Binarization;
+    // }
+    // if (ImGui::MenuItem("Filtry Liniowe", NULL, algorithmSelected == LinearFilter))
+    // {
+    //     selectedAlgorithmName = "Filtry Liniowe";
+    //     algorithmSelected = LinearFilter;
+    // }
+    // if (ImGui::MenuItem("Filtry medianowe", NULL, algorithmSelected == MedianFilter))
+    // {
+    //     selectedAlgorithmName = "Filtry medianowe";
+    //     algorithmSelected = MedianFilter;
+    // }
+    // if (ImGui::MenuItem("Erozja", NULL, algorithmSelected == Erosion))
+    // {
+    //     selectedAlgorithmName = "Erozja";
+    //     algorithmSelected = Erosion;
+    // }
+    // if (ImGui::MenuItem("Dylatacja", NULL, algorithmSelected == Dilatation))
+    // {
+    //     selectedAlgorithmName = "Dylatacja";
+    //     algorithmSelected = Dilatation;
+    // }
+    // if (ImGui::MenuItem("Szkieletyzacja", NULL, algorithmSelected == Skeletonization))
+    // {
+    //     selectedAlgorithmName = "Szkieletyzacja";
+    //     algorithmSelected = Skeletonization;
+    //     autoRefreshPictureEnabled = false;
+    // }
+    // if (ImGui::MenuItem("Transformacja Houghta", NULL, algorithmSelected == Hought))
+    // {
+    //     selectedAlgorithmName = "Transformacja Houghta";
+    //     algorithmSelected = Hought;
+    // }
 }
 
 void App::DrawLoadPopup()
@@ -968,49 +981,53 @@ void App::DrawParametersPopup()
     // can not be opend if thread is running
     if (ImGui::BeginPopupModal("Parametry", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
+        if(currAlgorithm == nullptr)
+             ImGui::Text("Nie wybrano algorytmu");
+        else
+            currAlgorithm->ParamsMenu();
         // if new needed just add it
-        switch (algorithmSelected)
-        {
-        case None:
-            ImGui::Text("Nie wybrano algorytmu");
-            break;
-        case Negative:
-            ImGui::Text("Brak parametrów do tego algorytmu");
-            break;
-        case Brighten:
-            ImGui::SliderInt("O ile rozjaśnić/przyciemnić?", &params.value, -255, 255);
-            break;
-        case Contrast:
-            ImGui::SliderFloat("O ile zmienić kontrast?", &params.contrast, 0.1, 5.0);
-            break;
-        case Exponentiation:
-            ImGui::SliderFloat("Wartość alfa", &params.alfa, 0.1, 3.0);
-            break;
-        case LeveledHistogram:
-            ImGui::Text("Brak parametrów do tego algorytmu");
-            break;
-        case Binarization:
-            DrawBinarizationParams();
-            break;
-        case LinearFilter:
-            DrawLinearFilterParams();
-            break;
-        case MedianFilter:
-            DrawMedianFilterParams();
-            break;
-        case Erosion:
-            DrawErosionParams();
-            break;
-        case Dilatation:
-            DrawDilatationParams();
-            break;
-        case Skeletonization:
-            ImGui::Text("Brak paramentrów dla tego algorytmu");
-            break;
-        case Hought:
-            ImGui::Text("?????");
-            break;
-        }
+        // switch (algorithmSelected)
+        // {
+        // case None:
+        //     ImGui::Text("Nie wybrano algorytmu");
+        //     break;
+        // case Negative:
+        //     currAlgorithm->ParamsMenu();
+        //     break;
+        // case Brighten:
+        //     ImGui::SliderInt("O ile rozjaśnić/przyciemnić?", &params.value, -255, 255);
+        //     break;
+        // case Contrast:
+        //     ImGui::SliderFloat("O ile zmienić kontrast?", &params.contrast, 0.1, 5.0);
+        //     break;
+        // case Exponentiation:
+        //     ImGui::SliderFloat("Wartość alfa", &params.alfa, 0.1, 3.0);
+        //     break;
+        // case LeveledHistogram:
+        //     ImGui::Text("Brak parametrów do tego algorytmu");
+        //     break;
+        // case Binarization:
+        //     DrawBinarizationParams();
+        //     break;
+        // case LinearFilter:
+        //     DrawLinearFilterParams();
+        //     break;
+        // case MedianFilter:
+        //     DrawMedianFilterParams();
+        //     break;
+        // case Erosion:
+        //     DrawErosionParams();
+        //     break;
+        // case Dilatation:
+        //     DrawDilatationParams();
+        //     break;
+        // case Skeletonization:
+        //     ImGui::Text("Brak paramentrów dla tego algorytmu");
+        //     break;
+        // case Hought:
+        //     ImGui::Text("?????");
+        //     break;
+        // }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
         {
@@ -1220,7 +1237,7 @@ void App::LaunchAlgorithms()
     switch (algorithmSelected)
     {
     case Negative:
-        algorithmThread = std::thread(&Algorithm::AlgorithmFunction, algorithmsAvailable[0], &outputImage);
+        algorithmThread = std::thread(&Algorithm::AlgorithmFunction, currAlgorithm, &outputImage);
         break;
     case Brighten:
         algorithmThread = std::thread(&Algorithms::BrightenImage, &outputImage, &params);
@@ -1262,6 +1279,9 @@ void App::LaunchAlgorithms()
 
 void App::ResetParameters()
 {
+    for(auto alg : algorithmsAvailable)
+        alg->ResetToDefaults();
+
     params.value = 0;
     params.contrast = 1.0;
     params.alfa = 1.0;

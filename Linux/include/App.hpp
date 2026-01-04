@@ -19,6 +19,7 @@
 #include "Renderer.hpp"
 #include "Mutex.hpp"
 #include "Negative.hpp"
+#include "Brighten.hpp"
 
 // window size
 #define WINDOW_WIDTH 1280
@@ -83,6 +84,10 @@
 // 3) just write it again
 // load image should be reusable for loading extra image
 // minor ui improvements
+
+// ISSUE
+// MEMORY LEAK IN IMAGE (copying?)
+// MEMORY LEAK IN BASE APP 256 BYTES
 
 
 // singleton
@@ -250,8 +255,9 @@ private:
     // algorithm state
     std::string selectedAlgorithmName = "Brak wybranego algorytmu";
     int algorithmSelected = None; // change to pos in vector
-    NEGATIVE_HPP::Negative neg;
     std::vector<Algorithm*> algorithmsAvailable; // algorithm objects
+    Algorithm* currAlgorithm = nullptr;
+
 
     // File name and extension
     char fileNameBuff[64];
