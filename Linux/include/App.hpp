@@ -86,8 +86,8 @@
 // minor ui improvements
 
 // ISSUE
-// MEMORY LEAK IN IMAGE (copying?)
-// MEMORY LEAK IN BASE APP 256 BYTES
+// MEMORY LEAK FOUND (DO NOT FREE TEXTURE IN THREAD) (fix it in some way)
+// MEMORY LEAK WHEN CREATION RENDERER (does not detect freeing it?)
 
 
 // singleton

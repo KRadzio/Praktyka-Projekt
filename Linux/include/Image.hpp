@@ -43,11 +43,13 @@ public:
     // copy content and make a new texture
     // sets the same filepath as the other
     // (no checks if texture created)
+    // DO NOT USE IN A THREAD
     Image(const Image &other);
     // clears prev data
     // copy content and make a new texture
     // sets the same filepath as the other
     // (no checks if texture created)
+    // DO NOT USE IN A THREAD
     Image operator=(const Image &other);
     // clears prev data
     // create a new image and fill
@@ -100,7 +102,15 @@ public:
     // sets arrays to 0
     // sets width and height to 0
     // sets filepath to ""
+    // DO NOT USE IN A THREAD
     void ClearImage();
+
+     // frees the surface (DOES NOT CLEAR TEXTURE)
+    // sets arrays to 0
+    // sets width and height to 0
+    // sets filepath to ""
+    // FOR USE IN A THREAD
+    void ClearImageNoTexture();
 
     // for safety checks
     inline bool NoSurface() { return surface == nullptr; }
@@ -118,6 +128,7 @@ public:
     void RefreshPixelValuesArrays();
     // clears prev texture
     // to refresh texture after surface was modified
+    // DO NOT USE IN A THREAD
     void RefreshTexture();
 
     Pixel GetPixel(int x, int y);
@@ -129,7 +140,12 @@ public:
     void SetPixelBlack(int x, int y);
 
     // same as copy constructor
+    // DO NOT USE IN A THREAD
     void Copy(Image &other);
+
+    // copys all data exept for texture
+    // FOR USE IN THREAD
+    void CopyNoTexture(Image &other);
 
     // use only if pixels and size info is needed
     // does not create texture

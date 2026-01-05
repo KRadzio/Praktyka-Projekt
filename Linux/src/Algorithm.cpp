@@ -7,7 +7,7 @@ Algorithm::~Algorithm() { copy.ClearImage(); }
 void Algorithm::CopyToLocalVariable(Image *outputImage)
 {
     Mutex::GetInstance().Lock();
-    copy = *outputImage;
+    copy.CopyNoTexture(*outputImage);
     Mutex::GetInstance().Unlock();
 }
 
@@ -17,7 +17,7 @@ bool Algorithm::Canceled(Image *outputImage)
     // if canceled
     if (!Mutex::GetInstance().IsThreadRunning())
     {
-        *outputImage = copy;
+        outputImage->CopyNoTexture(copy);
         copy.ClearImage();
         Mutex::GetInstance().Unlock();
         return true;
@@ -31,7 +31,7 @@ void Algorithm::AutoRefresh(Image *outputImage)
     Mutex::GetInstance().Lock();
     if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
     {
-        *outputImage = copy;
+        outputImage->CopyNoTexture(copy);
         Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
     }
     Mutex::GetInstance().Unlock();
@@ -41,7 +41,7 @@ void Algorithm::SaveToOutput(Image *outputImage)
 {
     Mutex::GetInstance().Lock();
     Mutex::GetInstance().ThreadStopped();
-    *outputImage = copy;
+    outputImage->CopyNoTexture(copy);
     copy.ClearImage();
     Mutex::GetInstance().Unlock();
 }

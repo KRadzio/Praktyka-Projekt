@@ -248,6 +248,27 @@ void Image::ClearImage()
     filePath = "";
 }
 
+void Image::ClearImageNoTexture()
+{
+    SDL_FreeSurface(surface);
+    surface = nullptr;
+    // do not do anything with texture
+    for (int i = 0; i < MAX_VAL; i++)
+    {
+        lightValues[i] = 0;
+        valuesR[i] = 0;
+        valuesG[i] = 0;
+        valuesB[i] = 0;
+        distributorLight[i] = 0;
+        distributorR[i] = 0;
+        distributorG[i] = 0;
+        distributorB[i] = 0;
+    }
+    width = 0;
+    height = 0;
+    filePath = "";
+}
+
 void Image::SetBlankSurface(int width, int height)
 {
     SDL_FreeSurface(surface);
@@ -381,6 +402,26 @@ void Image::Copy(Image &other)
     surface = SDL_DuplicateSurface(other.surface);
     if (surface != nullptr)
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
+    width = other.width;
+    height = other.height;
+    for (int i = 0; i < MAX_VAL; i++)
+    {
+        lightValues[i] = other.lightValues[i];
+        valuesR[i] = other.valuesR[i];
+        valuesG[i] = other.valuesG[i];
+        valuesB[i] = other.valuesB[i];
+        distributorLight[i] = other.distributorLight[i];
+        distributorR[i] = other.distributorR[i];
+        distributorG[i] = other.distributorG[i];
+        distributorB[i] = other.distributorB[i];
+    }
+    filePath = other.filePath;
+}
+
+void Image::CopyNoTexture(Image &other)
+{
+    ClearImageNoTexture();
+    surface = SDL_DuplicateSurface(other.surface);
     width = other.width;
     height = other.height;
     for (int i = 0; i < MAX_VAL; i++)

@@ -37,7 +37,7 @@ protected:
 
 protected:
     std::string algorithmName = "None";
-    Image copy;
+    Image copy; // the copys texture should not be created or copied (it causes memory leaks 233 bytes per copy)
 };
 
 #endif
