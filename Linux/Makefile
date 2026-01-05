@@ -18,7 +18,7 @@ SRC_DIRS+=$(SRC)$(ALGS_DIR)
 LIBS=-ldl -lSDL2_image `sdl2-config --libs`
 # standard
 STD=-std=c++17
-# optimization (for later)
+# optimization
 OPT=-O2
 #warnings
 WARN=-Wall -Wextra -Wnull-dereference -Wpedantic -Wformat=2
