@@ -1,6 +1,6 @@
 #include "Brighten.hpp"
 
-Brighten::Brighten() { algorithmName = "Brighten"; }
+Brighten::Brighten() { algorithmName = "Rosjaśnij/Przyciemnij"; }
 
 void Brighten::ParamsMenu()
 {

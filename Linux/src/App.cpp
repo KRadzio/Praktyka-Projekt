@@ -454,7 +454,7 @@ void App::DrawHistogramsAndFunctions()
 
     // in
     ImGui::SameLine(BORDER_OFFSET);
-    ImGui::BeginChild("Histogram wejsciowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
+    ImGui::BeginChild("Histogram wejściowy", ImVec2(HIST_WINDOW_W, HIST_WINDOW_H), ImGuiChildFlags_Borders);
     ImGui::Text("Obraz wejściowy");
     ImGui::RadioButton("Jasność", &modeI, 0);
     ImGui::SameLine();
