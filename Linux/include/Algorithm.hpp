@@ -32,12 +32,13 @@ public:
 protected:
     void CopyToLocalVariable(Image *outputImage);
     bool Canceled(Image *outputImage);
-    void AutoRefresh(Image *outputImage);
+    void Refresh(Image *outputImage);
     void SaveToOutput(Image *outputImage);
 
 protected:
+    // flag for manual
     std::string algorithmName = "None";
-    Image copy; // the copys texture should not be created or copied (it causes memory leaks 233 bytes per copy)
+    Image copy; // the copys texture should not be created or copied (it causes memory leaks 233 bytes per texture modification)
 };
 
 #endif

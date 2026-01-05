@@ -71,6 +71,10 @@ int App::Init()
 
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new NEGATIVE_HPP::Negative());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new BRIGHTEN_HPP::Brighten());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new CONTRAST_HPP::Contrast());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new EXPONENTIATION_HPP::Exponentiation());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new LEVELEDHISTOGRAM_HPP::LeveledHistogram());
+
 
     return 0;
 }
@@ -524,36 +528,9 @@ void App::DrawAlgMenuElements()
         {
             currAlgorithm = alg;
             selectedAlgorithmName = alg->GetName();
-            // algorithmSelected = Negative;
         }
     }
 
-    // // if new needed just add it
-    // if (ImGui::MenuItem("Negatyw1", NULL, algorithmSelected == Negative))
-    // {
-    //     selectedAlgorithmName = "Negatyw";
-    //     algorithmSelected = Negative;
-    // }
-    // if (ImGui::MenuItem("Rozjaśnij", NULL, algorithmSelected == Brighten))
-    // {
-    //     selectedAlgorithmName = "Rozjaśnij";
-    //     algorithmSelected = Brighten;
-    // }
-    // if (ImGui::MenuItem("Kontrast", NULL, algorithmSelected == Contrast))
-    // {
-    //     selectedAlgorithmName = "Kontrast";
-    //     algorithmSelected = Contrast;
-    // }
-    // if (ImGui::MenuItem("Potęgowanie", NULL, algorithmSelected == Exponentiation))
-    // {
-    //     selectedAlgorithmName = "Potęgowanie";
-    //     algorithmSelected = Exponentiation;
-    // }
-    // if (ImGui::MenuItem("Wyrównanie histogramu", NULL, algorithmSelected == LeveledHistogram))
-    // {
-    //     selectedAlgorithmName = "Wyrównanie histogramu";
-    //     algorithmSelected = LeveledHistogram;
-    // }
     // if (ImGui::MenuItem("Binaryzacja", NULL, algorithmSelected == Binarization))
     // {
     //     selectedAlgorithmName = "Binaryzacja";
@@ -984,27 +961,6 @@ void App::DrawParametersPopup()
              ImGui::Text("Nie wybrano algorytmu");
         else
             currAlgorithm->ParamsMenu();
-        // if new needed just add it
-        // switch (algorithmSelected)
-        // {
-        // case None:
-        //     ImGui::Text("Nie wybrano algorytmu");
-        //     break;
-        // case Negative:
-        //     currAlgorithm->ParamsMenu();
-        //     break;
-        // case Brighten:
-        //     ImGui::SliderInt("O ile rozjaśnić/przyciemnić?", &params.value, -255, 255);
-        //     break;
-        // case Contrast:
-        //     ImGui::SliderFloat("O ile zmienić kontrast?", &params.contrast, 0.1, 5.0);
-        //     break;
-        // case Exponentiation:
-        //     ImGui::SliderFloat("Wartość alfa", &params.alfa, 0.1, 3.0);
-        //     break;
-        // case LeveledHistogram:
-        //     ImGui::Text("Brak parametrów do tego algorytmu");
-        //     break;
         // case Binarization:
         //     DrawBinarizationParams();
         //     break;

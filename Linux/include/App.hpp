@@ -18,8 +18,6 @@
 #include "Algorithms.hpp"
 #include "Renderer.hpp"
 #include "Mutex.hpp"
-#include "Negative.hpp"
-#include "Brighten.hpp"
 
 // window size
 #define WINDOW_WIDTH 1280

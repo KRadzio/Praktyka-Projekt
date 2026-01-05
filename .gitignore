@@ -584,3 +584,15 @@ Linux/bin/relase/Brighten.d
 Linux/bin/relase/Brighten.o
 Linux/leak.txt
 Linux/addr.txt
+Linux/bin/debug/Contrast.d
+Linux/bin/debug/Contrast.o
+Linux/bin/debug/Exponentiation.d
+Linux/bin/debug/Exponentiation.o
+Linux/bin/debug/LeveledHistogram.d
+Linux/bin/debug/LeveledHistogram.o
+Linux/bin/relase/Contrast.d
+Linux/bin/relase/Contrast.o
+Linux/bin/relase/Exponentiation.d
+Linux/bin/relase/Exponentiation.o
+Linux/bin/relase/LeveledHistogram.d
+Linux/bin/relase/LeveledHistogram.o

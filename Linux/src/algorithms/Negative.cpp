@@ -23,7 +23,7 @@ void Negative::AlgorithmFunction(Image *outputImage)
         }
         if (Canceled(outputImage))
             return;
-        AutoRefresh(outputImage);
+        Refresh(outputImage);
     }
     SaveToOutput(outputImage);
 }

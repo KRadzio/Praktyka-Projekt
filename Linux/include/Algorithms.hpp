@@ -10,6 +10,12 @@
 #include "Image.hpp"
 #include "Mutex.hpp"
 
+#include "Negative.hpp"
+#include "Brighten.hpp"
+#include "Contrast.hpp"
+#include "Exponentiation.hpp"
+#include "LeveledHistogram.hpp"
+
 // pre defined
 // (it took some time)
 

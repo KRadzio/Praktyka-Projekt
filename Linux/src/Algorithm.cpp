@@ -26,7 +26,7 @@ bool Algorithm::Canceled(Image *outputImage)
     return false;
 }
 
-void Algorithm::AutoRefresh(Image *outputImage)
+void Algorithm::Refresh(Image *outputImage)
 {
     Mutex::GetInstance().Lock();
     if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
