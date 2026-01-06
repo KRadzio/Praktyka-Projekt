@@ -124,22 +124,22 @@ public:
     // DrawParametersPopup
     // LaunchAlgorithms
     // then implement the function in Algorithms.hpp Algorithms.cpp
-    enum AlgSelected
-    {
-        None,
-        Negative,
-        Brighten,
-        Contrast,
-        Exponentiation,
-        LeveledHistogram,
-        Binarization,
-        LinearFilter,
-        MedianFilter,
-        Erosion,
-        Dilatation,
-        Skeletonization,
-        Hought
-    };
+    // enum AlgSelected
+    // {
+    //     None,
+    //     Negative,
+    //     Brighten,
+    //     Contrast,
+    //     Exponentiation,
+    //     LeveledHistogram,
+    //     Binarization,
+    //     LinearFilter,
+    //     MedianFilter,
+    //     Erosion,
+    //     Dilatation,
+    //     Skeletonization,
+    //     Hought
+    // };
 
 public:
     static App &GetInstance();
@@ -199,8 +199,6 @@ private:
     void DrawResetDonePopup();
 
     // parameters popup split
-    void DrawBinarizationParams();
-    void DrawLinearFilterParams();
     void DrawMedianFilterParams();
     void DrawErosionParams();
     void DrawDilatationParams();
@@ -208,17 +206,12 @@ private:
     // other
     void DrawHelpMenu();
     // here the algorithm thread is started
-    void LaunchAlgorithms();
     void ResetParameters();
     // refresh logic
     void AutoRefreshOutputImage();
     // special refresh logic
     void RefreshSkelAndHought();
 
-    // input and display arrays
-    void DrawLinearInputArray();
-    void DrawLinearDisplayArray();
-    void DrawMedianDisplayArray();
     // helper for median, erosion and dilatation
     void DrawInputArray(std::string name, int size, std::array<std::array<bool, 3>, 3> &a3x3, std::array<std::array<bool, 5>, 5> &a5x5, std::array<std::array<bool, 7>, 7> &a7x7);
 
@@ -252,7 +245,7 @@ private:
 
     // algorithm state
     std::string selectedAlgorithmName = "Brak wybranego algorytmu";
-    int algorithmSelected = None; // change to pos in vector
+    // int algorithmSelected = None; // change to pos in vector
     std::vector<Algorithm*> algorithmsAvailable; // algorithm objects
     Algorithm* currAlgorithm = nullptr;
 

@@ -596,3 +596,15 @@ Linux/bin/relase/Exponentiation.d
 Linux/bin/relase/Exponentiation.o
 Linux/bin/relase/LeveledHistogram.d
 Linux/bin/relase/LeveledHistogram.o
+Linux/bin/debug/Binarization.d
+Linux/bin/debug/Binarization.o
+Linux/bin/debug/LinearFilter.d
+Linux/bin/debug/LinearFilter.o
+Linux/bin/debug/MedianFilter.d
+Linux/bin/debug/MedianFilter.o
+Linux/bin/relase/Binarization.d
+Linux/bin/relase/Binarization.o
+Linux/bin/relase/LinearFilter.d
+Linux/bin/relase/LinearFilter.o
+Linux/bin/relase/MedianFilter.d
+Linux/bin/relase/MedianFilter.o

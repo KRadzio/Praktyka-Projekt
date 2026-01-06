@@ -25,6 +25,7 @@ public:
     virtual void ResetToDefaults() = 0;
 
     inline std::string GetName() { return algorithmName; }
+    inline bool CanBeAutoRefreshed() { return autoRefresh; }
     // TODO
     // virtual void Save();
     // virtual void Load();
@@ -36,7 +37,7 @@ protected:
     void SaveToOutput(Image *outputImage);
 
 protected:
-    // flag for manual
+    bool autoRefresh = true;
     std::string algorithmName = "None";
     Image copy; // the copys texture should not be created or copied (it causes memory leaks 233 bytes per texture modification)
 };
