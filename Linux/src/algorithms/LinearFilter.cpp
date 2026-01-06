@@ -169,7 +169,7 @@ void LinearFilter::AlgorithmFunction(Image *outputImage)
         }
         if (Canceled(outputImage))
             return;
-        Refresh(outputImage);
+        AutomaticRefresh(outputImage);
     }
     // copy back to output
     SaveToOutput(outputImage);

@@ -3,6 +3,9 @@
 
 #include "Algorithm.hpp"
 
+class LinearFilter : public Algorithm
+{
+private:
 #define AVERAGE_3x3 {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}}
 
 #define AVERAGE_5x5 {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}
@@ -39,8 +42,7 @@
 
 #define SHARPENING_7x7 {{-1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, 49, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1}}
 
-class LinearFilter : public Algorithm
-{
+
 public:
     LinearFilter();
 

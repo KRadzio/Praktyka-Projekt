@@ -26,7 +26,7 @@ bool Algorithm::Canceled(Image *outputImage)
     return false;
 }
 
-void Algorithm::Refresh(Image *outputImage)
+void Algorithm::AutomaticRefresh(Image *outputImage)
 {
     Mutex::GetInstance().Lock();
     if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
@@ -34,6 +34,14 @@ void Algorithm::Refresh(Image *outputImage)
         outputImage->CopyNoTexture(copy);
         Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
     }
+    Mutex::GetInstance().Unlock();
+}
+
+void Algorithm::ManualRefresh(Image *outputImage)
+{
+    Mutex::GetInstance().Lock();
+    outputImage->CopyNoTexture(copy);
+    Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
     Mutex::GetInstance().Unlock();
 }
 

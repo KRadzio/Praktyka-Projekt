@@ -68,6 +68,7 @@ int App::Init()
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    // HERE ADD NEW ALGS TO THE VECTOR
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Negative());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Brighten());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Contrast());
@@ -76,6 +77,10 @@ int App::Init()
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Binarization());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new LinearFilter());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new MedianFilter());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Erosion());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Dilatation());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Skeletonization());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Hought());
 
     return 0;
 }
@@ -533,28 +538,6 @@ void App::DrawAlgMenuElements()
             selectedAlgorithmName = alg->GetName();
         }
     }
-
-    // if (ImGui::MenuItem("Erozja", NULL, algorithmSelected == Erosion))
-    // {
-    //     selectedAlgorithmName = "Erozja";
-    //     algorithmSelected = Erosion;
-    // }
-    // if (ImGui::MenuItem("Dylatacja", NULL, algorithmSelected == Dilatation))
-    // {
-    //     selectedAlgorithmName = "Dylatacja";
-    //     algorithmSelected = Dilatation;
-    // }
-    // if (ImGui::MenuItem("Szkieletyzacja", NULL, algorithmSelected == Skeletonization))
-    // {
-    //     selectedAlgorithmName = "Szkieletyzacja";
-    //     algorithmSelected = Skeletonization;
-    //     autoRefreshPictureEnabled = false;
-    // }
-    // if (ImGui::MenuItem("Transformacja Houghta", NULL, algorithmSelected == Hought))
-    // {
-    //     selectedAlgorithmName = "Transformacja Houghta";
-    //     algorithmSelected = Hought;
-    // }
 }
 
 void App::DrawLoadPopup()
@@ -949,19 +932,6 @@ void App::DrawParametersPopup()
             ImGui::Text("Nie wybrano algorytmu");
         else
             currAlgorithm->ParamsMenu();
-        // case Erosion:
-        //     DrawErosionParams();
-        //     break;
-        // case Dilatation:
-        //     DrawDilatationParams();
-        //     break;
-        // case Skeletonization:
-        //     ImGui::Text("Brak paramentrów dla tego algorytmu");
-        //     break;
-        // case Hought:
-        //     ImGui::Text("?????");
-        //     break;
-        // }
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
         if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
         {
@@ -991,32 +961,6 @@ void App::DrawResetDonePopup()
     ImGui::EndPopup();
 }
 
-void App::DrawErosionParams()
-{
-    ImGui::Text("Wybierz rozmiar");
-    ImGui::RadioButton("3x3", &params.erosionElementSize, Algorithms::MatrixSize::S3x3);
-    ImGui::SameLine();
-    ImGui::RadioButton("5x5", &params.erosionElementSize, Algorithms::MatrixSize::S5x5);
-    ImGui::SameLine();
-    ImGui::RadioButton("7x7", &params.erosionElementSize, Algorithms::MatrixSize::S7x7);
-    ImGui::Separator();
-    ImGui::Text("Zaznacz pola, które mają \nbyć elementem strukturalnym");
-    DrawInputArray("Element strukturalny", params.erosionElementSize, params.erosionElement3x3, params.erosionElement5x5, params.erosionElement7x7);
-}
-
-void App::DrawDilatationParams()
-{
-    ImGui::Text("Wybierz rozmiar");
-    ImGui::RadioButton("3x3", &params.dilatationElementSize, Algorithms::MatrixSize::S3x3);
-    ImGui::SameLine();
-    ImGui::RadioButton("5x5", &params.dilatationElementSize, Algorithms::MatrixSize::S5x5);
-    ImGui::SameLine();
-    ImGui::RadioButton("7x7", &params.dilatationElementSize, Algorithms::MatrixSize::S7x7);
-    ImGui::Separator();
-    ImGui::Text("Zaznacz pola, które mają \nbyć elementem strukturalnym");
-    DrawInputArray("Element strukturalny", params.dilatationElementSize, params.dilatationElement3x3, params.dilatationElement5x5, params.dilatationElement7x7);
-}
-
 void App::DrawHelpMenu()
 {
     // not finished
@@ -1034,21 +978,6 @@ void App::ResetParameters()
 {
     for (auto alg : algorithmsAvailable)
         alg->ResetToDefaults();
-
-    // erosion
-    params.erosionElementSize = Algorithms::MatrixSize::S3x3;
-    params.erosionElement3x3 = EMPTY_3x3;
-    params.erosionElement5x5 = EMPTY_5x5;
-    params.erosionElement7x7 = EMPTY_7x7;
-    // dilatation
-    params.dilatationElementSize = Algorithms::MatrixSize::S3x3;
-    params.dilatationElement3x3 = EMPTY_3x3;
-    params.dilatationElement5x5 = EMPTY_5x5;
-    params.dilatationElement7x7 = EMPTY_7x7;
-    // Hought
-    params.maxIndexRo = 0;
-    params.maxIndexTheta = 0;
-    params.maxHoughtVal = 0;
 }
 
 void App::AutoRefreshOutputImage()
@@ -1105,30 +1034,4 @@ void App::RefreshSkelAndHought()
     }
 
     Mutex::GetInstance().Unlock();
-}
-
-void App::DrawInputArray(std::string name, int size, std::array<std::array<bool, 3>, 3> &a3x3, std::array<std::array<bool, 5>, 5> &a5x5, std::array<std::array<bool, 7>, 7> &a7x7)
-{
-    if (ImGui::BeginTable(name.c_str(), size, ImGuiTableFlags_Borders))
-    {
-        for (int row = 0; row < size; row++)
-        {
-            ImGui::PushID(row);
-            ImGui::TableNextRow();
-            for (int col = 0; col < size; col++)
-            {
-                ImGui::TableSetColumnIndex(col);
-                ImGui::PushItemWidth(ARRAY_INPUT_WIDTH);
-                std::string s = "##" + std::to_string(col);
-                if (size == Algorithms::MatrixSize::S3x3)
-                    ImGui::Checkbox(s.c_str(), &a3x3[row][col]);
-                else if (size == Algorithms::MatrixSize::S5x5)
-                    ImGui::Checkbox(s.c_str(), &a5x5[row][col]);
-                else
-                    ImGui::Checkbox(s.c_str(), &a7x7[row][col]);
-            }
-            ImGui::PopID();
-        }
-        ImGui::EndTable();
-    }
 }

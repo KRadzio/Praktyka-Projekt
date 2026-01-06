@@ -18,7 +18,7 @@ void Binarization::ParamsMenu()
         ImGui::SameLine();
         ImGui::RadioButton("Dwa progi", &boundCount, 2);
         ImGui::Separator();
-        ImGui::Text("Ustwa progi");
+        ImGui::Text("Ustaw progi");
         ImGui::SliderInt("t", &lowerBound, 0, 255);
         if (boundCount == 2)
             ImGui::SliderInt("t1", &upperBound, 0, 255);
@@ -74,7 +74,7 @@ void Binarization::AlgorithmFunction(Image *outputImage)
             }
             if (Canceled(outputImage))
                 return;
-            Refresh(outputImage);
+            AutomaticRefresh(outputImage);
         }
     }
     else if (method == Gradient)
@@ -181,7 +181,7 @@ void Binarization::AlgorithmFunction(Image *outputImage)
 
             if (Canceled(outputImage))
                 return;
-            Refresh(outputImage);
+            AutomaticRefresh(outputImage);
         }
     }
     // copt back to output

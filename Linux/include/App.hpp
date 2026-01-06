@@ -198,11 +198,6 @@ private:
     // draw and handle logic for resets buttons
     void DrawResetDonePopup();
 
-    // parameters popup split
-    void DrawMedianFilterParams();
-    void DrawErosionParams();
-    void DrawDilatationParams();
-
     // other
     void DrawHelpMenu();
     // here the algorithm thread is started
@@ -212,8 +207,6 @@ private:
     // special refresh logic
     void RefreshSkelAndHought();
 
-    // helper for median, erosion and dilatation
-    void DrawInputArray(std::string name, int size, std::array<std::array<bool, 3>, 3> &a3x3, std::array<std::array<bool, 5>, 5> &a5x5, std::array<std::array<bool, 7>, 7> &a7x7);
 
 private:
     // App
@@ -258,9 +251,6 @@ private:
     std::thread algorithmThread;
     float counterRefreshImage = 0.0;
     float refreshIntervalValue = DEFAULT_REFRESH_INTERVAL;
-
-    // Params
-    Algorithms::ParametersStruct params; // shared
 
     // Images
     Image inputImage;

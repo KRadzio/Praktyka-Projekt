@@ -27,7 +27,7 @@ void Exponentiation::AlgorithmFunction(Image *outputImage)
         }
         if (Canceled(outputImage))
             return;
-        Refresh(outputImage);
+        AutomaticRefresh(outputImage);
     }
 
     SaveToOutput(outputImage);

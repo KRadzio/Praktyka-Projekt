@@ -283,6 +283,16 @@ void Image::SetBlankSurface(int width, int height)
     RefreshPixelValuesArrays();
 }
 
+void Image::SetBlankSurfaceNoTexture(int width, int height)
+{
+    SDL_FreeSurface(surface);
+    surface = nullptr;
+    this->width = width;
+    this->height = height;
+    surface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    RefreshPixelValuesArrays();
+}
+
 void Image::RefreshPixelValuesArrays()
 {
     for (int i = 0; i < MAX_VAL; i++)

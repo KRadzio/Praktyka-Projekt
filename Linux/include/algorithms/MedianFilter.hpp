@@ -5,6 +5,9 @@
 
 #include "Algorithm.hpp"
 
+class MedianFilter : public Algorithm
+{
+private:
 #define MEDIAN_3x3 {{true, true, true}, {true, true, true}, {true, true, true}}
 #define MEDIAN_5x5 {{true, true, true, true, true},{true, true, true, true, true}, {true, true, true, true, true}, {true, true, true, true, true},{true, true, true, true, true}}
 #define MEDIAN_7x7 {{true, true, true, true, true, true, true},{true, true, true, true, true, true, true}, {true, true, true, true, true, true, true}, {true, true, true, true, true, true, true}, {true, true, true, true, true, true, true}, {true, true, true, true, true, true, true},{true, true, true, true, true, true, true}}
@@ -13,8 +16,6 @@
 #define MEDIAN_CROSS_5x5 {{false, false, true, false, false},{false, false, true, false, false}, {true, true, true, true, true}, {false, false, true, false, false},{false, false, true, false, false}}
 #define MEDIAN_CROSS_7x7 {{false, false, false, true, false, false, false},{false, false, false, true, false, false, false}, {false, false, false, true, false, false, false}, {true, true, true, true, true, true, true}, {false, false, false, true, false, false, false}, {false, false, false, true, false, false, false},{false, false, false, true, false, false, false}}
 
-class MedianFilter : public Algorithm
-{
 public:
     MedianFilter();
 

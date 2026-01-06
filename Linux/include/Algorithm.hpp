@@ -30,11 +30,17 @@ public:
     // virtual void Save();
     // virtual void Load();
 
+// this methods may be overriden if needed, but the are defined by default
 protected:
-    void CopyToLocalVariable(Image *outputImage);
-    bool Canceled(Image *outputImage);
-    void Refresh(Image *outputImage);
-    void SaveToOutput(Image *outputImage);
+    virtual void CopyToLocalVariable(Image *outputImage);
+    virtual bool Canceled(Image *outputImage);
+    // the main difference is that one waits for permission from main thread (automatic in some set interval) and the other refreshes and tells the main thread that refresh was done
+    // automatic in some interval (waits for permission from main thread, only then can it refresh)
+    virtual void AutomaticRefresh(Image *outputImage);
+    // the main difference is that one waits for permission from main thread (automatic in some set interval) and the other refreshes and tells the main thread that refresh was done
+    // manual when the programer wants (refreshes and notifies the main thread)
+    virtual void ManualRefresh(Image *outputImage);
+    virtual void SaveToOutput(Image *outputImage);
 
 protected:
     bool autoRefresh = true;

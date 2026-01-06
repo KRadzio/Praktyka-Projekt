@@ -105,7 +105,7 @@ public:
     // DO NOT USE IN A THREAD
     void ClearImage();
 
-     // frees the surface (DOES NOT CLEAR TEXTURE)
+    // frees the surface (DOES NOT CLEAR TEXTURE)
     // sets arrays to 0
     // sets width and height to 0
     // sets filepath to ""
@@ -123,6 +123,13 @@ public:
     // does not change filename
     // refreshes arrays
     void SetBlankSurface(int width, int height);
+
+    // sets a white surface of specified dimensions
+    // sets new width and height
+    // does not change filename
+    // refreshes arrays
+    // FOR USE IN THREAD
+    void SetBlankSurfaceNoTexture(int width, int height);
 
     // to refresh arrays after surface was modified
     void RefreshPixelValuesArrays();
