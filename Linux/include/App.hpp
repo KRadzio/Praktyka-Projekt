@@ -66,14 +66,7 @@
 #define DEFAULT_REFRESH_INTERVAL 5.0
 
 // TODO
-// all params menu should be functions
-// alg methods sould be stored in something
 // saving params struct state and selected alg state, maybe also picture loaded?
-// change how params are stored?
-// the whole alg might be a class that contains the alg func, param func, and params
-// map <alg name, alg class>
-// slected by name, name can be saved
-// params can be accesed and saeved
 // erosion + dilatation is possible but think if it could be simplified
 // otherwise write a WARNING to not attempt it
 // the solutions are:
@@ -105,41 +98,6 @@ public:
         InputDist,
         OutputDist
     };
-
-
-    // zrobić klasę Algorithm(po której będą dziedziczyć algorytmy), 
-    // klasa będzie zawierać funkcje od parametrów, paremetry 
-    // do algorytmu, (i flagę czy algorytm wgl ma parametry) i funkcje 
-    // algorymu, oraz metodę od ustawienia parametrów. i potem można 
-    // zmapować <nazwa, klasa>, co powoduje, że można jednocześnie łatwo
-    //  zapisać stan programu (parametry i algorytm wybrany), jak i 
-    // sprawić, że trzeba tylko w jednym miejscu wprowadzić modyfikacje 
-    // (dodać do mapy). Co prawda powoduje to że trzeba stowrzyć 
-    // nowyAlgortm.hpp i nowy Algorytm.cpp gdzie algorytm dziedziczy
-    //  po klasie nadrzędniej ale jest to chyba w miarę eleganckie
-    //  rozwiązanie
-
-    // if new needed just add it
-    // then update DrawAlgMenuElements
-    // DrawParametersPopup
-    // LaunchAlgorithms
-    // then implement the function in Algorithms.hpp Algorithms.cpp
-    // enum AlgSelected
-    // {
-    //     None,
-    //     Negative,
-    //     Brighten,
-    //     Contrast,
-    //     Exponentiation,
-    //     LeveledHistogram,
-    //     Binarization,
-    //     LinearFilter,
-    //     MedianFilter,
-    //     Erosion,
-    //     Dilatation,
-    //     Skeletonization,
-    //     Hought
-    // };
 
 public:
     static App &GetInstance();
@@ -238,7 +196,6 @@ private:
 
     // algorithm state
     std::string selectedAlgorithmName = "Brak wybranego algorytmu";
-    // int algorithmSelected = None; // change to pos in vector
     std::vector<Algorithm*> algorithmsAvailable; // algorithm objects
     Algorithm* currAlgorithm = nullptr;
 
