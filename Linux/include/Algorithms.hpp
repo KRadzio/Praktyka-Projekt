@@ -1,5 +1,7 @@
-#ifndef ALGORITHMS
-#define ALGORITHMS
+#ifndef ALGORITHMS_HPP
+#define ALGORITHMS_HPP
+
+// NEW ALGORITHMS HEADERS HERE
 
 #include "Negative.hpp"
 #include "Brighten.hpp"
