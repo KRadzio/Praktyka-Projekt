@@ -73,6 +73,7 @@ int App::Init()
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Brighten());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Contrast());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Exponentiation());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Logarithm());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new LeveledHistogram());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Binarization());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new LinearFilter());
