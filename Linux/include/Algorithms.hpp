@@ -14,6 +14,8 @@
 #include "MedianFilter.hpp"
 #include "Erosion.hpp"
 #include "Dilatation.hpp"
+#include "Opening.hpp"
+#include "Closing.hpp"
 #include "Skeletonization.hpp"
 #include "Hought.hpp"
 
