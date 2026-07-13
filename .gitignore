@@ -632,3 +632,15 @@ Linux/bin/relase/Closing.d
 Linux/bin/relase/Closing.o
 Linux/bin/relase/Opening.d
 Linux/bin/relase/Opening.o
+Linux/bin/debug/Logarithm.o
+Linux/bin/debug/MorphologicAlgorithm.d
+Linux/bin/debug/MorphologicAlgorithm.o
+Linux/bin/relase/Logarithm.o
+Linux/bin/relase/MorphologicAlgorithm.d
+Linux/bin/relase/MorphologicAlgorithm.o
+Linux/bin/debug/Logarithm.o
+Linux/bin/relase/Logarithm.o
+Linux/bin/debug/Logarithm.o
+Linux/bin/*
+Linux/bin/debug/Logarithm.o
+Linux/bin/relase/Logarithm.o
