@@ -279,6 +279,18 @@ void Image::SetBlankSurface(int width, int height)
     this->width = width;
     this->height = height;
     surface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = 255;
+        }
+    }
+    SDL_UnlockSurface(surface);
     texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
     RefreshPixelValuesArrays();
 }
@@ -290,6 +302,18 @@ void Image::SetBlankSurfaceNoTexture(int width, int height)
     this->width = width;
     this->height = height;
     surface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = 255;
+        }
+    }
+    SDL_UnlockSurface(surface);
     RefreshPixelValuesArrays();
 }
 
