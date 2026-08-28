@@ -16,6 +16,8 @@
 #include "Dilatation.hpp"
 #include "Opening.hpp"
 #include "Closing.hpp"
+#include "ContourInner.hpp"
+#include "ContourOuter.hpp"
 #include "Skeletonization.hpp"
 #include "Hought.hpp"
 

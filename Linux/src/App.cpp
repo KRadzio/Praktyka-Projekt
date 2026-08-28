@@ -82,6 +82,8 @@ int App::Init()
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Dilatation());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Opening());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Closing());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new ContourInner());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new ContourOuter());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Skeletonization());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Hought());
 
