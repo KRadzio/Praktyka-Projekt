@@ -642,5 +642,10 @@ Linux/bin/debug/Logarithm.o
 Linux/bin/relase/Logarithm.o
 Linux/bin/debug/Logarithm.o
 Linux/bin/*
-Linux/bin/debug/Logarithm.o
-Linux/bin/relase/Logarithm.o
+Linux/bin/debug/*
+Linux/bin/relase/*
+Linux/Obrazy/*
+Linux/Obrazy-Lab4/*
+Linux/Obrazy-Lab5/*
+Linux/Obrazy-Lab6/*
+Linux/Obrazy2/*
