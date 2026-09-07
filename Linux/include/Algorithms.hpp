@@ -9,6 +9,8 @@
 #include "Exponentiation.hpp"
 #include "Logarithm.hpp"
 #include "LeveledHistogram.hpp"
+#include "Masking.hpp"
+#include "Mixing.hpp"
 #include "Binarization.hpp"
 #include "LinearFilter.hpp"
 #include "MedianFilter.hpp"

@@ -96,6 +96,8 @@ public:
     // refreshes arrays
     int SetSourceImage(std::filesystem::path path);
 
+    int SetSourceImageNoTEXTURE(std::filesystem::path path);
+
     void TurnToGrayScale();
 
     // frees the surface and texture

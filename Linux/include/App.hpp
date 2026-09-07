@@ -67,14 +67,8 @@
 
 // TODO
 // saving params struct state and selected alg state, maybe also picture loaded?
-// erosion + dilatation is possible but think if it could be simplified
-// otherwise write a WARNING to not attempt it
-// the solutions are:
-// 1) do not do it in a thread
-// 2) make a special case while launching or after finishing one operation
-// 3) just write it again
 // load image should be reusable for loading extra image
-// minor ui improvements
+// minor ui improvements (charts could be hidden)
 
 // ISSUE
 // MEMORY LEAK FOUND (DO NOT FREE TEXTURE IN THREAD) (fix it in some way)

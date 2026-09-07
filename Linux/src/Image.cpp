@@ -200,6 +200,45 @@ int Image::SetSourceImage(std::filesystem::path path)
     }
 }
 
+int Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
+{
+    ClearImage();
+    surface = IMG_Load(path.c_str());
+    if (surface == nullptr)
+        return -1;
+    else
+    {
+        width = surface->w;
+        height = surface->h;
+        if (surface->format->BytesPerPixel < 3)
+        {
+            // change the numbver of bytes per pixel
+            SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+            SDL_LockSurface(surface);
+            SDL_LockSurface(newSurface);
+            uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+            uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
+                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
+                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
+                }
+            }
+            SDL_UnlockSurface(newSurface);
+            SDL_UnlockSurface(surface);
+            SDL_FreeSurface(surface);
+            surface = newSurface;
+        }
+        filePath = path;
+        RefreshPixelValuesArrays();
+        return 0;
+    }
+}
+
 void Image::TurnToGrayScale()
 {
     if (texture != nullptr)

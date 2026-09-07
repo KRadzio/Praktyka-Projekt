@@ -75,6 +75,8 @@ int App::Init()
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Exponentiation());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Logarithm());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new LeveledHistogram());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Masking());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Mixing());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new Binarization());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new LinearFilter());
     algorithmsAvailable.emplace(algorithmsAvailable.end(), new MedianFilter());
