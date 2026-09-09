@@ -75,6 +75,9 @@ public:
     inline std::filesystem::path GetImagePath() { return filePath; }
     inline std::string GetExtension() { return filePath.extension(); }
 
+    inline bool LoadedProperly() { return loadedProperly; }
+    inline std::string GetLoadError() { return loadError; }
+
     // copies the brightness histogram to dst
     // dst == float[256]
     void CopyBrightnessHistogram(float *dst);
@@ -89,6 +92,13 @@ public:
     void SaveImageAs(std::filesystem::path path);
     // save image to a specified irectory with specified filename and selected extension
     void SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
+
+    // if color is saved on 1 byte AND has a custom pallete (ex. 2 colors)
+    void ConvertFromPallete();
+
+    // if color is saved on 1 byte insted of 3
+    void NormalizeFormat();
+
     // clears prev data
     // sets path to new path
     // creates new surface and texture
@@ -178,6 +188,9 @@ private:
     float distributorG[MAX_VAL];
     float distributorB[MAX_VAL];
     std::filesystem::path filePath = "";
+
+    bool loadedProperly = false;
+    std::string loadError = "";
 };
 
 #endif

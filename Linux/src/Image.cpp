@@ -157,6 +157,57 @@ void Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int exten
     }
 }
 
+void Image::ConvertFromPallete()
+{
+    // normalize
+    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    SDL_LockSurface(newSurface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            // now convert the color using the pallete
+            uint8_t colorIndex = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            // the colorIndex should not be grater than ncolors of the pallete
+            SDL_Color newColor = surface->format->palette->colors[colorIndex];
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = newColor.b;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = newColor.g;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = newColor.r;
+        }
+    }
+    SDL_UnlockSurface(newSurface);
+    SDL_UnlockSurface(surface);
+    SDL_FreeSurface(surface);
+    surface = newSurface;
+}
+
+void Image::NormalizeFormat()
+{
+    // change the numbver of bytes per pixel
+    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    SDL_LockSurface(newSurface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
+        }
+    }
+    SDL_UnlockSurface(newSurface);
+    SDL_UnlockSurface(surface);
+    SDL_FreeSurface(surface);
+    surface = newSurface;
+}
+
 int Image::SetSourceImage(std::filesystem::path path)
 {
     ClearImage();
@@ -167,29 +218,12 @@ int Image::SetSourceImage(std::filesystem::path path)
     {
         width = surface->w;
         height = surface->h;
-        if (surface->format->BytesPerPixel < 3)
-        {
-            // change the numbver of bytes per pixel
-            SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
-            SDL_LockSurface(surface);
-            SDL_LockSurface(newSurface);
-            uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-            uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
-                }
-            }
-            SDL_UnlockSurface(newSurface);
-            SDL_UnlockSurface(surface);
-            SDL_FreeSurface(surface);
-            surface = newSurface;
-        }
+        // pallete check
+        if (surface->format->palette != nullptr)
+            ConvertFromPallete();
+        // bytes check
+        else if (surface->format->BytesPerPixel < 3)
+            NormalizeFormat();
         filePath = path;
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
         // handle it in some way
@@ -210,29 +244,12 @@ int Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
     {
         width = surface->w;
         height = surface->h;
-        if (surface->format->BytesPerPixel < 3)
-        {
-            // change the numbver of bytes per pixel
-            SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
-            SDL_LockSurface(surface);
-            SDL_LockSurface(newSurface);
-            uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-            uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
-                }
-            }
-            SDL_UnlockSurface(newSurface);
-            SDL_UnlockSurface(surface);
-            SDL_FreeSurface(surface);
-            surface = newSurface;
-        }
+        // pallete check
+        if (surface->format->palette != nullptr)
+            ConvertFromPallete();
+        // bytes check
+        else if (surface->format->BytesPerPixel < 3)
+            NormalizeFormat();
         filePath = path;
         RefreshPixelValuesArrays();
         return 0;
