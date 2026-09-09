@@ -6,7 +6,14 @@ Hought::Hought()
     algorithmName = "Transformacja Houghta";
 }
 
-void Hought::ParamsMenu() { ImGui::Text("Parametry wynikowe"); }
+void Hought::ParamsMenu() 
+{ 
+    ImGui::Text("Parametry wynikowe:"); 
+    ImGui::Text("MaxIndexRO: %d", maxIndexRo);
+    ImGui::Text("MaxIndexTheta: %d", maxIndexTheta);
+    ImGui::Text("MaxHoughtVal: %d", maxHoughtVal);
+    ImGui::Text("ROMax: %d", roMax);
+}
 
 void Hought::AlgorithmFunction(Image *outputImage)
 {
