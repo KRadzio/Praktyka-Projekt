@@ -1,7 +1,11 @@
 #ifndef MASKING_HPP
 #define MASKING_HPP
 
+#include "FileSelector.hpp"
+
 #include "Algorithm.hpp"
+
+#define CANCEL_BUTTON_W 120
 
 class Masking : public Algorithm
 {
@@ -14,6 +18,8 @@ public:
 
 private:
     Image mask;
+
+    bool maskingLoadMenuActive = false;
 };
 
 #endif

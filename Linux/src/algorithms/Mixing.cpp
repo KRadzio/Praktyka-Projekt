@@ -2,13 +2,27 @@
 
 Mixing::Mixing() { algorithmName = "Mieszanie Obrazów"; }
 
-void Mixing::ParamsMenu() { ImGui::SliderFloat("Wartość a", &mixRatio, 0.0, 1.0); }
+void Mixing::ParamsMenu()
+{
+    ImGui::SliderFloat("Wartość a", &mixRatio, 0.0, 1.0);
+    if (!image2.NoSurface())
+        ImGui::Text("%s", image2.GetImagePath().filename().c_str());
+    else
+        ImGui::Text("Brak obrazu");
+     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+    if (ImGui::Button("Wczytaj obraz", ImVec2(CANCEL_BUTTON_W_FS, 0)))
+        mixingLoadMenuActive = true;
+    if (mixingLoadMenuActive)
+    {
+        if (FileSelector::GetInstance().LoadMenu(&image2, true) != 2)
+            mixingLoadMenuActive = false;
+    }
+    ImGui::Separator();
+}
 
 void Mixing::AlgorithmFunction(Image *outputImage)
 {
     CopyToLocalVariable(outputImage);
-    
-    image2.SetSourceImageNoTEXTURE("./resources/maska.jpg");
 
     for (int row = 0; row < copy.GetHeight() && row < image2.GetHeight(); row++)
     {

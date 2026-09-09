@@ -2,14 +2,27 @@
 
 Masking::Masking() { algorithmName = "Maskowanie"; }
 
-void Masking::ParamsMenu() { ImGui::Text("Brak parametrów do tego algorytmu"); }
+void Masking::ParamsMenu()
+{
+    if (!mask.NoSurface())
+        ImGui::Text("%s", mask.GetImagePath().filename().c_str());
+    else
+        ImGui::Text("Brak obrazu");
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+    if (ImGui::Button("Wczytaj obraz", ImVec2(CANCEL_BUTTON_W_FS, 0)))
+        maskingLoadMenuActive = true;
+    if (maskingLoadMenuActive)
+    {
+        if (FileSelector::GetInstance().LoadMenu(&mask, true) != 2)
+            maskingLoadMenuActive = false;
+    }
+    ImGui::Separator();
+}
 
 void Masking::AlgorithmFunction(Image *outputImage)
 {
 
     CopyToLocalVariable(outputImage);
-
-    mask.SetSourceImageNoTEXTURE("./resources/maska.jpg");
 
     for (int row = 0; row < copy.GetHeight() && row < mask.GetHeight(); row++)
     {
