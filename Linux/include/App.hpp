@@ -43,16 +43,16 @@
 #define CANCEL_BUTTON_W 120
 
 // popups
-#define POPUP_WIDTH 200
-#define POPUP_HEIGHT 100
-#define FILE_POPUP_WIDTH 300
-#define FILE_POPUP_HEIGHT 340
-#define SAVE_POPUP_HEIGHT 480
-#define BUTTON_OFFSET 20
+// #define POPUP_WIDTH 200
+// #define POPUP_HEIGHT 100
+// #define FILE_POPUP_WIDTH 300
+// #define FILE_POPUP_HEIGHT 340
+// #define SAVE_POPUP_HEIGHT 480
+// #define BUTTON_OFFSET 20
 
 // dir items
-#define DIR_LIST_WIDTH 290
-#define DIR_LIST_HEIGHT 200
+// #define DIR_LIST_WIDTH 290
+// #define DIR_LIST_HEIGHT 200
 
 // arrays
 #define ARRAY_INPUT_WIDTH 100
@@ -130,8 +130,6 @@ private:
     void DrawAlgMenuElements();
 
     // popups
-    // draw and handle logic for load popup
-    void DrawLoadPopup();
     // draw and handle logic for save AS popup
     void DrawSavePopup();
     // draw and handle logic save warning and error popups
@@ -165,7 +163,6 @@ private:
     // flags
     bool show_demo_window = false;
     bool runLoop = true;
-    bool loadPopupActive = false;
     bool saveAsPopupActive = false;
     bool errorPopupActive = false;
     bool errorPopupAlgActive = false;

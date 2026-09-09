@@ -1,10 +1,31 @@
-#ifndef FILESELECTOR
-#define FILESELECTOR
+#ifndef FILESELECTOR_HPP
+#define FILESELECTOR_HPP
 
 #include <filesystem>
 #include <string>
 #include <map>
 #include <vector>
+
+#include "imgui.h"
+
+#include "Image.hpp"
+
+#define POPUP_WIDTH 200
+#define POPUP_HEIGHT 100
+#define FILE_POPUP_WIDTH 300
+#define FILE_POPUP_HEIGHT 340
+#define SAVE_POPUP_HEIGHT 480
+#define BUTTON_OFFSET 20
+
+#define DIR_LIST_WIDTH 290
+#define DIR_LIST_HEIGHT 200
+
+#define ERROR_SPACE_HEIGHT 120
+
+#define CANCEL_BUTTON_W_FS 120
+
+
+// RENAME TO FILEMANAGER
 
 // singleton
 class FileSelector
@@ -40,6 +61,19 @@ public:
     // sets currenEntry to none
     void RefreshCurrDir();
 
+    // load an  image
+    // -1 error
+    // 0 ok
+    // 1 canceled
+    // 2 nothing
+    int32_t LoadMenu(Image* imageToLoad, bool noTexture = false);
+
+    // set if want to use load menu
+    void ActivatePopupMenu();
+
+    // check if flag for using is set (to call the menu function)
+    inline bool IsLoadMenuActive() { return loadPopupActive;}
+
     // does a file with such name exist
     inline bool FileExists(std::filesystem::path path) { return std::filesystem::exists(path); }
 
@@ -53,6 +87,13 @@ private:
     std::map<std::filesystem::path, bool> dirMaped; // maped by full path
 
     std::filesystem::path currEntrySelected = ""; // full path
+
+    bool loadPopupActive = false;
+    bool saveAsPopupActive = false;
+    bool errorPopupActive = false;
+    bool errorPopupAlgActive = false;
+    bool warningPopupActive = false;
+    bool customName = false; // in save as
 };
 
 #endif

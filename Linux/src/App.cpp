@@ -231,8 +231,7 @@ void App::DrawMenuBar()
         // load a file
         if (ImGui::MenuItem("Wczytaj"))
         {
-            loadPopupActive = true;
-            FileSelector::GetInstance().RefreshCurrDir();
+            FileSelector::GetInstance().ActivatePopupMenu();
         }
         // quit
         ImGui::Separator();
@@ -274,8 +273,9 @@ void App::DrawMenuBar()
     ImGui::EndMainMenuBar();
 
     // popups
-    if (loadPopupActive)
-        DrawLoadPopup();
+    if(FileSelector::GetInstance().IsLoadMenuActive())
+        if(FileSelector::GetInstance().LoadMenu(&inputImage) == 0)
+            outputImage.ClearImage();
 
     if (saveAsPopupActive)
         DrawSavePopup();
@@ -544,94 +544,6 @@ void App::DrawAlgMenuElements()
             currAlgorithm = alg;
             selectedAlgorithmName = alg->GetName();
         }
-    }
-}
-
-void App::DrawLoadPopup()
-{
-    // can not be opend if thread is running
-    ImGui::OpenPopup("WczytajPlik", ImGuiPopupFlags_NoReopen);
-    ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, FILE_POPUP_HEIGHT));
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-    {
-        auto dir = FileSelector::GetInstance().GetCurrDir();
-        auto map = FileSelector::GetInstance().GetDirMaped();
-        // curr dir path
-        ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().c_str());
-        ImGui::Separator();
-        // display entries as selectebles
-        for (auto entry : dir)
-            if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
-                if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
-                {
-                    // could not be loaded
-                    if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToEntry()) == -1)
-                    {
-                        errorPopupActive = true;
-                        outputImage.ClearImage();
-                    }
-                    else
-                    {
-                        outputImage.ClearImage();
-                        loadPopupActive = false;
-                        ImGui::CloseCurrentPopup();
-                    }
-                }
-        ImGui::EndChild();
-        ImGui::Separator();
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Otwórz", ImVec2(CANCEL_BUTTON_W, 0)))
-        {
-            if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
-            {
-                // could not be loaded
-                if (inputImage.SetSourceImage(FileSelector::GetInstance().GetFullPathToEntry()) == -1)
-                {
-                    errorPopupActive = true;
-                    outputImage.ClearImage();
-                }
-                else
-                {
-                    outputImage.ClearImage();
-                    loadPopupActive = false;
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-        }
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W, 0)))
-        {
-            FileSelector::GetInstance().GoUpADirectory();
-        }
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
-        {
-            loadPopupActive = false;
-            ImGui::CloseCurrentPopup();
-        }
-
-        if (errorPopupActive)
-        {
-            ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
-            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-            ImGui::SetNextWindowSize(ImVec2(0, 100));
-            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-            {
-                ImGui::Text("Nie udało sie wczytać pliku");
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-                if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
-                {
-                    errorPopupActive = false;
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-        }
-        ImGui::EndPopup();
     }
 }
 
