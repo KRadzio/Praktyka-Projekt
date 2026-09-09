@@ -75,8 +75,7 @@ public:
     inline std::filesystem::path GetImagePath() { return filePath; }
     inline std::string GetExtension() { return filePath.extension(); }
 
-    inline bool LoadedProperly() { return loadedProperly; }
-    inline std::string GetLoadError() { return loadError; }
+    inline std::string GetError() { return error; }
 
     // copies the brightness histogram to dst
     // dst == float[256]
@@ -86,12 +85,12 @@ public:
     void CopyNormalisedBrightnessHistogram(float *dst);
 
     // save image as the current filename
-    void SaveImage();
+    int32_t SaveImage();
     // save image as specified filepath
     // filepath should have an extension
-    void SaveImageAs(std::filesystem::path path);
+    int32_t SaveImageAs(std::filesystem::path path);
     // save image to a specified irectory with specified filename and selected extension
-    void SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
+    int32_t SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
 
     // if color is saved on 1 byte AND has a custom pallete (ex. 2 colors)
     void ConvertFromPallete();
@@ -104,9 +103,9 @@ public:
     // creates new surface and texture
     // sets width and height based on surface
     // refreshes arrays
-    int SetSourceImage(std::filesystem::path path);
+    int32_t SetSourceImage(std::filesystem::path path);
 
-    int SetSourceImageNoTEXTURE(std::filesystem::path path);
+    int32_t SetSourceImageNoTEXTURE(std::filesystem::path path);
 
     void TurnToGrayScale();
 
@@ -150,6 +149,7 @@ public:
     // DO NOT USE IN A THREAD
     void RefreshTexture();
 
+    // CHANGE TO COL ROW
     Pixel GetPixel(int x, int y);
     void SetPixel(int x, int y, Pixel pix);
 
@@ -189,8 +189,7 @@ private:
     float distributorB[MAX_VAL];
     std::filesystem::path filePath = "";
 
-    bool loadedProperly = false;
-    std::string loadError = "";
+    std::string error = "";
 };
 
 #endif

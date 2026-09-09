@@ -87,73 +87,133 @@ void Image::CopyNormalisedBrightnessHistogram(float *dst)
     }
 }
 
-void Image::SaveImage()
+int32_t Image::SaveImage()
 {
     // no surface
     if (surface == nullptr)
-        printf("Can not save \n");
+    {
+        error = "No surface could not save\n";
+        return -1;
+    }
     else
     {
+        int32_t status = 0;
         if (filePath.extension() == ".png")
-            IMG_SavePNG(surface, filePath.c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
-            IMG_SaveJPG(surface, filePath.c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.c_str(), 100);
         else if (filePath.extension() == ".bmp")
-            SDL_SaveBMP(surface, filePath.c_str());
+            status = SDL_SaveBMP(surface, filePath.c_str());
         // default to png
         else
-            IMG_SavePNG(surface, filePath.c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
+
+        if (status != 0)
+        {
+            if (filePath.extension() == ".bmp")
+            {
+                error = SDL_GetError();
+                return -1;
+            }
+            else
+            {
+                error = IMG_GetError();
+                return -1;
+            }
+        }
+        else
+            return 0;
     }
 }
 
-void Image::SaveImageAs(std::filesystem::path path)
+int32_t Image::SaveImageAs(std::filesystem::path path)
 {
     if (surface == nullptr)
-        printf("Can not save \n");
+    {
+        error = "No surface could not save\n";
+        return -1;
+    }
     else
     {
+        int32_t status = 0;
         filePath = path;
         if (path.extension() == ".png")
-            IMG_SavePNG(surface, filePath.c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         else if (path.extension() == ".jpg" || path.extension() == "jpeg")
-            IMG_SaveJPG(surface, filePath.c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.c_str(), 100);
         else if (path.extension() == ".bmp")
-            SDL_SaveBMP(surface, filePath.c_str());
+            status = SDL_SaveBMP(surface, filePath.c_str());
         // default to png
         else
-            IMG_SavePNG(surface, filePath.c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
+
+        if (status != 0)
+        {
+            if (filePath.extension() == ".bmp")
+            {
+                error = SDL_GetError();
+                return -1;
+            }
+            else
+            {
+                error = IMG_GetError();
+                return -1;
+            }
+        }
+        else
+            return 0;
     }
 }
 
-void Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int extension)
+int32_t Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int extension)
 {
     if (surface == nullptr)
-        printf("Can not save \n");
+    {
+        error = "No surface could not save\n";
+        return -1;
+    }
     else
     {
+        int32_t status = 0;
         filePath = dirPath;
         filePath /= filename;
         if (extension == PNG)
         {
             filePath += ".png";
-            IMG_SavePNG(surface, filePath.c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         }
         else if (extension == JPG)
         {
             filePath += ".jpg";
-            IMG_SaveJPG(surface, filePath.c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.c_str(), 100);
         }
         else if (extension == BMP)
         {
             filePath += ".bmp";
-            SDL_SaveBMP(surface, filePath.c_str());
+            status = SDL_SaveBMP(surface, filePath.c_str());
         }
         // default to png
         else
         {
             filePath += ".png";
-            IMG_SavePNG(surface, filePath.c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         }
+        
+        if (status != 0)
+        {
+            if (filePath.extension() == ".bmp")
+            {
+                error = SDL_GetError();
+                return -1;
+            }
+            else
+            {
+                error = IMG_GetError();
+                return -1;
+            }
+        }
+        else
+            return 0;
     }
 }
 
@@ -208,12 +268,15 @@ void Image::NormalizeFormat()
     surface = newSurface;
 }
 
-int Image::SetSourceImage(std::filesystem::path path)
+int32_t Image::SetSourceImage(std::filesystem::path path)
 {
     ClearImage();
     surface = IMG_Load(path.c_str());
     if (surface == nullptr)
+    {
+        error = IMG_GetError();
         return -1;
+    }
     else
     {
         width = surface->w;
@@ -226,20 +289,25 @@ int Image::SetSourceImage(std::filesystem::path path)
             NormalizeFormat();
         filePath = path;
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
-        // handle it in some way
         if (texture == nullptr)
-            printf("%s\n", SDL_GetError());
+        {
+            error = SDL_GetError();
+            return -1;
+        }
         RefreshPixelValuesArrays();
         return 0;
     }
 }
 
-int Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
+int32_t Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
 {
     ClearImage();
     surface = IMG_Load(path.c_str());
     if (surface == nullptr)
+    {
+        error = IMG_GetError();
         return -1;
+    }
     else
     {
         width = surface->w;
