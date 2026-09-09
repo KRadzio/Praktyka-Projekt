@@ -9,9 +9,12 @@ void Mixing::ParamsMenu()
         ImGui::Text("%s", image2.GetImagePath().filename().c_str());
     else
         ImGui::Text("Brak obrazu");
-     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
     if (ImGui::Button("Wczytaj obraz", ImVec2(CANCEL_BUTTON_W_FS, 0)))
+    {
+        FileSelector::GetInstance().RefreshCurrDir();
         mixingLoadMenuActive = true;
+    }
     if (mixingLoadMenuActive)
     {
         if (FileSelector::GetInstance().LoadMenu(&image2, true) != 2)

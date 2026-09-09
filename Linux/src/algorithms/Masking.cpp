@@ -10,7 +10,10 @@ void Masking::ParamsMenu()
         ImGui::Text("Brak obrazu");
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
     if (ImGui::Button("Wczytaj obraz", ImVec2(CANCEL_BUTTON_W_FS, 0)))
+    {
+        FileSelector::GetInstance().RefreshCurrDir();
         maskingLoadMenuActive = true;
+    }
     if (maskingLoadMenuActive)
     {
         if (FileSelector::GetInstance().LoadMenu(&mask, true) != 2)
