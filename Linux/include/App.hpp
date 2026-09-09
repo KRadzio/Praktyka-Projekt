@@ -67,7 +67,6 @@
 
 // TODO
 // saving params struct state and selected alg state, maybe also picture loaded?
-// load image should be reusable for loading extra image
 // minor ui improvements (charts could be hidden)
 
 // ISSUE
@@ -164,11 +163,9 @@ private:
     bool show_demo_window = false;
     bool runLoop = true;
     bool mainLoadMenuActive = false; // to avoid conflict with extra image loading
-    bool saveAsPopupActive = false;
-    bool errorPopupActive = false;
-    bool errorPopupAlgActive = false;
-    bool warningPopupActive = false;
-    bool customName = false; // in save as
+    bool mainSaveAsMenuActive = false;
+    bool savePopUpActive = false;
+    bool errorPopupAlgActive = false; // no alg
     bool inProgressPopupActive = false;
     bool justRefreshed = false; // used after algorithm thread is done
     bool errorCopying = false;
@@ -190,11 +187,6 @@ private:
     std::string selectedAlgorithmName = "Brak wybranego algorytmu";
     std::vector<Algorithm*> algorithmsAvailable; // algorithm objects
     Algorithm* currAlgorithm = nullptr;
-
-
-    // File name and extension
-    char fileNameBuff[64];
-    int currExtension = 0;
 
     // Thread
     std::thread algorithmThread;

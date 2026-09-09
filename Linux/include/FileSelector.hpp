@@ -24,7 +24,6 @@
 
 #define CANCEL_BUTTON_W_FS 120
 
-
 // RENAME TO FILEMANAGER
 
 // singleton
@@ -34,9 +33,9 @@ public:
     enum EntryType
     {
         Error = -1, // can not read
-        Ignore, // not needed for the simple file explorer
-        FileEntry, // file
-        DirEntry // dir
+        Ignore,     // not needed for the simple file explorer
+        FileEntry,  // file
+        DirEntry    // dir
     };
 
 public:
@@ -61,29 +60,45 @@ public:
     // sets currenEntry to none
     void RefreshCurrDir();
 
-    // load an  image
-    // -1 error
+    // load an image
     // 0 ok
     // 1 canceled
     // 2 nothing
-    int32_t LoadMenu(Image* imageToLoad, bool noTexture = false);
+    int32_t LoadMenu(Image *imageToLoad, bool noTexture = false);
+    // save an image as
+    // 0 ok
+    // 1 canceled
+    // 2 nothing
+    int32_t SaveAsMenu(Image *imageToSave);
+    // save an image
+    // 0 ok
+    // 1 canceled
+    // 2 nothing
+    int32_t SaveWarningPopup(Image *imageToSave);
+
 
     // does a file with such name exist
     inline bool FileExists(std::filesystem::path path) { return std::filesystem::exists(path); }
+
+private:
+    void WarningAndErrorPopUp(Image *imageToSave, int32_t* returnCode);
 
 private:
     FileSelector();
     ~FileSelector();
 
 private:
-    std::filesystem::path currDirectoryPath; // the directory path
+    std::filesystem::path currDirectoryPath;               // the directory path
     std::vector<std::filesystem::directory_entry> currDir; // the dircetory
-    std::map<std::filesystem::path, bool> dirMaped; // maped by full path
+    std::map<std::filesystem::path, bool> dirMaped;        // maped by full path
 
     std::filesystem::path currEntrySelected = ""; // full path
 
+    // File name and extension
+    char fileNameBuff[64];
+    int currExtension = 0;
+
     bool errorPopupActive = false;
-    bool errorPopupAlgActive = false;
     bool warningPopupActive = false;
     bool customName = false; // in save as
 };

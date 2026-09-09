@@ -218,19 +218,22 @@ void App::DrawMenuBar()
         if (ImGui::MenuItem("Zapisz", NULL, false, !outputImage.NoSurface()))
         {
             if (FileSelector::GetInstance().FileExists(outputImage.GetImagePath()))
-                warningPopupActive = true;
+                savePopUpActive = true;
             else
                 outputImage.SaveImage();
         }
         // save as a file or with custom name
         if (ImGui::MenuItem("Zapisz jako", NULL, false, !outputImage.NoSurface()))
         {
-            saveAsPopupActive = true;
             FileSelector::GetInstance().RefreshCurrDir();
+            mainSaveAsMenuActive = true;
         }
         // load a file
         if (ImGui::MenuItem("Wczytaj"))
+        {
+            FileSelector::GetInstance().RefreshCurrDir();
             mainLoadMenuActive = true;
+        }
         // quit
         ImGui::Separator();
         if (ImGui::MenuItem("Wyjdź"))
@@ -283,12 +286,14 @@ void App::DrawMenuBar()
         }
     }
 
-    if (saveAsPopupActive)
-        DrawSavePopup();
+    if (mainSaveAsMenuActive)
+        if(FileSelector::GetInstance().SaveAsMenu(&outputImage) != 2)
+            mainSaveAsMenuActive = false;
 
     // if save is used
-    if (warningPopupActive && !saveAsPopupActive)
-        DrawSaveWarningPopup();
+    if (savePopUpActive)
+        if (FileSelector::GetInstance().SaveWarningPopup(&outputImage) != 2)
+            savePopUpActive = false;
 
     if (settingsPopupActive)
         DrawSettingsPopup();
@@ -550,180 +555,6 @@ void App::DrawAlgMenuElements()
             currAlgorithm = alg;
             selectedAlgorithmName = alg->GetName();
         }
-    }
-}
-
-void App::DrawSavePopup()
-{
-    // can not be opend if thread is running
-    ImGui::OpenPopup("ZapiszPlik", ImGuiPopupFlags_NoReopen);
-    ImGui::SetNextWindowSize(ImVec2(FILE_POPUP_WIDTH, SAVE_POPUP_HEIGHT));
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("ZapiszPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-    {
-        auto dir = FileSelector::GetInstance().GetCurrDir();
-        auto map = FileSelector::GetInstance().GetDirMaped();
-        // curr dir path
-        ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().c_str());
-        ImGui::Separator();
-        // display dir as selectables
-        for (auto entry : dir)
-            if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
-                if (FileSelector::GetInstance().SelectEntry(entry.path()) == FileSelector::FileEntry)
-                    warningPopupActive = true;
-        ImGui::EndChild();
-
-        ImGui::Separator();
-
-        ImGui::Text("Nazwa pliku");
-        ImGui::InputText("wpisz", fileNameBuff, 64);
-
-        const char *ext[] = {".png", ".jpg", ".bmp"};
-        ImGui::Text("Rozszerzenie");
-        ImGui::Combo("wybierz", &currExtension, ext, IM_ARRAYSIZE(ext));
-
-        ImGui::Text("Zapisz - jeżeli chcemy nadać nazwę");
-        ImGui::Text("Wybierz - jeżeli chcemy wybrać \n istniejacy plik lub folder");
-        ImGui::Separator();
-
-        int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W_MAIN - BUTTON_OFFSET) / 2;
-
-        ImGui::SetCursorPosX(offset);
-        if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-        {
-            // can not be empty
-            std::string buffStr = fileNameBuff;
-            if (buffStr == "")
-                errorPopupActive = true;
-            // already exists
-            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
-            {
-                warningPopupActive = true;
-                customName = true;
-            }
-            else
-            {
-                outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrDirectoryPath(), fileNameBuff, currExtension);
-                saveAsPopupActive = false;
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
-        if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-        {
-            // save as existing
-            if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
-                warningPopupActive = true;
-        }
-        ImGui::SetCursorPosX(offset);
-        if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-        {
-            FileSelector::GetInstance().GoUpADirectory();
-        }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-        {
-            saveAsPopupActive = false;
-            ImGui::CloseCurrentPopup();
-        }
-        DrawSaveWarningAndErrorPopup();
-        ImGui::EndPopup();
-    }
-}
-
-void App::DrawSaveWarningAndErrorPopup()
-{
-    if (warningPopupActive)
-    {
-        ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("OSTRZEŻENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-        {
-            ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
-            ImGui::Separator();
-
-            int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W_MAIN - BUTTON_OFFSET) / 2;
-
-            ImGui::SetCursorPosX(offset);
-            // override
-            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-            {
-                if (customName)
-                {
-                    outputImage.SaveImageAs(FileSelector::GetInstance().GetCurrDirectoryPath(), fileNameBuff, currExtension);
-                    customName = false;
-                }
-                else
-                    outputImage.SaveImageAs(FileSelector::GetInstance().GetFullPathToEntry());
-                saveAsPopupActive = false;
-                warningPopupActive = false;
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
-            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-            {
-                warningPopupActive = false;
-                FileSelector::GetInstance().DeselectCurrEntry();
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
-        }
-        if (!saveAsPopupActive)
-            ImGui::CloseCurrentPopup();
-    }
-
-    // can not be empty
-    if (errorPopupActive)
-    {
-        ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowSize(ImVec2(0, POPUP_HEIGHT));
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-        if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-        {
-            ImGui::Text("Nazwa pliku nie może być pusta");
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
-            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-            {
-                errorPopupActive = false;
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
-        }
-    }
-}
-
-void App::DrawSaveWarningPopup()
-{
-    // can not be opend if thread is running
-    ImGui::OpenPopup("OSTRZEŻENIE", ImGuiPopupFlags_NoReopen);
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("OSTRZEŻENIE", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-    {
-        ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
-        ImGui::Separator();
-
-        int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W_MAIN - BUTTON_OFFSET) / 2;
-
-        ImGui::SetCursorPosX(offset);
-        // override
-        if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-        {
-            outputImage.SaveImage();
-            warningPopupActive = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
-        {
-            warningPopupActive = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
     }
 }
 
