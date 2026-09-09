@@ -40,7 +40,7 @@
 #define MIDDLE_W 200
 #define MIDDLE_BUTTON_W 180
 #define MIDDLE_BUTTON_H 30
-#define CANCEL_BUTTON_W 120
+#define CANCEL_BUTTON_W_MAIN 120
 
 // popups
 // #define POPUP_WIDTH 200
@@ -163,6 +163,7 @@ private:
     // flags
     bool show_demo_window = false;
     bool runLoop = true;
+    bool mainLoadMenuActive = false; // to avoid conflict with extra image loading
     bool saveAsPopupActive = false;
     bool errorPopupActive = false;
     bool errorPopupAlgActive = false;

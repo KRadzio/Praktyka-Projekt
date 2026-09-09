@@ -68,12 +68,6 @@ public:
     // 2 nothing
     int32_t LoadMenu(Image* imageToLoad, bool noTexture = false);
 
-    // set if want to use load menu
-    void ActivatePopupMenu();
-
-    // check if flag for using is set (to call the menu function)
-    inline bool IsLoadMenuActive() { return loadPopupActive;}
-
     // does a file with such name exist
     inline bool FileExists(std::filesystem::path path) { return std::filesystem::exists(path); }
 
@@ -88,8 +82,6 @@ private:
 
     std::filesystem::path currEntrySelected = ""; // full path
 
-    bool loadPopupActive = false;
-    bool saveAsPopupActive = false;
     bool errorPopupActive = false;
     bool errorPopupAlgActive = false;
     bool warningPopupActive = false;

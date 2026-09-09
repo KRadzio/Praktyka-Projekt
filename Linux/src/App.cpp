@@ -230,9 +230,7 @@ void App::DrawMenuBar()
         }
         // load a file
         if (ImGui::MenuItem("Wczytaj"))
-        {
-            FileSelector::GetInstance().ActivatePopupMenu();
-        }
+            mainLoadMenuActive = true;
         // quit
         ImGui::Separator();
         if (ImGui::MenuItem("Wyjdź"))
@@ -273,9 +271,17 @@ void App::DrawMenuBar()
     ImGui::EndMainMenuBar();
 
     // popups
-    if(FileSelector::GetInstance().IsLoadMenuActive())
-        if(FileSelector::GetInstance().LoadMenu(&inputImage) == 0)
-            outputImage.ClearImage();
+    if (mainLoadMenuActive)
+    {
+        int32_t status = FileSelector::GetInstance().LoadMenu(&inputImage);
+
+        if (status != 2)
+        {
+            mainLoadMenuActive = false;
+            if (status == 0 || status == -1)
+                outputImage.ClearImage();
+        }
+    }
 
     if (saveAsPopupActive)
         DrawSavePopup();
@@ -582,10 +588,10 @@ void App::DrawSavePopup()
         ImGui::Text("Wybierz - jeżeli chcemy wybrać \n istniejacy plik lub folder");
         ImGui::Separator();
 
-        int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
+        int offset = (FILE_POPUP_WIDTH - 2 * CANCEL_BUTTON_W_MAIN - BUTTON_OFFSET) / 2;
 
         ImGui::SetCursorPosX(offset);
-        if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             // can not be empty
             std::string buffStr = fileNameBuff;
@@ -604,20 +610,20 @@ void App::DrawSavePopup()
                 ImGui::CloseCurrentPopup();
             }
         }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
-        if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W, 0)))
+        ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
+        if (ImGui::Button("Wybierz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             // save as existing
             if (FileSelector::GetInstance().SelectCurrEntry() == FileSelector::FileEntry)
                 warningPopupActive = true;
         }
         ImGui::SetCursorPosX(offset);
-        if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Folder wyżej", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             FileSelector::GetInstance().GoUpADirectory();
         }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+        ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
+        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             saveAsPopupActive = false;
             ImGui::CloseCurrentPopup();
@@ -639,11 +645,11 @@ void App::DrawSaveWarningAndErrorPopup()
             ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
             ImGui::Separator();
 
-            int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
+            int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W_MAIN - BUTTON_OFFSET) / 2;
 
             ImGui::SetCursorPosX(offset);
             // override
-            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+            if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
             {
                 if (customName)
                 {
@@ -656,8 +662,8 @@ void App::DrawSaveWarningAndErrorPopup()
                 warningPopupActive = false;
                 ImGui::CloseCurrentPopup();
             }
-            ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
-            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
             {
                 warningPopupActive = false;
                 FileSelector::GetInstance().DeselectCurrEntry();
@@ -679,8 +685,8 @@ void App::DrawSaveWarningAndErrorPopup()
         if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
             ImGui::Text("Nazwa pliku nie może być pusta");
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
             {
                 errorPopupActive = false;
                 ImGui::CloseCurrentPopup();
@@ -701,18 +707,18 @@ void App::DrawSaveWarningPopup()
         ImGui::Text("Plik o takie nazwie już istnieje czy chcesz go nadpisać?");
         ImGui::Separator();
 
-        int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W - BUTTON_OFFSET) / 2;
+        int offset = (ImGui::GetWindowWidth() - 2 * CANCEL_BUTTON_W_MAIN - BUTTON_OFFSET) / 2;
 
         ImGui::SetCursorPosX(offset);
         // override
-        if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W, 0)))
+        if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             outputImage.SaveImage();
             warningPopupActive = false;
             ImGui::CloseCurrentPopup();
         }
-        ImGui::SameLine(offset + CANCEL_BUTTON_W + BUTTON_OFFSET);
-        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+        ImGui::SameLine(offset + CANCEL_BUTTON_W_MAIN + BUTTON_OFFSET);
+        if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             warningPopupActive = false;
             ImGui::CloseCurrentPopup();
@@ -734,8 +740,8 @@ void App::DrawSettingsPopup()
             // how often
             ImGui::Text("Ustaw co ile sekund obraz\nwyjściowy ma się odświerzać");
             ImGui::InputFloat("##", &refreshIntervalValue, 1);
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-            if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+            if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
             {
                 settingsPopupActive = false;
                 ImGui::CloseCurrentPopup();
@@ -764,8 +770,8 @@ void App::DrawMiddleErrorPopup()
             ImGui::Text("Błąd podczas kopiowania obrazu");
         else if (outputImage.NoSurface())
             ImGui::Text("Nie można odświerzyć obraz nie przetworzony");
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+        if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             errorPopupAlgActive = false;
             errorCopying = false;
@@ -792,8 +798,8 @@ void App::DrawInProgressPopup()
         {
             ImGui::SetCursorPosX(10);
             ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(180.0f, 0.0f), "Przetwarzanie...");
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W, 0)))
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+            if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
             {
                 Mutex::GetInstance().Lock();
                 Mutex::GetInstance().ThreadStopped();
@@ -824,8 +830,8 @@ void App::DrawInProgressPopup()
                 Mutex::GetInstance().Unlock();
             }
             ImGui::Text("Ukończone");
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+            if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
             {
                 // remember to join
                 if (algorithmThread.joinable())
@@ -851,8 +857,8 @@ void App::DrawParametersPopup()
             ImGui::Text("Nie wybrano algorytmu");
         else
             currAlgorithm->ParamsMenu();
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W, 0)))
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+        if (ImGui::Button("Powrót", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
@@ -870,8 +876,8 @@ void App::DrawResetDonePopup()
     if (ImGui::BeginPopupModal("INFORMACJA"))
     {
         ImGui::Text("Zresetowano");
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
-        if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W, 0)))
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_MAIN / 2);
+        if (ImGui::Button("OK", ImVec2(CANCEL_BUTTON_W_MAIN, 0)))
         {
             resetDonePopupActive = false;
             ImGui::CloseCurrentPopup();

@@ -107,11 +107,6 @@ void FileSelector::RefreshCurrDir()
     }
 }
 
-void FileSelector::ActivatePopupMenu()
-{
-    loadPopupActive = true;
-    RefreshCurrDir();
-}
 
 int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
 {
@@ -140,12 +135,9 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                     {
                         // could not be loaded
                         if (imageToLoad->SetSourceImage(GetFullPathToEntry()) == -1)
-                        {
                             errorPopupActive = true;
-                        }
                         else
                         {
-                            loadPopupActive = false;
                             ImGui::CloseCurrentPopup();
                             returnCode = 0;
                         }
@@ -154,12 +146,9 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                     {
                         // could not be loaded
                         if (imageToLoad->SetSourceImageNoTEXTURE(GetFullPathToEntry()) == -1)
-                        {
                             errorPopupActive = true;
-                        }
                         else
                         {
-                            loadPopupActive = false;
                             ImGui::CloseCurrentPopup();
                             returnCode = 0;
                         }
@@ -176,12 +165,9 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                 {
                     // could not be loaded
                     if (imageToLoad->SetSourceImage(GetFullPathToEntry()) == -1)
-                    {
                         errorPopupActive = true;
-                    }
                     else
                     {
-                        loadPopupActive = false;
                         ImGui::CloseCurrentPopup();
                         returnCode = 0;
                     }
@@ -190,12 +176,9 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                 {
                     // could not be loaded
                     if (imageToLoad->SetSourceImageNoTEXTURE(GetFullPathToEntry()) == -1)
-                    {
                         errorPopupActive = true;
-                    }
                     else
                     {
-                        loadPopupActive = false;
                         ImGui::CloseCurrentPopup();
                         returnCode = 0;
                     }
@@ -210,7 +193,6 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W_FS / 2);
         if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_FS, 0)))
         {
-            loadPopupActive = false;
             ImGui::CloseCurrentPopup();
             returnCode = 1;
         }
