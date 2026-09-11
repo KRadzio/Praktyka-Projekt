@@ -37,8 +37,8 @@
 #define HIST_H 200
 
 // middle menu
-#define MIDDLE_W 200
-#define MIDDLE_BUTTON_W 180
+#define MIDDLE_W 250
+#define MIDDLE_BUTTON_W 230
 #define MIDDLE_BUTTON_H 30
 #define CANCEL_BUTTON_W_MAIN 120
 

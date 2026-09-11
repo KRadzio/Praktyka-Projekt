@@ -27,7 +27,7 @@ int App::Init()
     mainScale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
     windowFlags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     // create window
-    mainWindow = SDL_CreateWindow("Laboratorium przetwarzanie obrazów", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(1280 * mainScale), (int)(720 * mainScale), windowFlags);
+    mainWindow = SDL_CreateWindow("Laboratorium przetwarzanie obrazów", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(WINDOW_WIDTH * mainScale), (int)(WINDOW_HEIGHT * mainScale), windowFlags);
     if (mainWindow == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -305,7 +305,7 @@ void App::DrawPicturesAndMiddle()
     float h = ImGui::GetFrameHeight();
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Obraz wejściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Obraz wejściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     if (!inputImage.NoTexture())
     {
         // if fits in space set it to middle
@@ -323,7 +323,7 @@ void App::DrawPicturesAndMiddle()
     // output image
     ImGui::SetNextWindowPos(ImVec2(currWidth / 2 + MIDDLE_W / 2, h));
     ImGui::SetNextWindowSize(ImVec2((currWidth - MIDDLE_W) / 2, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Obraz wyjściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Obraz wyjściowy", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     // shared resources
     Mutex::GetInstance().Lock();
     if (!outputImage.NoTexture())
@@ -337,28 +337,6 @@ void App::DrawPicturesAndMiddle()
     }
     Mutex::GetInstance().Unlock();
     ImGui::End();
-    // for Hought transormation it has to be drawn a bit diffrent
-    // else
-    // {
-    //     ImGui::Begin("Tablica akumulatorów", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
-    //     // CS
-    //     Mutex::GetInstance().Lock();
-    //     ImGui::Text("Wartość maksymalna tablicy akumulatorów: %d", params.maxHoughtVal);
-    //     ImGui::Text("Wartość ro: %d", params.maxIndexRo);
-    //     ImGui::Text("Wartość theta: %d", params.maxIndexTheta);
-    //     ImGui::Separator();
-    //     if (!outputImage.NoTexture())
-    //     {
-    //         // if fits in space set it to middle and below text
-    //         if (outputImage.GetWidth() < ImGui::GetWindowWidth())
-    //             ImGui::SameLine((ImGui::GetWindowWidth() - outputImage.GetWidth()) / 2);
-    //         if (outputImage.GetHeight() < ImGui::GetWindowHeight() - ImGui::GetCursorPosY())
-    //             ImGui::SetCursorPosY((ImGui::GetWindowHeight() + ImGui::GetCursorPosY() - outputImage.GetHeight()) / 2);
-    //         ImGui::Image((ImTextureRef)outputImage.GetTexture(), ImVec2(outputImage.GetWidth(), outputImage.GetHeight()));
-    //     }
-    //     Mutex::GetInstance().Unlock();
-    //     ImGui::End();
-    // }
 
     if (errorPopupAlgActive)
         DrawMiddleErrorPopup();
@@ -368,7 +346,7 @@ void App::DrawMiddleButtonsWindow(float h)
 {
     ImGui::SetNextWindowPos(ImVec2((currWidth - MIDDLE_W) / 2, h));
     ImGui::SetNextWindowSize(ImVec2(MIDDLE_W, currHeight - MENU_ALG_HIST_H));
-    ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Separator", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("Wybrany algorytm:");
     ImGui::Text("%s", selectedAlgorithmName.c_str());
 
@@ -459,6 +437,12 @@ void App::DrawMiddleButtonsWindow(float h)
     // can not be opend if thread is running
     if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
+        currAlgorithm->ResetToDefaults();
+        resetDonePopupActive = true;
+    }
+
+    if(ImGui::Button("Resetuj wszystkie parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
         ResetParameters();
         resetDonePopupActive = true;
     }
@@ -478,7 +462,7 @@ void App::DrawHistogramsAndFunctions()
 
     ImGui::SetNextWindowPos(ImVec2(0, h));
     ImGui::SetNextWindowSize(ImVec2(currWidth, HIST_BAR_HEIGHT));
-    ImGui::Begin("Funkcje i wykresy", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+    ImGui::Begin("Funkcje i wykresy", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     float freeSpace = currWidth - 3 * HIST_WINDOW_W;
     freeSpace -= 2 * BORDER_OFFSET;
 
