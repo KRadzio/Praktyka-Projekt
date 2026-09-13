@@ -6,8 +6,17 @@
 #include <thread>
 #include <chrono>
 
+#ifdef __linux__
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+
+#elif _WIN32
+
+#include <SDL.h>
+#include <SDL_image.h>
+
+#endif
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -67,7 +76,6 @@
 
 // TODO
 // saving params struct state and selected alg state, maybe also picture loaded?
-// minor ui improvements (charts could be hidden)
 
 // ISSUE
 // MEMORY LEAK FOUND (DO NOT FREE TEXTURE IN THREAD) (fix it in some way)

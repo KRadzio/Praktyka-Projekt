@@ -4,8 +4,18 @@
 #include <string>
 #include <filesystem>
 
+
+#ifdef __linux__
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+
+#elif _WIN32
+
+#include <SDL.h>
+#include <SDL_image.h>
+
+#endif
 
 #include "Renderer.hpp"
 
