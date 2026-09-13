@@ -125,11 +125,19 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
         auto map = GetDirMaped();
         // curr dir path
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+#ifdef __linux__
         ImGui::Text("%s", GetCurrDirectoryPath().c_str());
+#elif _WIN32
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string().c_str());
+#endif
         ImGui::Separator();
         // display entries as selectebles
         for (auto entry : dir)
+#ifdef __linux__
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+#elif _WIN32
+            if (ImGui::Selectable(entry.path().filename().generic_u8string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+#endif
                 if (SelectEntry(entry.path()) == FileEntry)
                 {
                     if (!noTexture)
@@ -239,11 +247,19 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
         auto map = GetDirMaped();
         // curr dir path
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
+#ifdef __linux__
         ImGui::Text("%s", GetCurrDirectoryPath().c_str());
+#elif _WIN32
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string().c_str());
+#endif
         ImGui::Separator();
         // display dir as selectables
         for (auto entry : dir)
+#ifdef __linux__
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+#elif _WIN32
+            if (ImGui::Selectable(entry.path().filename().generic_u8string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+#endif
                 if (SelectEntry(entry.path()) == FileSelector::FileEntry)
                     warningPopupActive = true;
         ImGui::EndChild();
@@ -270,8 +286,12 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
             std::string buffStr = fileNameBuff;
             if (buffStr == "")
                 errorPopupActive = true;
-            // already exists
+// already exists
+#ifdef __linux__
             else if (FileExists(GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
+#elif _WIN32
+            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string() + '/' + fileNameBuff + ext[currExtension]))
+#endif
             {
                 warningPopupActive = true;
                 customName = true;

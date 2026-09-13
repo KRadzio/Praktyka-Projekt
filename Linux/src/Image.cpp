@@ -98,6 +98,7 @@ int32_t Image::SaveImage()
     else
     {
         int32_t status = 0;
+#ifdef __linux__
         if (filePath.extension() == ".png")
             status = IMG_SavePNG(surface, filePath.c_str());
         else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
@@ -107,6 +108,17 @@ int32_t Image::SaveImage()
         // default to png
         else
             status = IMG_SavePNG(surface, filePath.c_str());
+#elif _WIN32
+        if (filePath.extension() == ".png")
+            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+        else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
+            status = IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
+        else if (filePath.extension() == ".bmp")
+            status = SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
+        // default to png
+        else
+            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+#endif
 
         if (status != 0)
         {
@@ -137,6 +149,7 @@ int32_t Image::SaveImageAs(std::filesystem::path path)
     {
         int32_t status = 0;
         filePath = path;
+#ifdef __linux__
         if (path.extension() == ".png")
             status = IMG_SavePNG(surface, filePath.c_str());
         else if (path.extension() == ".jpg" || path.extension() == "jpeg")
@@ -146,6 +159,17 @@ int32_t Image::SaveImageAs(std::filesystem::path path)
         // default to png
         else
             status = IMG_SavePNG(surface, filePath.c_str());
+#elif _WIN32
+        if (path.extension() == ".png")
+            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+        else if (path.extension() == ".jpg" || path.extension() == "jpeg")
+            status = IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
+        else if (path.extension() == ".bmp")
+            status = SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
+        // default to png
+        else
+            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+#endif
 
         if (status != 0)
         {
@@ -177,6 +201,7 @@ int32_t Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int ex
         int32_t status = 0;
         filePath = dirPath;
         filePath /= filename;
+#ifdef __linux__
         if (extension == PNG)
         {
             filePath += ".png";
@@ -198,7 +223,30 @@ int32_t Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int ex
             filePath += ".png";
             status = IMG_SavePNG(surface, filePath.c_str());
         }
-        
+#elif _WIN32
+        if (extension == PNG)
+        {
+            filePath += ".png";
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+        }
+        else if (extension == JPG)
+        {
+            filePath += ".jpg";
+            status = IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+        }
+        else if (extension == BMP)
+        {
+            filePath += ".bmp";
+            status = SDL_SaveBMP(surface, filePath.string().c_str());
+        }
+        // default to png
+        else
+        {
+            filePath += ".png";
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+        }
+#endif
+
         if (status != 0)
         {
             if (filePath.extension() == ".bmp")
@@ -271,7 +319,12 @@ void Image::NormalizeFormat()
 int32_t Image::SetSourceImage(std::filesystem::path path)
 {
     ClearImage();
+#ifdef __linux__
     surface = IMG_Load(path.c_str());
+#elif _WIN32
+    surface = IMG_Load(path.generic_u8string().c_str());
+#endif
+
     if (surface == nullptr)
     {
         error = IMG_GetError();
@@ -302,7 +355,11 @@ int32_t Image::SetSourceImage(std::filesystem::path path)
 int32_t Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
 {
     ClearImage();
+#ifdef __linux__
     surface = IMG_Load(path.c_str());
+#elif _WIN32
+    surface = IMG_Load(path.generic_u8string().c_str());
+#endif
     if (surface == nullptr)
     {
         error = IMG_GetError();
