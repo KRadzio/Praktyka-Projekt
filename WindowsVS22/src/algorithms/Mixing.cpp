@@ -6,7 +6,11 @@ void Mixing::ParamsMenu()
 {
     ImGui::SliderFloat("Wartość a", &mixRatio, 0.0, 1.0);
     if (!image2.NoSurface())
+#ifdef __linux__
         ImGui::Text("%s", image2.GetImagePath().filename().c_str());
+#elif _WIN32
+        ImGui::Text("%s", image2.GetImagePath().filename().u8string().c_str());
+#endif    
     else
         ImGui::Text("Brak obrazu");
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -46,4 +50,8 @@ void Mixing::AlgorithmFunction(Image *outputImage)
     SaveToOutput(outputImage);
 }
 
-void Mixing::ResetToDefaults() { mixRatio = 0.5f; }
+void Mixing::ResetToDefaults() 
+{
+    mixRatio = 0.5f; 
+    image2.ClearImage();
+}

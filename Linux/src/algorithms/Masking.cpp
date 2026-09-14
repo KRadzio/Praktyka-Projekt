@@ -5,7 +5,11 @@ Masking::Masking() { algorithmName = "Maskowanie"; }
 void Masking::ParamsMenu()
 {
     if (!mask.NoSurface())
+#ifdef __linux__
         ImGui::Text("%s", mask.GetImagePath().filename().c_str());
+#elif _WIN32
+        ImGui::Text("%s", mask.GetImagePath().filename().u8string().c_str());
+#endif  
     else
         ImGui::Text("Brak obrazu");
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -46,5 +50,7 @@ void Masking::AlgorithmFunction(Image *outputImage)
     SaveToOutput(outputImage);
 }
 
-// nothing to do
-void Masking::ResetToDefaults() {}
+void Masking::ResetToDefaults() 
+{
+    mask.ClearImage();
+}
