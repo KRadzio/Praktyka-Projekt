@@ -7,8 +7,6 @@
 
 #elif _WIN32
 
-#include <Windows.h>
-
 #include <SDL.h>
 
 #endif

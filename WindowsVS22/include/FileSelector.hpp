@@ -6,10 +6,6 @@
 #include <map>
 #include <vector>
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-
 #include "imgui.h"
 
 #include "imgui_stdlib.h"

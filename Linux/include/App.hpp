@@ -13,8 +13,6 @@
 
 #elif _WIN32
 
-#include <Windows.h>
-
 #include <SDL.h>
 #include <SDL_image.h>
 
