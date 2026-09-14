@@ -6,6 +6,10 @@
 #include <map>
 #include <vector>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include "imgui.h"
 
 #include "imgui_stdlib.h"
@@ -78,12 +82,11 @@ public:
     // 2 nothing
     int32_t SaveWarningPopup(Image *imageToSave);
 
-
     // does a file with such name exist
     inline bool FileExists(std::filesystem::path path) { return std::filesystem::exists(path); }
 
 private:
-    void WarningAndErrorPopUp(Image *imageToSave, int32_t* returnCode);
+    void WarningAndErrorPopUp(Image *imageToSave, int32_t *returnCode);
 
 private:
     FileSelector();
@@ -96,10 +99,13 @@ private:
 
     std::filesystem::path currEntrySelected = ""; // full path
 
-    // File name and extension
+// File name and extension
+#ifdef __linux__
+    std::string fileNameBuff = std::string(64, '\0');
+#elif _WIN32
     std::u8string fileNameBuff = std::u8string(64, u8'\0');
+#endif
     int currExtension = 0;
-
     bool errorPopupActive = false;
     bool warningPopupActive = false;
     bool customName = false; // in save as

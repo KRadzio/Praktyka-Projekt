@@ -4,7 +4,6 @@
 #include <string>
 #include <filesystem>
 
-
 #ifdef __linux__
 
 #include <SDL2/SDL.h>
@@ -86,7 +85,6 @@ public:
 
     inline std::filesystem::path GetImagePath() { return filePath; }
 
-
 #ifdef __linux__
 
     inline std::string GetExtension() { return filePath.extension(); }
@@ -112,7 +110,12 @@ public:
     // filepath should have an extension
     int32_t SaveImageAs(std::filesystem::path path);
     // save image to a specified irectory with specified filename and selected extension
+
+#ifdef __linux__
+    int32_t SaveImageAs(std::filesystem::path dirPath, std::string filename, int extension);
+#elif _WIN32
     int32_t SaveImageAs(std::filesystem::path dirPath, std::u8string filename, int extension);
+#endif
 
     // if color is saved on 1 byte AND has a custom pallete (ex. 2 colors)
     void ConvertFromPallete();

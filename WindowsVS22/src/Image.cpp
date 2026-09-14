@@ -189,7 +189,13 @@ int32_t Image::SaveImageAs(std::filesystem::path path)
     }
 }
 
+#ifdef __linux__
+int32_t Image::SaveImageAs(std::filesystem::path dirPath, std::string filename, int extension)
+
+#elif _WIN32
 int32_t Image::SaveImageAs(std::filesystem::path dirPath, std::u8string filename, int extension)
+
+#endif
 {
     if (surface == nullptr)
     {
