@@ -11,6 +11,7 @@ App &App::GetInstance()
 
 int App::Init()
 {
+    setlocale(LC_ALL, "en_US.UTF-8");
     // SDL Init
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
