@@ -1,3 +1,11 @@
+#ifdef _WIN32
+
+#include <Windows.h>
+
+#pragma execution_character_set("utf-8")
+
+#endif
+
 #include "App.hpp"
 
 // entry point

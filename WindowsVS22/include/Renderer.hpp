@@ -1,7 +1,17 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
+#ifdef __linux__
+
+#include <SDL2/SDL.h>
+
+#elif _WIN32
+
+#include <Windows.h>
+
 #include <SDL.h>
+
+#endif
 
 // singleton
 class Renderer

@@ -1,0 +1,55 @@
+#include "Algorithm.hpp"
+
+Algorithm::Algorithm() {}
+
+Algorithm::~Algorithm() { copy.ClearImage(); }
+
+void Algorithm::CopyToLocalVariable(Image *outputImage)
+{
+    Mutex::GetInstance().Lock();
+    copy.CopyNoTexture(*outputImage);
+    Mutex::GetInstance().Unlock();
+}
+
+bool Algorithm::Canceled(Image *outputImage)
+{
+    Mutex::GetInstance().Lock();
+    // if canceled
+    if (!Mutex::GetInstance().IsThreadRunning())
+    {
+        outputImage->CopyNoTexture(copy);
+        copy.ClearImage();
+        Mutex::GetInstance().Unlock();
+        return true;
+    }
+    Mutex::GetInstance().Unlock();
+    return false;
+}
+
+void Algorithm::AutomaticRefresh(Image *outputImage)
+{
+    Mutex::GetInstance().Lock();
+    if (Mutex::GetInstance().GetState() == Mutex::AlgorithmThreadRefresh)
+    {
+        outputImage->CopyNoTexture(copy);
+        Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+    }
+    Mutex::GetInstance().Unlock();
+}
+
+void Algorithm::ManualRefresh(Image *outputImage)
+{
+    Mutex::GetInstance().Lock();
+    outputImage->CopyNoTexture(copy);
+    Mutex::GetInstance().SetState(Mutex::MainThreadRefresh);
+    Mutex::GetInstance().Unlock();
+}
+
+void Algorithm::SaveToOutput(Image *outputImage)
+{
+    Mutex::GetInstance().Lock();
+    Mutex::GetInstance().ThreadStopped();
+    outputImage->CopyNoTexture(copy);
+    copy.ClearImage();
+    Mutex::GetInstance().Unlock();
+}

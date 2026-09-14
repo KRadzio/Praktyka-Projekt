@@ -87,119 +87,299 @@ void Image::CopyNormalisedBrightnessHistogram(float *dst)
     }
 }
 
-void Image::SaveImage()
+int32_t Image::SaveImage()
 {
     // no surface
     if (surface == nullptr)
-        printf("Can not save \n");
+    {
+        error = "No surface could not save\n";
+        return -1;
+    }
     else
     {
+        int32_t status = 0;
+#ifdef __linux__
         if (filePath.extension() == ".png")
-            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
-            IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.c_str(), 100);
         else if (filePath.extension() == ".bmp")
-            SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
+            status = SDL_SaveBMP(surface, filePath.c_str());
         // default to png
         else
-            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
+#elif _WIN32
+        if (filePath.extension() == ".png")
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+        else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
+            status = IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+        else if (filePath.extension() == ".bmp")
+            status = SDL_SaveBMP(surface, filePath.string().c_str());
+        // default to png
+        else
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+#endif
+
+        if (status != 0)
+        {
+            if (filePath.extension() == ".bmp")
+            {
+                error = SDL_GetError();
+                return -1;
+            }
+            else
+            {
+                error = IMG_GetError();
+                return -1;
+            }
+        }
+        else
+            return 0;
     }
 }
 
-void Image::SaveImageAs(std::filesystem::path path)
+int32_t Image::SaveImageAs(std::filesystem::path path)
 {
     if (surface == nullptr)
-        printf("Can not save \n");
+    {
+        error = "No surface could not save\n";
+        return -1;
+    }
     else
     {
+        int32_t status = 0;
         filePath = path;
+#ifdef __linux__
         if (path.extension() == ".png")
-            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         else if (path.extension() == ".jpg" || path.extension() == "jpeg")
-            IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.c_str(), 100);
         else if (path.extension() == ".bmp")
-            SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
+            status = SDL_SaveBMP(surface, filePath.c_str());
         // default to png
         else
-            IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
+#elif _WIN32
+        if (path.extension() == ".png")
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+        else if (path.extension() == ".jpg" || path.extension() == "jpeg")
+            status = IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+        else if (path.extension() == ".bmp")
+            status = SDL_SaveBMP(surface, filePath.string().c_str());
+        // default to png
+        else
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+#endif
+
+        if (status != 0)
+        {
+            if (filePath.extension() == ".bmp")
+            {
+                error = SDL_GetError();
+                return -1;
+            }
+            else
+            {
+                error = IMG_GetError();
+                return -1;
+            }
+        }
+        else
+            return 0;
     }
 }
 
-void Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int extension)
+int32_t Image::SaveImageAs(std::filesystem::path dirPath, std::u8string filename, int extension)
 {
     if (surface == nullptr)
-        printf("Can not save \n");
+    {
+        error = "No surface could not save\n";
+        return -1;
+    }
     else
     {
+        int32_t status = 0;
         filePath = dirPath;
         filePath /= filename;
+#ifdef __linux__
         if (extension == PNG)
         {
             filePath += ".png";
-            IMG_SavePNG(surface, filePath.string().c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         }
         else if (extension == JPG)
         {
             filePath += ".jpg";
-            IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.c_str(), 100);
         }
         else if (extension == BMP)
         {
             filePath += ".bmp";
-            SDL_SaveBMP(surface, filePath.string().c_str());
+            status = SDL_SaveBMP(surface, filePath.c_str());
         }
         // default to png
         else
         {
             filePath += ".png";
-            IMG_SavePNG(surface, filePath.string().c_str());
+            status = IMG_SavePNG(surface, filePath.c_str());
         }
+#elif _WIN32
+        if (extension == PNG)
+        {
+            filePath += ".png";
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+        }
+        else if (extension == JPG)
+        {
+            filePath += ".jpg";
+            status = IMG_SaveJPG(surface, filePath.string().c_str(), 100);
+        }
+        else if (extension == BMP)
+        {
+            filePath += ".bmp";
+            status = SDL_SaveBMP(surface, filePath.string().c_str());
+        }
+        // default to png
+        else
+        {
+            filePath += ".png";
+            status = IMG_SavePNG(surface, filePath.string().c_str());
+        }
+#endif
+
+        if (status != 0)
+        {
+            if (filePath.extension() == ".bmp")
+            {
+                error = SDL_GetError();
+                return -1;
+            }
+            else
+            {
+                error = IMG_GetError();
+                return -1;
+            }
+        }
+        else
+            return 0;
     }
 }
 
-int Image::SetSourceImage(std::filesystem::path path)
+void Image::ConvertFromPallete()
+{
+    // normalize
+    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    SDL_LockSurface(newSurface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            // now convert the color using the pallete
+            uint8_t colorIndex = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            // the colorIndex should not be grater than ncolors of the pallete
+            SDL_Color newColor = surface->format->palette->colors[colorIndex];
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = newColor.b;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = newColor.g;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = newColor.r;
+        }
+    }
+    SDL_UnlockSurface(newSurface);
+    SDL_UnlockSurface(surface);
+    SDL_FreeSurface(surface);
+    surface = newSurface;
+}
+
+void Image::NormalizeFormat()
+{
+    // change the numbver of bytes per pixel
+    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    SDL_LockSurface(newSurface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
+        }
+    }
+    SDL_UnlockSurface(newSurface);
+    SDL_UnlockSurface(surface);
+    SDL_FreeSurface(surface);
+    surface = newSurface;
+}
+
+int32_t Image::SetSourceImage(std::filesystem::path path)
 {
     ClearImage();
-    surface = IMG_Load(path.generic_u8string().c_str());
+#ifdef __linux__
+    surface = IMG_Load(path.c_str());
+#elif _WIN32
+    surface = IMG_Load(path.string().c_str());
+#endif
+
     if (surface == nullptr)
+    {
+        error = IMG_GetError();
         return -1;
+    }
     else
     {
         width = surface->w;
         height = surface->h;
-        if (surface->format->BytesPerPixel < 3)
-        {
-            // change the numbver of bytes per pixel
-            SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
-            SDL_LockSurface(surface);
-            SDL_LockSurface(newSurface);
-            uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-            uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
-                    newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
-                }
-            }
-            SDL_UnlockSurface(newSurface);
-            SDL_UnlockSurface(surface);
-            SDL_FreeSurface(surface);
-            surface = newSurface;
-        }
+        // pallete check
+        if (surface->format->palette != nullptr)
+            ConvertFromPallete();
+        // bytes check
+        else if (surface->format->BytesPerPixel < 3)
+            NormalizeFormat();
         filePath = path;
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
-        // handle it in some way
         if (texture == nullptr)
-            printf("%s\n", SDL_GetError());
+        {
+            error = SDL_GetError();
+            return -1;
+        }
         RefreshPixelValuesArrays();
         return 0;
     }
 }
 
+int32_t Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
+{
+    ClearImage();
+#ifdef __linux__
+    surface = IMG_Load(path.c_str());
+#elif _WIN32
+    surface = IMG_Load(path.string().c_str());
+#endif
+    if (surface == nullptr)
+    {
+        error = IMG_GetError();
+        return -1;
+    }
+    else
+    {
+        width = surface->w;
+        height = surface->h;
+        // pallete check
+        if (surface->format->palette != nullptr)
+            ConvertFromPallete();
+        // bytes check
+        else if (surface->format->BytesPerPixel < 3)
+            NormalizeFormat();
+        filePath = path;
+        RefreshPixelValuesArrays();
+        return 0;
+    }
+}
 
 void Image::TurnToGrayScale()
 {
@@ -249,6 +429,27 @@ void Image::ClearImage()
     filePath = "";
 }
 
+void Image::ClearImageNoTexture()
+{
+    SDL_FreeSurface(surface);
+    surface = nullptr;
+    // do not do anything with texture
+    for (int i = 0; i < MAX_VAL; i++)
+    {
+        lightValues[i] = 0;
+        valuesR[i] = 0;
+        valuesG[i] = 0;
+        valuesB[i] = 0;
+        distributorLight[i] = 0;
+        distributorR[i] = 0;
+        distributorG[i] = 0;
+        distributorB[i] = 0;
+    }
+    width = 0;
+    height = 0;
+    filePath = "";
+}
+
 void Image::SetBlankSurface(int width, int height)
 {
     SDL_FreeSurface(surface);
@@ -258,8 +459,42 @@ void Image::SetBlankSurface(int width, int height)
     texture = nullptr;
     this->width = width;
     this->height = height;
-    surface = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+    surface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = 255;
+        }
+    }
+    SDL_UnlockSurface(surface);
     texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
+    RefreshPixelValuesArrays();
+}
+
+void Image::SetBlankSurfaceNoTexture(int width, int height)
+{
+    SDL_FreeSurface(surface);
+    surface = nullptr;
+    this->width = width;
+    this->height = height;
+    surface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 1] = 255;
+            surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel + 2] = 255;
+        }
+    }
+    SDL_UnlockSurface(surface);
     RefreshPixelValuesArrays();
 }
 
@@ -345,6 +580,7 @@ Image::Pixel Image::GetPixel(int x, int y)
     return px;
 }
 
+// fix here
 void Image::SetPixel(int x, int y, Pixel pix)
 {
     SDL_LockSurface(surface);
@@ -381,6 +617,26 @@ void Image::Copy(Image &other)
     surface = SDL_DuplicateSurface(other.surface);
     if (surface != nullptr)
         texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
+    width = other.width;
+    height = other.height;
+    for (int i = 0; i < MAX_VAL; i++)
+    {
+        lightValues[i] = other.lightValues[i];
+        valuesR[i] = other.valuesR[i];
+        valuesG[i] = other.valuesG[i];
+        valuesB[i] = other.valuesB[i];
+        distributorLight[i] = other.distributorLight[i];
+        distributorR[i] = other.distributorR[i];
+        distributorG[i] = other.distributorG[i];
+        distributorB[i] = other.distributorB[i];
+    }
+    filePath = other.filePath;
+}
+
+void Image::CopyNoTexture(Image &other)
+{
+    ClearImageNoTexture();
+    surface = SDL_DuplicateSurface(other.surface);
     width = other.width;
     height = other.height;
     for (int i = 0; i < MAX_VAL; i++)

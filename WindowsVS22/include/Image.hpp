@@ -4,8 +4,20 @@
 #include <string>
 #include <filesystem>
 
+
+#ifdef __linux__
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
+#elif _WIN32
+
+#include <Windows.h>
+
 #include <SDL.h>
 #include <SDL_image.h>
+
+#endif
 
 #include "Renderer.hpp"
 
@@ -43,11 +55,13 @@ public:
     // copy content and make a new texture
     // sets the same filepath as the other
     // (no checks if texture created)
+    // DO NOT USE IN A THREAD
     Image(const Image &other);
     // clears prev data
     // copy content and make a new texture
     // sets the same filepath as the other
     // (no checks if texture created)
+    // DO NOT USE IN A THREAD
     Image operator=(const Image &other);
     // clears prev data
     // create a new image and fill
@@ -71,7 +85,19 @@ public:
     inline int GetPixelCount() { return width * height; }
 
     inline std::filesystem::path GetImagePath() { return filePath; }
+
+
+#ifdef __linux__
+
+    inline std::string GetExtension() { return filePath.extension(); }
+
+#elif _WIN32
+
     inline std::string GetExtension() { return filePath.extension().string(); }
+
+#endif
+
+    inline std::string GetError() { return error; }
 
     // copies the brightness histogram to dst
     // dst == float[256]
@@ -81,26 +107,43 @@ public:
     void CopyNormalisedBrightnessHistogram(float *dst);
 
     // save image as the current filename
-    void SaveImage();
+    int32_t SaveImage();
     // save image as specified filepath
     // filepath should have an extension
-    void SaveImageAs(std::filesystem::path path);
+    int32_t SaveImageAs(std::filesystem::path path);
     // save image to a specified irectory with specified filename and selected extension
-    void SaveImageAs(std::filesystem::path dirPath, char *filename, int extension);
+    int32_t SaveImageAs(std::filesystem::path dirPath, std::u8string filename, int extension);
+
+    // if color is saved on 1 byte AND has a custom pallete (ex. 2 colors)
+    void ConvertFromPallete();
+
+    // if color is saved on 1 byte insted of 3
+    void NormalizeFormat();
+
     // clears prev data
     // sets path to new path
     // creates new surface and texture
     // sets width and height based on surface
     // refreshes arrays
-    int SetSourceImage(std::filesystem::path path);
+    int32_t SetSourceImage(std::filesystem::path path);
 
-     void TurnToGrayScale();
+    int32_t SetSourceImageNoTEXTURE(std::filesystem::path path);
+
+    void TurnToGrayScale();
 
     // frees the surface and texture
     // sets arrays to 0
     // sets width and height to 0
     // sets filepath to ""
+    // DO NOT USE IN A THREAD
     void ClearImage();
+
+    // frees the surface (DOES NOT CLEAR TEXTURE)
+    // sets arrays to 0
+    // sets width and height to 0
+    // sets filepath to ""
+    // FOR USE IN A THREAD
+    void ClearImageNoTexture();
 
     // for safety checks
     inline bool NoSurface() { return surface == nullptr; }
@@ -114,12 +157,21 @@ public:
     // refreshes arrays
     void SetBlankSurface(int width, int height);
 
+    // sets a white surface of specified dimensions
+    // sets new width and height
+    // does not change filename
+    // refreshes arrays
+    // FOR USE IN THREAD
+    void SetBlankSurfaceNoTexture(int width, int height);
+
     // to refresh arrays after surface was modified
     void RefreshPixelValuesArrays();
     // clears prev texture
     // to refresh texture after surface was modified
+    // DO NOT USE IN A THREAD
     void RefreshTexture();
 
+    // CHANGE TO COL ROW
     Pixel GetPixel(int x, int y);
     void SetPixel(int x, int y, Pixel pix);
 
@@ -129,7 +181,12 @@ public:
     void SetPixelBlack(int x, int y);
 
     // same as copy constructor
+    // DO NOT USE IN A THREAD
     void Copy(Image &other);
+
+    // copys all data exept for texture
+    // FOR USE IN THREAD
+    void CopyNoTexture(Image &other);
 
     // use only if pixels and size info is needed
     // does not create texture
@@ -153,6 +210,8 @@ private:
     float distributorG[MAX_VAL];
     float distributorB[MAX_VAL];
     std::filesystem::path filePath = "";
+
+    std::string error = "";
 };
 
 #endif
