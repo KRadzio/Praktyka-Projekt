@@ -110,14 +110,14 @@ int32_t Image::SaveImage()
             status = IMG_SavePNG(surface, filePath.c_str());
 #elif _WIN32
         if (filePath.extension() == ".png")
-            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.string().c_str());
         else if (filePath.extension() == ".jpg" || filePath.extension() == "jpeg")
-            status = IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.string().c_str(), 100);
         else if (filePath.extension() == ".bmp")
-            status = SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
+            status = SDL_SaveBMP(surface, filePath.string().c_str());
         // default to png
         else
-            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.string().c_str());
 #endif
 
         if (status != 0)
@@ -161,14 +161,14 @@ int32_t Image::SaveImageAs(std::filesystem::path path)
             status = IMG_SavePNG(surface, filePath.c_str());
 #elif _WIN32
         if (path.extension() == ".png")
-            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.string().c_str());
         else if (path.extension() == ".jpg" || path.extension() == "jpeg")
-            status = IMG_SaveJPG(surface, filePath.generic_u8string().c_str(), 100);
+            status = IMG_SaveJPG(surface, filePath.string().c_str(), 100);
         else if (path.extension() == ".bmp")
-            status = SDL_SaveBMP(surface, filePath.generic_u8string().c_str());
+            status = SDL_SaveBMP(surface, filePath.string().c_str());
         // default to png
         else
-            status = IMG_SavePNG(surface, filePath.generic_u8string().c_str());
+            status = IMG_SavePNG(surface, filePath.string().c_str());
 #endif
 
         if (status != 0)
@@ -189,29 +189,14 @@ int32_t Image::SaveImageAs(std::filesystem::path path)
     }
 }
 
-int32_t Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int extension)
-{
-#ifdef _WIN32
-    if (!file.empty())
-    {
-        // assume Windows 1250 filepath
-        int wlen = MultiByteToWideChar(1250, 0, file.c_str(), -1, NULL, 0);
-        if (wlen > 0)
-        {
-            std::wstring wfile(wlen, L'\0');
-            MultiByteToWideChar(1250, 0, file.c_str(), -1, &wfile[0], wlen);
+#ifdef __linux__
+int32_t Image::SaveImageAs(std::filesystem::path dirPath, std::string filename, int extension)
 
-            int utf8len = WideCharToMultiByte(CP_UTF8, 0, wfile.c_str(), -1, NULL, 0, NULL, NULL);
-            if (utf8len > 0)
-            {
-                std::string utf8file(utf8len, '\0');
-                WideCharToMultiByte(CP_UTF8, 0, wfile.c_str(), -1, &utf8file[0], utf8len, NULL, NULL);
-                utf8file.erase(std::find(utf8file.begin(), utf8file.end(), '\0'), utf8file.end());
-                file = utf8file;
-            }
-        }
-    }
+#elif _WIN32
+int32_t Image::SaveImageAs(std::filesystem::path dirPath, std::u8string filename, int extension)
+
 #endif
+{
     if (surface == nullptr)
     {
         error = "No surface could not save\n";
@@ -343,7 +328,7 @@ int32_t Image::SetSourceImage(std::filesystem::path path)
 #ifdef __linux__
     surface = IMG_Load(path.c_str());
 #elif _WIN32
-    surface = IMG_Load(path.generic_u8string().c_str());
+    surface = IMG_Load(path.string().c_str());
 #endif
 
     if (surface == nullptr)
@@ -379,7 +364,7 @@ int32_t Image::SetSourceImageNoTEXTURE(std::filesystem::path path)
 #ifdef __linux__
     surface = IMG_Load(path.c_str());
 #elif _WIN32
-    surface = IMG_Load(path.generic_u8string().c_str());
+    surface = IMG_Load(path.string().c_str());
 #endif
     if (surface == nullptr)
     {

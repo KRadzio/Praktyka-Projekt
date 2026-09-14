@@ -136,7 +136,7 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
 #ifdef __linux__
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #elif _WIN32
-            if (ImGui::Selectable(entry.path().filename().generic_u8string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #endif
                 if (SelectEntry(entry.path()) == FileEntry)
                 {
@@ -250,7 +250,7 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
 #ifdef __linux__
         ImGui::Text("%s", GetCurrDirectoryPath().c_str());
 #elif _WIN32
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string().c_str());
+        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().string().c_str());
 #endif
         ImGui::Separator();
         // display dir as selectables
@@ -258,7 +258,7 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
 #ifdef __linux__
             if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #elif _WIN32
-            if (ImGui::Selectable(entry.path().filename().generic_u8string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #endif
                 if (SelectEntry(entry.path()) == FileSelector::FileEntry)
                     warningPopupActive = true;
@@ -267,7 +267,7 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
         ImGui::Separator();
 
         ImGui::Text("Nazwa pliku");
-        ImGui::InputText("wpisz", fileNameBuff, 64);
+        ImGui::InputText("wpisz", (std::string*)&fileNameBuff, 64);
 
         const char *ext[] = {".png", ".jpg", ".bmp"};
         ImGui::Text("Rozszerzenie");
@@ -283,14 +283,14 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
         if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_FS, 0)))
         {
             // can not be empty
-            std::string buffStr = fileNameBuff;
-            if (buffStr == "")
+            //std::string buffStr = fileNameBuff;
+            if (fileNameBuff.empty())
                 errorPopupActive = true;
 // already exists
 #ifdef __linux__
             else if (FileExists(GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
 #elif _WIN32
-            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string() + '/' + fileNameBuff + ext[currExtension]))
+            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().u8string() + u8'/' + fileNameBuff + (char8_t*)ext[currExtension]))
 #endif
             {
                 warningPopupActive = true;

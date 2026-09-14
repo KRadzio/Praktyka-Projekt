@@ -2,22 +2,25 @@
 CC=g++
 #include directories
 IMGUI_DIR=./lib/imgui
+IMGUI_MISC_DIR=./lib/imgui/misc/cpp
 ALGS_DIR=/algorithms
 #project include dir
 INCLUDE=./include
 INCLUDE_DIRS=$(INCLUDE)
 INCLUDE_DIRS+=$(IMGUI_DIR)
+INCLUDE_DIRS+=$(IMGUI_MISC_DIR)
 INCLUDE_DIRS+=$(INCLUDE)$(ALGS_DIR)
 #project src dir
 SRC=./src
 SRC_DIRS=$(SRC)
 SRC_DIRS+=$(IMGUI_DIR)
+SRC_DIRS+=$(IMGUI_MISC_DIR)
 SRC_DIRS+=$(SRC)$(ALGS_DIR)
 # libs
 # `pkg-config --cflags --libs opencv` (if opencv)
 LIBS=-ldl -lSDL2_image `sdl2-config --libs`
 # standard
-STD=-std=c++17
+STD=-std=c++20
 # optimization
 OPT=-O2
 #warnings
@@ -61,6 +64,9 @@ $(RELASE)%.o:$(SRC)/%.cpp
 $(RELASE)%.o:$(IMGUI_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+$(RELASE)%.o:$(IMGUI_MISC_DIR)/%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 $(RELASE)%.o:$(SRC)$(ALGS_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -74,6 +80,9 @@ $(DEBUG)%.o:$(SRC)/%.cpp
 	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
 
 $(DEBUG)%.o:$(IMGUI_DIR)/%.cpp
+	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
+
+$(DEBUG)%.o:$(IMGUI_MISC_DIR)/%.cpp
 	$(CC) $(CFLAGS) $(DEBUGFLAG) -c -o $@ $<
 
 $(DEBUG)%.o:$(SRC)$(ALGS_DIR)/%.cpp

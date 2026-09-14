@@ -13,6 +13,8 @@
 
 #elif _WIN32
 
+#include <Windows.h>
+
 #include <SDL.h>
 #include <SDL_image.h>
 
@@ -137,12 +139,6 @@ private:
     void DrawAlgMenuElements();
 
     // popups
-    // draw and handle logic for save AS popup
-    void DrawSavePopup();
-    // draw and handle logic save warning and error popups
-    void DrawSaveWarningAndErrorPopup();
-    // draw and handle logic for save popup
-    void DrawSaveWarningPopup();
     // draw and handle logic for settings popup
     void DrawSettingsPopup();
     // draw and handle logic middle buttons errors popups

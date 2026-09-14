@@ -4,11 +4,15 @@
 #include <string>
 #include <vector>
 
+#include <math.h>
+
 #ifdef __linux__
 
 #include <SDL2/SDL.h>
 
 #elif _WIN32
+
+#include <Windows.h>
 
 #include <SDL.h>
 

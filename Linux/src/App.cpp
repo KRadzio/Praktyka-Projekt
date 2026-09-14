@@ -11,7 +11,7 @@ App &App::GetInstance()
 
 int App::Init()
 {
-    setlocale(LC_ALL, "en_US.UTF-8");
+    setlocale(LC_ALL, "pl_PL.UTF-8");
     // SDL Init
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -157,7 +157,7 @@ int App::MainLoop()
 void App::Cleanup()
 {
     // Cleanup
-    for (u_int64_t it = 0; it < algorithmsAvailable.size(); it++)
+    for (uint64_t it = 0; it < algorithmsAvailable.size(); it++)
         delete algorithmsAvailable[it];
     algorithmsAvailable.clear();
     inputImage.ClearImage();

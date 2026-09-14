@@ -39,7 +39,7 @@ void Hought::AlgorithmFunction(Image *outputImage)
                 int currRo;
                 for (int t = 0; t < THETA_NUM; t++)
                 {
-                    currRo = col * cos(t * (M_PIf / 180)) + row * sin(t * (M_PIf / 180));
+                    currRo = col * cos(t * (M_PI / 180)) + row * sin(t * (M_PI / 180));
                     acumulator[currRo + roMax][t]++;
                     if (acumulator[currRo + roMax][t] > maxHoughtVal)
                     {

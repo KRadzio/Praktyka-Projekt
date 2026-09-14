@@ -1,13 +1,13 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
-#include <SDL2/SDL.h>
-
 #ifdef __linux__
 
 #include <SDL2/SDL.h>
 
 #elif _WIN32
+
+#include <Windows.h>
 
 #include <SDL.h>
 

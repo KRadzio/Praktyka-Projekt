@@ -92,7 +92,16 @@ void Binarization::AlgorithmFunction(Image *outputImage)
                 Image::Pixel pix = copy.GetPixel(col, row);
                 Gx = copy.GetPixel(col + 1, row).brightnes - copy.GetPixel(col - 1, row).brightnes;
                 Gy = copy.GetPixel(col, row + 1).brightnes - copy.GetPixel(col, row - 1).brightnes;
+#ifdef __linux__
+
                 G = std::max(abs(Gx), abs(Gy));
+
+#elif _WIN32
+
+                G = max(abs(Gx), abs(Gy));
+
+#endif
+               
                 sum_G += G;
                 sum_JG += pix.brightnes * G;
             }
