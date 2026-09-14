@@ -57,7 +57,10 @@ void MorphologicAlgorithm::DrawInputArray()
 
 void MorphologicAlgorithm::CalculateOffsets()
 {
-
+    offsetLeft = 0;
+    offsetRight = 0;
+    offsetTop = 0;
+    offsetBottom = 0;
     // copy element
     for (int i = 0; i < elementSize; i++)
         for (int j = 0; j < elementSize; j++)
