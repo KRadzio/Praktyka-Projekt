@@ -191,6 +191,27 @@ int32_t Image::SaveImageAs(std::filesystem::path path)
 
 int32_t Image::SaveImageAs(std::filesystem::path dirPath, char *filename, int extension)
 {
+#ifdef _WIN32
+    if (!file.empty())
+    {
+        // assume Windows 1250 filepath
+        int wlen = MultiByteToWideChar(1250, 0, file.c_str(), -1, NULL, 0);
+        if (wlen > 0)
+        {
+            std::wstring wfile(wlen, L'\0');
+            MultiByteToWideChar(1250, 0, file.c_str(), -1, &wfile[0], wlen);
+
+            int utf8len = WideCharToMultiByte(CP_UTF8, 0, wfile.c_str(), -1, NULL, 0, NULL, NULL);
+            if (utf8len > 0)
+            {
+                std::string utf8file(utf8len, '\0');
+                WideCharToMultiByte(CP_UTF8, 0, wfile.c_str(), -1, &utf8file[0], utf8len, NULL, NULL);
+                utf8file.erase(std::find(utf8file.begin(), utf8file.end(), '\0'), utf8file.end());
+                file = utf8file;
+            }
+        }
+    }
+#endif
     if (surface == nullptr)
     {
         error = "No surface could not save\n";
