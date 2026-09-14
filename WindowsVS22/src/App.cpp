@@ -121,14 +121,7 @@ int App::MainLoop()
         DrawPicturesAndMiddle();
         DrawHistogramsAndFunctions();
 
-        if (helpWindowActive)
-            DrawHelpMenu();
-
         ImGui::PopFont();
-
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
 
         Render();
 
@@ -253,22 +246,11 @@ void App::DrawMenuBar()
     if (ImGui::BeginMenu("Ustawienia"))
     {
         if (currAlgorithm != nullptr)
-            ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled, currAlgorithm->CanBeAutoRefreshed());
+            ImGui::MenuItem("Automatyczne odświeżanie", NULL, &autoRefreshPictureEnabled, currAlgorithm->CanBeAutoRefreshed());
         else
-            ImGui::MenuItem("Automatyczne odświerzanie", NULL, &autoRefreshPictureEnabled, false);
+            ImGui::MenuItem("Automatyczne odświeżanie", NULL, &autoRefreshPictureEnabled, false);
 
         ImGui::MenuItem("Czas odświerzania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
-        ImGui::EndMenu();
-    }
-
-    // help menu and imgui demo
-    if (ImGui::BeginMenu("Pomoc"))
-    {
-        if (ImGui::MenuItem("O programie", NULL, helpWindowActive))
-            helpWindowActive = !helpWindowActive;
-        ImGui::Separator();
-        if (ImGui::MenuItem("Pokaż ImGui Demo", NULL, show_demo_window))
-            show_demo_window = !show_demo_window;
         ImGui::EndMenu();
     }
 
@@ -700,19 +682,6 @@ void App::DrawResetDonePopup()
         }
     }
     ImGui::EndPopup();
-}
-
-void App::DrawHelpMenu()
-{
-    // not finished
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(HELP_WINDOW_WIDTH, HELP_WINDOW_HEIGHT));
-    if (ImGui::Begin("O programie", &helpWindowActive, ImGuiWindowFlags_NoSavedSettings))
-    {
-        ImGui::Text("Ta sekcja jest jeszcze do uzupełnienia");
-        ImGui::End();
-    }
 }
 
 void App::ResetParameters()

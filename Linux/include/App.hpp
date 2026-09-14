@@ -149,8 +149,6 @@ private:
     // draw and handle logic for resets buttons
     void DrawResetDonePopup();
 
-    // other
-    void DrawHelpMenu();
     // here the algorithm thread is started
     void ResetParameters();
     // refresh logic
@@ -162,7 +160,6 @@ private:
 private:
     // App
     // flags
-    bool show_demo_window = false;
     bool runLoop = true;
     bool mainLoadMenuActive = false; // to avoid conflict with extra image loading
     bool mainSaveAsMenuActive = false;
@@ -173,7 +170,6 @@ private:
     bool errorCopying = false;
     bool autoRefreshPictureEnabled = false;
     bool settingsPopupActive = false;
-    bool helpWindowActive = false;
     bool resetDonePopupActive = false;
 
     // image histograms and plot flags
