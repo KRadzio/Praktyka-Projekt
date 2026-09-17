@@ -24,10 +24,10 @@ void ContourInner::AlgorithmFunction(Image *outputImage)
             bool elementFits = true; 
 
             // check if every element part fits inside if not stop checking
-            for (int localRow = row - offsetTop, elementRow = 0; localRow <= row + offsetBottom; localRow++, elementRow++)
+            for (int localRow = row - offsetTop; localRow < row + offsetBottom + 1; localRow++)
             {
-                for (int localCol = col - offsetLeft, elementCol = 0; localCol <= col + offsetRight; localCol++, elementCol++)
-                    if (elemntCopy[elementRow][elementCol] && copyRead.GetPixel(localCol, localRow).brightnes == WHITE)
+                for (int localCol = col - offsetLeft; localCol <= col + offsetRight; localCol++)
+                    if (elemntCopy[localRow - row + elementSize / 2][localCol - col + elementSize / 2] && copyRead.GetPixel(localCol, localRow).brightnes == WHITE)
                         {
                             elementFits = false;
                             break;

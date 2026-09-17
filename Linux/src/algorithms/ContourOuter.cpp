@@ -24,12 +24,12 @@ void ContourOuter::AlgorithmFunction(Image *outputImage)
             // if part of object on picture
             if (copyRead.GetPixel(col, row).brightnes == BLACK)
             {
-                for (int localRow = row - offsetTop, elementRow = 0; localRow <= row + offsetBottom; localRow++, elementRow++)
+                for (int localRow = row - offsetTop; localRow <= row + offsetBottom; localRow++)
                 {
-                    for (int localCol = col - offsetLeft, elementCol = 0; localCol <= col + offsetRight; localCol++, elementCol++)
+                    for (int localCol = col - offsetLeft; localCol <= col + offsetRight; localCol++)
                     {
                         // if part of element 
-                        if (elemntCopy[elementRow][elementCol])
+                        if (elemntCopy[localRow - row + elementSize / 2][localCol - col + elementSize / 2])
                             copy.SetPixelBlack(localCol, localRow);
                     }
                 }
