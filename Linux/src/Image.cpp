@@ -72,12 +72,6 @@ Image::~Image()
         SDL_DestroyTexture(texture);
 }
 
-void Image::CopyBrightnessHistogram(float *dst)
-{
-    for (int i = 0; i < MAX_VAL; i++)
-        dst[i] = lightValues[i];
-}
-
 void Image::CopyNormalisedBrightnessHistogram(float *dst)
 {
     for (int i = 0; i < MAX_VAL; i++)
@@ -269,57 +263,6 @@ int32_t Image::SaveImageAs(std::filesystem::path dirPath, std::u8string filename
         else
             return 0;
     }
-}
-
-void Image::ConvertFromPallete()
-{
-    // normalize
-    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
-    SDL_LockSurface(surface);
-    SDL_LockSurface(newSurface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
-    for (int i = 0; i < width; i++)
-    {
-        for (int j = 0; j < height; j++)
-        {
-            // now convert the color using the pallete
-            uint8_t colorIndex = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            // the colorIndex should not be grater than ncolors of the pallete
-            SDL_Color newColor = surface->format->palette->colors[colorIndex];
-            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = newColor.b;
-            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = newColor.g;
-            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = newColor.r;
-        }
-    }
-    SDL_UnlockSurface(newSurface);
-    SDL_UnlockSurface(surface);
-    SDL_FreeSurface(surface);
-    surface = newSurface;
-}
-
-void Image::NormalizeFormat()
-{
-    // change the numbver of bytes per pixel
-    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
-    SDL_LockSurface(surface);
-    SDL_LockSurface(newSurface);
-    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
-    for (int i = 0; i < width; i++)
-    {
-        for (int j = 0; j < height; j++)
-        {
-            uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
-            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
-            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
-            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
-        }
-    }
-    SDL_UnlockSurface(newSurface);
-    SDL_UnlockSurface(surface);
-    SDL_FreeSurface(surface);
-    surface = newSurface;
 }
 
 int32_t Image::SetSourceImage(std::filesystem::path path)
@@ -573,47 +516,46 @@ void Image::RefreshTexture()
     texture = SDL_CreateTextureFromSurface(Renderer::GetInstance().GetRenderer(), surface);
 }
 
-Image::Pixel Image::GetPixel(int x, int y)
+Image::Pixel Image::GetPixel(int col, int row)
 {
     SDL_LockSurface(surface);
     Pixel px;
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    px.b = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel];
-    px.g = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1];
-    px.r = surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2];
+    px.b = surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel];
+    px.g = surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 1];
+    px.r = surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 2];
     SDL_UnlockSurface(surface);
     px.brightnes = (px.b + px.g + px.r) / 3;
     return px;
 }
 
-// fix here
-void Image::SetPixel(int x, int y, Pixel pix)
+void Image::SetPixel(int col, int row, Pixel pix)
 {
     SDL_LockSurface(surface);
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = pix.b;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = pix.g;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = pix.r;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel] = pix.b;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 1] = pix.g;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 2] = pix.r;
     SDL_UnlockSurface(surface);
 }
 
-void Image::SetPixelWhite(int x, int y)
+void Image::SetPixelWhite(int col, int row)
 {
     SDL_LockSurface(surface);
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = 255;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = 255;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 255;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel] = 255;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 1] = 255;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 2] = 255;
     SDL_UnlockSurface(surface);
 }
 
-void Image::SetPixelBlack(int x, int y)
+void Image::SetPixelBlack(int col, int row)
 {
     SDL_LockSurface(surface);
     uint8_t *surfacePixels = (uint8_t *)surface->pixels;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel] = 0;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 1] = 0;
-    surfacePixels[y * surface->pitch + x * surface->format->BytesPerPixel + 2] = 0;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel] = 0;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 1] = 0;
+    surfacePixels[row * surface->pitch + col * surface->format->BytesPerPixel + 2] = 0;
     SDL_UnlockSurface(surface);
 }
 
@@ -659,10 +601,53 @@ void Image::CopyNoTexture(Image &other)
     filePath = other.filePath;
 }
 
-void Image::CopyOnlySurfaceAndSize(Image &other)
+void Image::ConvertFromPallete()
 {
-    ClearImage();
-    surface = SDL_DuplicateSurface(other.surface);
-    width = other.width;
-    height = other.height;
+    // normalize
+    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    SDL_LockSurface(newSurface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            // now convert the color using the pallete
+            uint8_t colorIndex = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            // the colorIndex should not be grater than ncolors of the pallete
+            SDL_Color newColor = surface->format->palette->colors[colorIndex];
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = newColor.b;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = newColor.g;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = newColor.r;
+        }
+    }
+    SDL_UnlockSurface(newSurface);
+    SDL_UnlockSurface(surface);
+    SDL_FreeSurface(surface);
+    surface = newSurface;
+}
+
+void Image::NormalizeFormat()
+{
+    // change the numbver of bytes per pixel
+    SDL_Surface *newSurface = SDL_CreateRGBSurface(0, width, height, 24, 0, 0, 0, 0);
+    SDL_LockSurface(surface);
+    SDL_LockSurface(newSurface);
+    uint8_t *surfacePixels = (uint8_t *)surface->pixels;
+    uint8_t *newSurfacePixels = (uint8_t *)newSurface->pixels;
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
+        {
+            uint8_t br = surfacePixels[j * surface->pitch + i * surface->format->BytesPerPixel];
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel] = br;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 1] = br;
+            newSurfacePixels[j * newSurface->pitch + i * newSurface->format->BytesPerPixel + 2] = br;
+        }
+    }
+    SDL_UnlockSurface(newSurface);
+    SDL_UnlockSurface(surface);
+    SDL_FreeSurface(surface);
+    surface = newSurface;
 }
