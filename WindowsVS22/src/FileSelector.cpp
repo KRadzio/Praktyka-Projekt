@@ -21,78 +21,13 @@ FileSelector &FileSelector::GetInstance()
     return *instance;
 }
 
-void FileSelector::DeselectCurrEntry()
+void FileSelector::SetDirectoryPath(std::filesystem::path path)
 {
-    // set to none
-    if (currEntrySelected != "")
+    if (std::filesystem::is_directory(path))
     {
-        dirMaped[currEntrySelected] = false;
-        currEntrySelected = "";
+        currDirectoryPath = path;
+        RefreshCurrDir();
     }
-}
-
-int FileSelector::SelectEntry(std::filesystem::path entryname)
-{
-    // empty select the new one
-    if (currEntrySelected == "")
-    {
-        currEntrySelected = entryname;
-        dirMaped[currEntrySelected] = true;
-        return Ignore;
-    }
-
-    // change selection to the new one
-    if (entryname != currEntrySelected)
-    {
-        dirMaped[currEntrySelected] = false;
-        currEntrySelected = entryname;
-        dirMaped[currEntrySelected] = true;
-        return Ignore;
-    }
-
-    // confirm selection
-    else
-    {
-        dirMaped[currEntrySelected] = false;
-        // dir
-        if (std::filesystem::is_directory(entryname))
-        {
-            currDirectoryPath = entryname;
-            RefreshCurrDir();
-            return DirEntry;
-        }
-        // file
-        else if (std::filesystem::is_regular_file(entryname))
-            return FileEntry;
-        return Ignore;
-    }
-}
-
-int FileSelector::SelectCurrEntry()
-{
-    // empty do nothing
-    if (currEntrySelected == "")
-        return Ignore;
-    else
-    {
-        // dir
-        if (std::filesystem::is_directory(currEntrySelected))
-        {
-            currDirectoryPath = currEntrySelected;
-            RefreshCurrDir();
-            return DirEntry;
-        }
-        // file
-        else if (std::filesystem::is_regular_file(currEntrySelected))
-            return FileEntry;
-        return Ignore;
-    }
-}
-
-void FileSelector::GoUpADirectory()
-{
-    currDirectoryPath = currDirectoryPath.parent_path();
-    RefreshCurrDir();
 }
 
 void FileSelector::RefreshCurrDir()
@@ -121,29 +56,29 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("WczytajPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        auto dir = GetCurrDir();
-        auto map = GetDirMaped();
+        // NEEDS A COPY or the for each loop will break when going down a directory
+        auto dir(currDir);
         // curr dir path
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
 #ifdef __linux__
-        ImGui::Text("%s", GetCurrDirectoryPath().c_str());
+        ImGui::Text("%s", currDirectoryPath.c_str());
 #elif _WIN32
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().generic_u8string().c_str());
+        ImGui::Text("%s", currDirectoryPath.generic_u8string().c_str());
 #endif
         ImGui::Separator();
         // display entries as selectebles
         for (auto entry : dir)
 #ifdef __linux__
-            if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().c_str(), dirMaped[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #elif _WIN32
-            if (ImGui::Selectable(entry.path().filename().string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().string().c_str(), dirMaped[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #endif
                 if (SelectEntry(entry.path()) == FileEntry)
                 {
                     if (!noTexture)
                     {
                         // could not be loaded
-                        if (imageToLoad->SetSourceImage(GetFullPathToEntry()) == -1)
+                        if (imageToLoad->SetSourceImage(currEntrySelected) == -1)
                             errorPopupActive = true;
                         else
                         {
@@ -154,7 +89,7 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                     else
                     {
                         // could not be loaded
-                        if (imageToLoad->SetSourceImageNoTEXTURE(GetFullPathToEntry()) == -1)
+                        if (imageToLoad->SetSourceImageNoTEXTURE(currEntrySelected) == -1)
                             errorPopupActive = true;
                         else
                         {
@@ -173,7 +108,7 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                 if (!noTexture)
                 {
                     // could not be loaded
-                    if (imageToLoad->SetSourceImage(GetFullPathToEntry()) == -1)
+                    if (imageToLoad->SetSourceImage(currEntrySelected) == -1)
                         errorPopupActive = true;
                     else
                     {
@@ -184,7 +119,7 @@ int32_t FileSelector::LoadMenu(Image *imageToLoad, bool noTexture)
                 else
                 {
                     // could not be loaded
-                    if (imageToLoad->SetSourceImageNoTEXTURE(GetFullPathToEntry()) == -1)
+                    if (imageToLoad->SetSourceImageNoTEXTURE(currEntrySelected) == -1)
                         errorPopupActive = true;
                     else
                     {
@@ -243,22 +178,22 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("ZapiszPlik", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
-        auto dir = GetCurrDir();
-        auto map = GetDirMaped();
+        // NEEDS A COPY or the for each loop will break when going down a directory
+        auto dir(currDir);
         // curr dir path
         ImGui::BeginChild("Dir", ImVec2(DIR_LIST_WIDTH, DIR_LIST_HEIGHT), ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_HorizontalScrollbar);
 #ifdef __linux__
-        ImGui::Text("%s", GetCurrDirectoryPath().c_str());
+        ImGui::Text("%s", currDirectoryPath.c_str());
 #elif _WIN32
-        ImGui::Text("%s", FileSelector::GetInstance().GetCurrDirectoryPath().string().c_str());
+        ImGui::Text("%s", currDirectoryPath.string().c_str());
 #endif
         ImGui::Separator();
         // display dir as selectables
         for (auto entry : dir)
 #ifdef __linux__
-            if (ImGui::Selectable(entry.path().filename().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().c_str(), dirMaped[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #elif _WIN32
-            if (ImGui::Selectable(entry.path().filename().string().c_str(), map[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
+            if (ImGui::Selectable(entry.path().filename().string().c_str(), dirMaped[entry.path()], ImGuiSelectableFlags_NoAutoClosePopups))
 #endif
                 if (SelectEntry(entry.path()) == FileSelector::FileEntry)
                     warningPopupActive = true;
@@ -267,7 +202,7 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
         ImGui::Separator();
 
         ImGui::Text("Nazwa pliku");
-        ImGui::InputText("wpisz", (std::string*)&fileNameBuff, 64);
+        ImGui::InputText("wpisz", (std::string *)&fileNameBuff, 64);
 
         const char *ext[] = {".png", ".jpg", ".bmp"};
         ImGui::Text("Rozszerzenie");
@@ -283,14 +218,14 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
         if (ImGui::Button("Zapisz", ImVec2(CANCEL_BUTTON_W_FS, 0)))
         {
             // can not be empty
-            //std::string buffStr = fileNameBuff;
+            // std::string buffStr = fileNameBuff;
             if (fileNameBuff.empty())
                 errorPopupActive = true;
 // already exists
 #ifdef __linux__
-            else if (FileExists(GetCurrDirectoryPath().string() + '/' + fileNameBuff + ext[currExtension]))
+            else if (FileExists(currDirectoryPath.string() + '/' + fileNameBuff + ext[currExtension]))
 #elif _WIN32
-            else if (FileSelector::GetInstance().FileExists(FileSelector::GetInstance().GetCurrDirectoryPath().u8string() + u8'/' + fileNameBuff + (char8_t*)ext[currExtension]))
+            else if (FileExists(currDirectoryPath.u8string() + u8'/' + fileNameBuff + (char8_t *)ext[currExtension]))
 #endif
             {
                 warningPopupActive = true;
@@ -299,7 +234,7 @@ int32_t FileSelector::SaveAsMenu(Image *imageToSave)
             else
             {
                 returnCode = 0;
-                imageToSave->SaveImageAs(GetCurrDirectoryPath(), fileNameBuff, currExtension);
+                imageToSave->SaveImageAs(currDirectoryPath, fileNameBuff, currExtension);
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -381,13 +316,13 @@ void FileSelector::WarningAndErrorPopUp(Image *imageToSave, int32_t *returnCode)
                 if (customName)
                 {
                     *returnCode = 0;
-                    imageToSave->SaveImageAs(FileSelector::GetInstance().GetCurrDirectoryPath(), fileNameBuff, currExtension);
+                    imageToSave->SaveImageAs(currDirectoryPath, fileNameBuff, currExtension);
                     customName = false;
                 }
                 else
                 {
                     *returnCode = 0;
-                    imageToSave->SaveImageAs(FileSelector::GetInstance().GetFullPathToEntry());
+                    imageToSave->SaveImageAs(currEntrySelected);
                 }
                 warningPopupActive = false;
                 ImGui::CloseCurrentPopup();
@@ -396,7 +331,7 @@ void FileSelector::WarningAndErrorPopUp(Image *imageToSave, int32_t *returnCode)
             if (ImGui::Button("Anuluj", ImVec2(CANCEL_BUTTON_W_FS, 0)))
             {
                 warningPopupActive = false;
-                FileSelector::GetInstance().DeselectCurrEntry();
+                DeselectCurrEntry();
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -422,4 +357,78 @@ void FileSelector::WarningAndErrorPopUp(Image *imageToSave, int32_t *returnCode)
             ImGui::EndPopup();
         }
     }
+}
+
+void FileSelector::DeselectCurrEntry()
+{
+    // set to none
+    if (currEntrySelected != "")
+    {
+        dirMaped[currEntrySelected] = false;
+        currEntrySelected = "";
+    }
+}
+
+int FileSelector::SelectEntry(std::filesystem::path entryname)
+{
+    // empty select the new one
+    if (currEntrySelected == "")
+    {
+        currEntrySelected = entryname;
+        dirMaped[currEntrySelected] = true;
+        return Ignore;
+    }
+
+    // change selection to the new one
+    if (entryname != currEntrySelected)
+    {
+        dirMaped[currEntrySelected] = false;
+        currEntrySelected = entryname;
+        dirMaped[currEntrySelected] = true;
+        return Ignore;
+    }
+
+    // confirm selection
+    else
+    {
+        dirMaped[currEntrySelected] = false;
+        // dir
+        if (std::filesystem::is_directory(entryname))
+        {
+            currDirectoryPath = entryname;
+            RefreshCurrDir();
+            return DirEntry;
+        }
+        // file
+        else if (std::filesystem::is_regular_file(entryname))
+            return FileEntry;
+        return Ignore;
+    }
+}
+
+int FileSelector::SelectCurrEntry()
+{
+    // empty do nothing
+    if (currEntrySelected == "")
+        return Ignore;
+    else
+    {
+        // dir
+        if (std::filesystem::is_directory(currEntrySelected))
+        {
+            currDirectoryPath = currEntrySelected;
+            RefreshCurrDir();
+            return DirEntry;
+        }
+        // file
+        else if (std::filesystem::is_regular_file(currEntrySelected))
+            return FileEntry;
+        return Ignore;
+    }
+}
+
+void FileSelector::GoUpADirectory()
+{
+    currDirectoryPath = currDirectoryPath.parent_path();
+    RefreshCurrDir();
 }

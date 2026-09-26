@@ -26,7 +26,8 @@
 
 #define CANCEL_BUTTON_W_FS 120
 
-// RENAME TO FILEMANAGER
+// Used for load and save menus and file system operations
+// EXEPT for loading and saving config file
 
 // singleton
 class FileSelector
@@ -44,24 +45,11 @@ public:
     static FileSelector &GetInstance();
     // only current directory path
     inline std::filesystem::path GetCurrDirectoryPath() { return currDirectoryPath; }
-    // vector of directory entries
-    inline std::vector<std::filesystem::directory_entry> GetCurrDir() { return currDir; }
-    // current directory entries mapped (used to determine which entry is selected)
-    inline std::map<std::filesystem::path, bool> &GetDirMaped() { return dirMaped; }
-    // full path to selected entry
-    inline std::filesystem::path GetFullPathToEntry() { return currEntrySelected; }
-    void DeselectCurrEntry();
-
-    // select by path
-    int SelectEntry(std::filesystem::path entryname);
-    // if any entry has been selected (flag is set in map)
-    int SelectCurrEntry();
-    // set current directory to parent directory
-    void GoUpADirectory();
+    // set the directory path after loading config
+    void SetDirectoryPath(std::filesystem::path path);
     // refresh the directory vector and map
     // sets currenEntry to none
     void RefreshCurrDir();
-
     // load an image
     // 0 ok
     // 1 canceled
@@ -83,6 +71,14 @@ public:
 
 private:
     void WarningAndErrorPopUp(Image *imageToSave, int32_t *returnCode);
+
+    void DeselectCurrEntry();
+    // select by path
+    int SelectEntry(std::filesystem::path entryname);
+    // if any entry has been selected (flag is set in map)
+    int SelectCurrEntry();
+    // set current directory to parent directory
+    void GoUpADirectory();
 
 private:
     FileSelector();
