@@ -212,6 +212,8 @@ private:
     ImGuiIO *io = nullptr;
     ImGuiStyle *style = nullptr;
     ImFont *lato = nullptr;
+
+    bool show_demo_window = false;
 };
 
 #endif

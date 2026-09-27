@@ -137,6 +137,9 @@ int App::MainLoop()
 
         ImGui::PopFont();
 
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+
         Render();
 
         // calculate time passed
@@ -269,6 +272,14 @@ void App::DrawMenuBar()
             ImGui::MenuItem("Automatyczne odświeżanie", NULL, &autoRefreshPictureEnabled, true);
 
         ImGui::MenuItem("Czas odświeżania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
+        ImGui::EndMenu();
+    }
+
+     // imgui demo
+    if (ImGui::BeginMenu("Pomoc"))
+    {
+        if (ImGui::MenuItem("Pokaż ImGui Demo", NULL, show_demo_window))
+            show_demo_window = !show_demo_window;
         ImGui::EndMenu();
     }
 
