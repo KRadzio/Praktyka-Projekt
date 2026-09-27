@@ -10,12 +10,8 @@ void Closing::AlgorithmFunction(Image *outputImage)
 {
     // copy
     CopyToLocalVariable(outputImage);
-    // element offsets
-    CalculateOffsets();
-    // dilatation 
-    DilatationFunc(outputImage);
-    // erosion
-    ErosionFunc(outputImage);
-    // copy back to output
+
+    // TUTAJ UZUPEŁNIĆ
+
     SaveToOutput(outputImage);
 }

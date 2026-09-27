@@ -83,94 +83,9 @@ void LinearFilter::AlgorithmFunction(Image *outputImage)
 {
     // local copy
     CopyToLocalVariable(outputImage);
-    // copy - to save
-    // copyRead - read
-    // this operation require 2 copies, one for readin, the other to save result
-    Image copyRead;
-    copyRead.CopyNoTexture(copy);
-    int32_t offset = linearFilterSize / 2;
-    int32_t maskCopy[7][7]; // copy the current mask (there are 3 sizes this way its easier)
-    bool normalise = true;
-    int32_t maskSum = 0;
 
-    // copy mask (easier this way)
-    for (int i = 0; i < linearFilterSize; i++)
-        for (int j = 0; j < linearFilterSize; j++)
-        {
-            if (linearFilterSize == S3x3)
-                maskCopy[i][j] = linearMask3x3[i][j];
-            else if (linearFilterSize == S5x5)
-                maskCopy[i][j] = linearMask5x5[i][j];
-            else
-                maskCopy[i][j] = linearMask7x7[i][j];
+    // TUTAJ UZUPEŁNIĆ
 
-            // all elements must be > 0
-            if (maskCopy[i][j] <= 0)
-                normalise = false;
-            maskSum += maskCopy[i][j];
-        }
-
-    for (int row = offset; row < copyRead.GetHeight() - offset; row++)
-    {
-        for (int col = offset; col < copyRead.GetWidth() - offset; col++)
-        {
-            auto pix = copyRead.GetPixel(col, row);
-            int JR = 0;
-            int JG = 0;
-            int JB = 0;
-
-            for (int y = 0; y < linearFilterSize; y++)
-            {
-                for (int x = 0; x < linearFilterSize; x++)
-                {
-                    auto neighbourPix = copyRead.GetPixel(col + x - offset, row + y - offset);
-                    JR += neighbourPix.r * maskCopy[y][x];
-                    JG += neighbourPix.g * maskCopy[y][x];
-                    JB += neighbourPix.b * maskCopy[y][x];
-                }
-            }
-
-            if (normalise)
-            {
-                JR /= maskSum;
-                JG /= maskSum;
-                JB /= maskSum;
-                pix.r = JR;
-                pix.g = JG;
-                pix.b = JB;
-            }
-            else
-            {
-                JR = abs(JR);
-                JG = abs(JG);
-                JB = abs(JB);
-                if (linearFilterType == SobelHorizontal || linearFilterType == SobelVertical || linearFilterType == Laplasjan)
-                {
-                    JR += 127;
-                    JG += 127;
-                    JB += 127;
-                }
-                if (JR > 255)
-                    pix.r = 255;
-                else
-                    pix.r = JR;
-
-                if (JG > 255)
-                    pix.g = 255;
-                else
-                    pix.g = JG;
-
-                if (JB > 255)
-                    pix.b = 255;
-                else
-                    pix.b = JB;
-            }
-            copy.SetPixel(col, row, pix);
-        }
-        if (Canceled(outputImage))
-            return;
-        AutomaticRefresh(outputImage);
-    }
     // copy back to output
     SaveToOutput(outputImage);
 }
@@ -374,7 +289,7 @@ void LinearFilter::ParseCustomFilter(std::string line, int size)
             colSplitCount++;
     }
     // invalid line skip
-    if(rowSplitCount != size - 1 || colSplitCount != size * size - size)
+    if (rowSplitCount != size - 1 || colSplitCount != size * size - size)
         return;
 
     for (int i = 0; i < size; i++)

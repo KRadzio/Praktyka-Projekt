@@ -151,100 +151,13 @@ void MorphologicAlgorithm::CalculateOffsets()
 void MorphologicAlgorithm::ErosionFunc(Image *outputImage)
 {
 
-    // CopyToLocalVariable(outputImage);
-
-    copyRead.CopyNoTexture(copy);
-
-    for (int row = offsetTop; row < copyRead.GetHeight() - offsetBottom; row++)
-    {
-        for (int col = offsetLeft; col < copyRead.GetWidth() - offsetRight; col++)
-        {
-            auto pix = copyRead.GetPixel(col, row);
-            if (pix.brightnes == BLACK)
-            {
-                bool elemntOutside = false;
-                for (int y = row - offsetTop; y < row + offsetBottom + 1; y++)
-                {
-                    for (int x = col - offsetLeft; x < col + offsetRight + 1; x++)
-                    {
-                        auto neighbourPix = copyRead.GetPixel(x, y);
-                        if (elemntCopy[y - row + elementSize / 2][x - col + elementSize / 2])
-                        {
-                            // erese pixel, not all element fields are black
-                            if (neighbourPix.brightnes == WHITE)
-                            {
-                                elemntOutside = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (elemntOutside)
-                        break;
-                }
-                if (elemntOutside)
-                    copy.SetPixelWhite(col, row);
-            }
-        }
-        if (Canceled(outputImage))
-            return;
-        AutomaticRefresh(outputImage);
-    }
-    // SaveToOutput(outputImage);
+    // TUTAJ UZUPEŁNIĆ (DWIE WYMAGANE METODY SĄ W ERIOSION.CPP)
 }
 
 void MorphologicAlgorithm::DilatationFunc(Image *outputImage)
 {
 
-    // CopyToLocalVariable(outputImage);
-
-    copyRead.CopyNoTexture(copy);
-
-    for (int row = offsetTop; row < copyRead.GetHeight() - offsetBottom; row++)
-    {
-        for (int col = offsetLeft; col < copyRead.GetWidth() - offsetRight; col++)
-        {
-            auto pix = copyRead.GetPixel(col, row);
-            if (pix.brightnes == BLACK)
-            {
-                bool elemntOutside = false;
-                for (int y = row - offsetTop; y < row + offsetBottom + 1; y++)
-                {
-                    for (int x = col - offsetLeft; x < col + offsetRight + 1; x++)
-                    {
-                        auto neighbourPix = copyRead.GetPixel(x, y);
-                        if (elemntCopy[y - row + elementSize / 2][x - col + elementSize / 2])
-                        {
-                            // element outside
-                            if (neighbourPix.brightnes == WHITE)
-                            {
-                                elemntOutside = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (elemntOutside)
-                        break;
-                }
-                // set all outside pixels to black
-                if (elemntOutside)
-                {
-                    for (int y = row - offsetTop; y < row + offsetBottom + 1; y++)
-                    {
-                        for (int x = col - offsetLeft; x < col + offsetRight + 1; x++)
-                        {
-                            if (elemntCopy[y - row + elementSize / 2][x - col + elementSize / 2])
-                                copy.SetPixelBlack(x, y);
-                        }
-                    }
-                }
-            }
-        }
-        if (Canceled(outputImage))
-            return;
-        AutomaticRefresh(outputImage);
-    }
-    // copy back to output
-    // SaveToOutput(outputImage);
+    // TUTAJ UZUPEŁNIĆ (DWIE WYMAGANE METODY SĄ W DILATATION.CPP)
 }
 
 void MorphologicAlgorithm::ParseElement(std::string line, int size)

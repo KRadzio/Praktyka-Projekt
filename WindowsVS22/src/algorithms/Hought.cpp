@@ -6,9 +6,9 @@ Hought::Hought()
     algorithmName = "Transformacja Houghta";
 }
 
-void Hought::ParamsMenu() 
-{ 
-    ImGui::Text("Parametry wynikowe:"); 
+void Hought::ParamsMenu()
+{
+    ImGui::Text("Parametry wynikowe:");
     ImGui::Text("MaxIndexRO: %d", maxIndexRo);
     ImGui::Text("MaxIndexTheta: %d", maxIndexTheta);
     ImGui::Text("MaxHoughtVal: %d", maxHoughtVal);
@@ -19,44 +19,9 @@ void Hought::AlgorithmFunction(Image *outputImage)
 {
     // local copy
     CopyToLocalVariable(outputImage);
-    roMax = sqrt(copy.GetHeight() * copy.GetHeight() + copy.GetWidth() * copy.GetWidth());
 
-    acumulator = std::vector<std::vector<int32_t>>(2 * roMax);
-    for (int i = 0; i < 2 * roMax; i++)
-        acumulator[i] = std::vector<int32_t>(THETA_NUM);
+    // TUTAJ UZUPEŁNIĆ
 
-    for (int i = 0; i < 2 * roMax; i++)
-        for (int j = 0; j < THETA_NUM; j++)
-            acumulator[i][j] = 0;
-
-    for (int row = 0; row < copy.GetHeight(); row++)
-    {
-        for (int col = 0; col < copy.GetWidth(); col++)
-        {
-            auto pix = copy.GetPixel(col, row);
-            if (pix.brightnes == BLACK)
-            {
-                int currRo;
-                for (int t = 0; t < THETA_NUM; t++)
-                {
-                    currRo = col * cos(t * (M_PI / 180)) + row * sin(t * (M_PI / 180));
-                    acumulator[currRo + roMax][t]++;
-                    if (acumulator[currRo + roMax][t] > maxHoughtVal)
-                    {
-                        maxHoughtVal = acumulator[currRo + roMax][t];
-                        maxIndexTheta = t;
-                        maxIndexRo = currRo;
-                    }
-                }
-            }
-        }
-        if (Canceled(outputImage))
-            return;
-        // refresh for every line
-        ManualRefresh(outputImage);
-    }
-
-    // refresh after the end
     // copy back to output
     SaveToOutput(outputImage);
 }

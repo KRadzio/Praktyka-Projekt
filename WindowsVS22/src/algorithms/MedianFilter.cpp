@@ -46,63 +46,9 @@ void MedianFilter::AlgorithmFunction(Image *outputImage)
 {
     // local copy
     CopyToLocalVariable(outputImage);
-    // copy - to save
-    // copyRead - read
-    // this operation require 2 copies, one for readin, the other to save result
-    Image copyRead;
-    copyRead.CopyNoTexture(copy);
-    int32_t offset = medianFilterSize / 2;
-    bool maskCopy[7][7]; // copy the current mask (there are 3 sizes this way its easier)
 
-    // copy mask
-    for (int i = 0; i < medianFilterSize; i++)
-        for (int j = 0; j < medianFilterSize; j++)
-        {
-            if (medianFilterSize == S3x3)
-                maskCopy[i][j] = medianMask3x3[i][j];
-            else if (medianFilterSize == S5x5)
-                maskCopy[i][j] = medianMask5x5[i][j];
-            else
-                maskCopy[i][j] = medianMask7x7[i][j];
-        }
+    // TUTAJ UZUPEŁNIĆ
 
-    for (int row = offset; row < copyRead.GetHeight() - offset; row++)
-    {
-        for (int col = offset; col < copyRead.GetWidth() - offset; col++)
-        {
-            auto pix = copyRead.GetPixel(col, row);
-            std::vector<int> JR;
-            std::vector<int> JG;
-            std::vector<int> JB;
-
-            for (int y = 0; y < medianFilterSize; y++)
-            {
-                for (int x = 0; x < medianFilterSize; x++)
-                {
-                    auto neighbourPix = copyRead.GetPixel(col + x - offset, row + y - offset);
-                    if (maskCopy[y][x])
-                    {
-                        JR.emplace(JR.end(), neighbourPix.r);
-                        JG.emplace(JG.end(), neighbourPix.g);
-                        JB.emplace(JB.end(), neighbourPix.b);
-                    }
-                }
-            }
-
-            std::sort(JR.begin(), JR.end());
-            std::sort(JG.begin(), JG.end());
-            std::sort(JB.begin(), JB.end());
-
-            pix.r = JR[JR.size() / 2];
-            pix.g = JG[JG.size() / 2];
-            pix.b = JB[JB.size() / 2];
-
-            copy.SetPixel(col, row, pix);
-        }
-        if (Canceled(outputImage))
-            return;
-        AutomaticRefresh(outputImage);
-    }
     SaveToOutput(outputImage);
 }
 
