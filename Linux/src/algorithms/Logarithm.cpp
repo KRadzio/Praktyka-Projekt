@@ -25,11 +25,10 @@ void Logarithm::AlgorithmFunction(Image *outputImage)
 
             copy.SetPixel(j, i, px);
         }
+        if (Canceled(outputImage))
+            return;
+        AutomaticRefresh(outputImage);
     }
-    if (Canceled(outputImage))
-        return;
-    AutomaticRefresh(outputImage);
-
     SaveToOutput(outputImage);
 }
 
