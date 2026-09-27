@@ -28,13 +28,16 @@ void ContourOuter::AlgorithmFunction(Image *outputImage)
                 {
                     for (int localCol = col - offsetLeft; localCol <= col + offsetRight; localCol++)
                     {
-                        // if part of element 
+                        // if part of element
                         if (elemntCopy[localRow - row + elementSize / 2][localCol - col + elementSize / 2])
                             copy.SetPixelBlack(localCol, localRow);
                     }
                 }
             }
         }
+        if (Canceled(outputImage))
+            return;
+        AutomaticRefresh(outputImage);
     }
 
     for (int row = 0; row < copyRead.GetHeight(); row++)
@@ -47,6 +50,9 @@ void ContourOuter::AlgorithmFunction(Image *outputImage)
             else
                 copy.SetPixelWhite(col, row);
         }
+        if (Canceled(outputImage))
+            return;
+        AutomaticRefresh(outputImage);
     }
 
     // copy back to output

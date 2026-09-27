@@ -21,25 +21,28 @@ void ContourInner::AlgorithmFunction(Image *outputImage)
     {
         for (int col = offsetLeft; col < copyRead.GetWidth() - offsetRight; col++)
         {
-            bool elementFits = true; 
+            bool elementFits = true;
 
             // check if every element part fits inside if not stop checking
             for (int localRow = row - offsetTop; localRow < row + offsetBottom + 1; localRow++)
             {
                 for (int localCol = col - offsetLeft; localCol <= col + offsetRight; localCol++)
                     if (elemntCopy[localRow - row + elementSize / 2][localCol - col + elementSize / 2] && copyRead.GetPixel(localCol, localRow).brightnes == WHITE)
-                        {
-                            elementFits = false;
-                            break;
-                        }
-                if(!elementFits)
+                    {
+                        elementFits = false;
                         break;
+                    }
+                if (!elementFits)
+                    break;
             }
 
             // contour (does not fit and pixel is black meaning an object)
             if (!elementFits && copyRead.GetPixel(col, row).brightnes == BLACK)
                 copy.SetPixelBlack(col, row);
         }
+        if (Canceled(outputImage))
+            return;
+        AutomaticRefresh(outputImage);
     }
 
     // copy back to output
