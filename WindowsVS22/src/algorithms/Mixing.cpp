@@ -10,7 +10,7 @@ void Mixing::ParamsMenu()
         ImGui::Text("%s", image2.GetImagePath().filename().c_str());
 #elif _WIN32
         ImGui::Text("%s", image2.GetImagePath().filename().u8string().c_str());
-#endif    
+#endif
     else
         ImGui::Text("Brak obrazu");
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -50,8 +50,36 @@ void Mixing::AlgorithmFunction(Image *outputImage)
     SaveToOutput(outputImage);
 }
 
-void Mixing::ResetToDefaults() 
+void Mixing::ResetToDefaults()
 {
-    mixRatio = 0.5f; 
+    mixRatio = 0.5f;
     image2.ClearImage();
+}
+
+void Mixing::Save(std::ofstream &file)
+{
+    file << "mixingRatio" << CONFIG_SPLIT_CHAR_A << mixRatio << std::endl;
+#ifdef __linux__
+    file << "mixingImagePath" << CONFIG_SPLIT_CHAR_A << image2.GetImagePath().string() << std::endl;
+#elif _WIN32
+    file << "mixingImagePath" << CONFIG_SPLIT_CHAR_A << image2.GetImagePath().u8string() << std::endl;
+#endif
+}
+
+void Mixing::Load(std::ifstream &file)
+{
+    try
+    {
+        mixRatio = std::stof(SplitLine(file));
+    }
+    catch (const std::exception &e)
+    {
+        mixRatio = 0.5f;
+    }
+    auto path = SplitLine(file);
+    if (FileSelector::GetInstance().FileExists(path))
+    {
+        if (image2.SetSourceImageNoTEXTURE(path) != 0)
+            image2.ClearImage();
+    }
 }

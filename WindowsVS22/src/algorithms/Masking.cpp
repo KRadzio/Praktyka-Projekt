@@ -9,7 +9,7 @@ void Masking::ParamsMenu()
         ImGui::Text("%s", mask.GetImagePath().filename().c_str());
 #elif _WIN32
         ImGui::Text("%s", mask.GetImagePath().filename().u8string().c_str());
-#endif  
+#endif
     else
         ImGui::Text("Brak obrazu");
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - CANCEL_BUTTON_W / 2);
@@ -50,7 +50,26 @@ void Masking::AlgorithmFunction(Image *outputImage)
     SaveToOutput(outputImage);
 }
 
-void Masking::ResetToDefaults() 
+void Masking::ResetToDefaults()
 {
     mask.ClearImage();
+}
+
+void Masking::Save(std::ofstream &file)
+{
+#ifdef __linux__
+    file << "maskPath" << CONFIG_SPLIT_CHAR_A << mask.GetImagePath().string() << std::endl;
+#elif _WIN32
+    file << "maskPath" << CONFIG_SPLIT_CHAR_A << mask.GetImagePath().u8string() << std::endl;
+#endif
+}
+
+void Masking::Load(std::ifstream &file)
+{
+    auto path = SplitLine(file);
+    if (FileSelector::GetInstance().FileExists(path))
+    {
+        if (mask.SetSourceImageNoTEXTURE(path) != 0)
+            mask.ClearImage();
+    }
 }

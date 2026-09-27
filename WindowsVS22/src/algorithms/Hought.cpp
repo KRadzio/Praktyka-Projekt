@@ -143,3 +143,15 @@ void Hought::ClearAcumulator()
         acumulator[i].clear();
     acumulator.clear();
 }
+
+// ignore the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void Hought::Save(std::ofstream &file) {} // NOTHING TO DO prams can not be set
+#pragma GCC diagnostic pop
+
+// ignore the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void Hought::Load(std::ifstream &file) {} // NOTHING TO DO prams can not be set
+#pragma GCC diagnostic pop

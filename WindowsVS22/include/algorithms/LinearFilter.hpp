@@ -50,10 +50,18 @@ public:
     void AlgorithmFunction(Image *outputImage) override;
     void ResetToDefaults() override;
 
+    void Save(std::ofstream &file) override;
+    void Load(std::ifstream &file) override;
+
 private:
     void ChangeFilter(int32_t tmp3x3[3][3], int32_t tmp5x5[5][5], int32_t tmp7x7[7][7]);
     void DrawLinearInputArray();
     void DrawLinearDisplayArray();
+
+    // used when loading
+    void SetPreDefinedFilters();
+    // to set custom filter while loading
+    void ParseCustomFilter(std::string line, int size);
 
 private:
     enum LinearFilters
@@ -78,7 +86,7 @@ private:
 #define ARRAY_FIELD_WIDTH 40
 
 private:
-    int linerFilterType = Average;
+    int linearFilterType = Average;
     int linearFilterSize = S3x3;
 
     int32_t linearMask3x3[3][3] = AVERAGE_3x3;

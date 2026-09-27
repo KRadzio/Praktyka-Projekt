@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include <math.h>
 
@@ -21,6 +22,14 @@
 #include "Image.hpp"
 #include "Mutex.hpp"
 
+#define CONFIG_SPLIT_CHAR_A '='
+#define CONFIG_FILE_DELIM_A '\n'
+
+// used in linear filter, median filter and morphological algorithms
+#define CONFIG_ROW_DELIM_A '|'
+// used in linear filter, median filter and morphological algorithms
+#define CONFIG_COL_DELIM_A ';'
+
 class Algorithm
 {
 public:
@@ -36,9 +45,15 @@ public:
 
     inline std::string GetName() { return algorithmName; }
     inline bool CanBeAutoRefreshed() { return autoRefresh; }
-    // TODO
-    // virtual void Save();
-    // virtual void Load();
+
+    // by default saves name and info that it is not impelented (to avoid the need to implement saving, but it is recomended to implement it)
+    virtual void Save(std::ofstream& file);
+    // by default load name (to avoid the need to implement loading, but it is recomended to implement it)
+    virtual void Load(std::ifstream& file);
+
+protected:
+    // return a substring after the delimiter
+    std::string SplitLine(std::ifstream& file);
 
 // this methods may be overriden if needed, but the are defined by default
 protected:
@@ -55,7 +70,7 @@ protected:
 protected:
     bool autoRefresh = true;
     std::string algorithmName = "None";
-    Image copy; // the copys texture should not be created or copied (it causes memory leaks 233 bytes per texture modification)
+    Image copy; // the copys textures should not be created or copied (it causes memory leaks 233 bytes per texture modification)
 };
 
 #endif

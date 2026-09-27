@@ -2,6 +2,8 @@
 #define APP_HPP
 
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <algorithm>
 #include <thread>
 #include <chrono>
@@ -28,7 +30,15 @@
 #include "Renderer.hpp"
 #include "Mutex.hpp"
 
-// window size
+// COMMENT OUT IF LOADING AND SAVING COUSES PROBLEMS
+#define LOAD_AND_SAVE 1
+
+// default config file
+#define CONFIG_FILE "./.config.cfg"
+#define CONFIG_SPLIT_CHAR '='
+#define CONFIG_FILE_DELIM '\n'
+
+// default window size
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
@@ -52,16 +62,8 @@
 #define CANCEL_BUTTON_W_MAIN 120
 
 // popups
-// #define POPUP_WIDTH 200
-// #define POPUP_HEIGHT 100
-// #define FILE_POPUP_WIDTH 300
-// #define FILE_POPUP_HEIGHT 340
-// #define SAVE_POPUP_HEIGHT 480
-// #define BUTTON_OFFSET 20
-
-// dir items
-// #define DIR_LIST_WIDTH 290
-// #define DIR_LIST_HEIGHT 200
+#define POPUP_WIDTH_M 200
+#define POPUP_HEIGHT_M 100
 
 // arrays
 #define ARRAY_INPUT_WIDTH 100
@@ -74,8 +76,6 @@
 
 #define DEFAULT_REFRESH_INTERVAL 5.0
 
-// TODO
-// saving params struct state and selected alg state, maybe also picture loaded?
 
 // ISSUE
 // MEMORY LEAK FOUND (DO NOT FREE TEXTURE IN THREAD) (fix it in some way)
@@ -117,10 +117,6 @@ private:
     // render things on window
     void Render();
 
-    // SAVE AND LOAD
-    // EXTRA IMAGE
-
-
     // main parts
 
     // draw and handle logic for menu at the top
@@ -155,6 +151,12 @@ private:
     void AutoRefreshOutputImage();
     // special refresh logic
     void RefreshSkelAndHought();
+    
+    // config file
+
+    // load config file if an error occurs in loading a variable it is set to default
+    void LoadConfigFile();
+    void SaveConfigFile();
 
 
 private:
@@ -178,7 +180,7 @@ private:
     int modeD = InputDist;
 
     // window
-    int currWidth = WINDOW_HEIGHT;
+    int currWidth = WINDOW_WIDTH;
     int currHeight = WINDOW_HEIGHT;
 
     // algorithm state

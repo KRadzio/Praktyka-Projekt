@@ -44,3 +44,17 @@ void Contrast::AlgorithmFunction(Image *outputImage)
 }
 
 void Contrast::ResetToDefaults() { contrast = 1.0; }
+
+void Contrast::Save(std::ofstream &file) {file << "contrastValue" << CONFIG_SPLIT_CHAR_A << contrast << std::endl;}
+
+void Contrast::Load(std::ifstream &file) {
+    try
+    {
+        contrast = std::stof(SplitLine(file));
+    }
+    catch(const std::exception& e)
+    {
+        contrast = 1.0;
+    }
+    
+}

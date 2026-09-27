@@ -4,6 +4,23 @@ Algorithm::Algorithm() {}
 
 Algorithm::~Algorithm() { copy.ClearImage(); }
 
+void Algorithm::Save(std::ofstream &file) { file << algorithmName << " SAVE NOT IMPLEMENTED!" << std::endl; }
+
+void Algorithm::Load(std::ifstream &file)
+{
+    std::string line;
+    getline(file, line, '\n');
+}
+
+std::string Algorithm::SplitLine(std::ifstream &file)
+{
+    std::string line;
+    std::string sub;
+    getline(file, line, CONFIG_FILE_DELIM_A);
+    sub = line.substr(line.find(CONFIG_SPLIT_CHAR_A) + 1);
+    return sub;
+}
+
 void Algorithm::CopyToLocalVariable(Image *outputImage)
 {
     Mutex::GetInstance().Lock();

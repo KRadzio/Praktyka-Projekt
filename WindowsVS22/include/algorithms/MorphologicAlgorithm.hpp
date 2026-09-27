@@ -6,10 +6,18 @@
 class MorphologicAlgorithm : public Algorithm
 {
 protected:
-#define EMPTY_ELEMENT_3x3 {{false, false, false}, {false, false, false}, {false, false, false}}
-#define EMPTY_ELEMENT_5x5 {{false, false, false, false, false},{false, false, false, false, false}, {false, false, false, false, false}, {false, false, false, false, false},{false, false, false, false, false}}
-#define EMPTY_ELEMENT_7x7 {{false, false, false, false, false, false, false},{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false},{false, false, false, false, false, false, false}}
-
+#define EMPTY_ELEMENT_3x3                                                     \
+    {                                                                         \
+        {false, false, false}, {false, false, false}, { false, false, false } \
+    }
+#define EMPTY_ELEMENT_5x5                                                                                                                                                                         \
+    {                                                                                                                                                                                             \
+        {false, false, false, false, false}, {false, false, false, false, false}, {false, false, false, false, false}, {false, false, false, false, false}, { false, false, false, false, false } \
+    }
+#define EMPTY_ELEMENT_7x7                                                                                                                                                                                                                                                                                                                                                     \
+    {                                                                                                                                                                                                                                                                                                                                                                         \
+        {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, { false, false, false, false, false, false, false } \
+    }
 
 public:
     MorphologicAlgorithm();
@@ -19,11 +27,17 @@ public:
     // called when params needs to be reset
     void ResetToDefaults() override;
 
+    void Save(std::ofstream &file) override;
+    void Load(std::ifstream &file) override;
+
 protected:
     void DrawInputArray();
     void CalculateOffsets();
     void ErosionFunc(Image *outputImage);
     void DilatationFunc(Image *outputImage);
+
+    // to set custom filter while loading
+    void ParseElement(std::string line, int size);
 
 protected:
     enum MatrixSize
@@ -49,7 +63,6 @@ protected:
     int32_t offsetTop = 0;
     int32_t offsetBottom = 0;
     int32_t elemntCopy[7][7]; // copy the current mask (there are 3 sizes this way its easier)
-
 };
 
 #endif

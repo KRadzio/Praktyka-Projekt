@@ -23,10 +23,18 @@ public:
     void AlgorithmFunction(Image *outputImage) override;
     void ResetToDefaults() override;
 
+    void Save(std::ofstream &file) override;
+    void Load(std::ifstream &file) override;
+
 private:
     void ChangeFilter(bool tmp3x3[3][3], bool tmp5x5[5][5], bool tmp7x7[7][7]);
     void DrawMedianDisplayArray();
     void DrawInputArray();
+
+    // used when loading
+    void SetPreDefinedFilters();
+    // to set custom filter while loading
+    void ParseCustomFilter(std::string line, int size);
 
 private:
     enum MedianFilters

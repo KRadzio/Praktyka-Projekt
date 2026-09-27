@@ -1,20 +1,23 @@
 #ifndef HOUGHT_HPP
 #define HOUGHT_HPP
 
-
 #include "Algorithm.hpp"
 
 class Hought : public Algorithm
 {
 private:
-    #define THETA_NUM 180
+#define THETA_NUM 180
 
 public:
     Hought();
 
+    // here the params menu shows the output params
     void ParamsMenu() override;
     void AlgorithmFunction(Image *outputImage) override;
     void ResetToDefaults() override;
+
+    void Save(std::ofstream &file) override;
+    void Load(std::ifstream &file) override;
 
 private:
     void CopyToLocalVariable(Image *outputImage) override;
@@ -31,7 +34,6 @@ private:
     int32_t maxHoughtVal = INT32_MIN;
     std::vector<std::vector<int32_t>> acumulator;
     int32_t roMax = 0;
-
 };
 
 #endif

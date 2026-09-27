@@ -93,7 +93,7 @@ void Binarization::AlgorithmFunction(Image *outputImage)
                 Gx = copy.GetPixel(col + 1, row).brightnes - copy.GetPixel(col - 1, row).brightnes;
                 Gy = copy.GetPixel(col, row + 1).brightnes - copy.GetPixel(col, row - 1).brightnes;
                 G = std::max(abs(Gx), abs(Gy));
-               
+
                 sum_G += G;
                 sum_JG += pix.brightnes * G;
             }
@@ -195,4 +195,47 @@ void Binarization::ResetToDefaults()
     lowerBound = 0;
     upperBound = 0;
     method = None;
+}
+
+void Binarization::Save(std::ofstream &file)
+{
+    file << "binarizationBoundCount" << CONFIG_SPLIT_CHAR_A << boundCount << std::endl;
+    file << "binarizationLowerBoundValue" << CONFIG_SPLIT_CHAR_A << lowerBound << std::endl;
+    file << "binarizationUpperBoundValue" << CONFIG_SPLIT_CHAR_A  << upperBound << std::endl;
+    file << "binarizationMethod" << CONFIG_SPLIT_CHAR_A << method << std::endl;
+}
+
+void Binarization::Load(std::ifstream &file) {
+    try
+    {
+        boundCount = std::stoi(SplitLine(file));
+    }
+    catch(const std::exception& e)
+    {
+        boundCount = 1;
+    }
+    try
+    {
+        lowerBound = std::stoi(SplitLine(file));
+    }
+    catch(const std::exception& e)
+    {
+        lowerBound = 0;
+    }
+    try
+    {
+        upperBound = std::stoi(SplitLine(file));
+    }
+    catch(const std::exception& e)
+    {
+        upperBound = 0;
+    }
+    try
+    {
+        method = std::stoi(SplitLine(file));
+    }
+    catch(const std::exception& e)
+    {
+        method = None;
+    }
 }

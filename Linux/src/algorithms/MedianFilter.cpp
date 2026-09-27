@@ -49,7 +49,7 @@ void MedianFilter::AlgorithmFunction(Image *outputImage)
     // copy - to save
     // copyRead - read
     // this operation require 2 copies, one for readin, the other to save result
-    Image copyRead; 
+    Image copyRead;
     copyRead.CopyNoTexture(copy);
     int32_t offset = medianFilterSize / 2;
     bool maskCopy[7][7]; // copy the current mask (there are 3 sizes this way its easier)
@@ -65,7 +65,6 @@ void MedianFilter::AlgorithmFunction(Image *outputImage)
             else
                 maskCopy[i][j] = medianMask7x7[i][j];
         }
-
 
     for (int row = offset; row < copyRead.GetHeight() - offset; row++)
     {
@@ -115,6 +114,74 @@ void MedianFilter::ResetToDefaults()
     bool tmp5x5[5][5] = MEDIAN_5x5;
     bool tmp7x7[7][7] = MEDIAN_7x7;
     ChangeFilter(tmp3x3, tmp5x5, tmp7x7);
+}
+
+void MedianFilter::Save(std::ofstream &file)
+{
+    file << "medianFilterType" << CONFIG_SPLIT_CHAR_A << medianFilterType << std::endl;
+    file << "medianFilterSize" << CONFIG_SPLIT_CHAR_A << medianFilterSize << std::endl;
+
+    for (int size = 3; size <= 7; size += 2)
+    {
+        file << "medianMaskSize" << size << CONFIG_SPLIT_CHAR_A;
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                if (size == 3)
+                    file << medianMask3x3[i][j];
+                else if (size == 5)
+                    file << medianMask5x5[i][j];
+                else
+                    file << medianMask7x7[i][j];
+                if (j < size - 1)
+                    file << CONFIG_COL_DELIM_A;
+            }
+            if (i < size - 1)
+                file << CONFIG_ROW_DELIM_A;
+        }
+        file << std::endl;
+    }
+}
+
+void MedianFilter::Load(std::ifstream &file)
+{
+    try
+    {
+        medianFilterType = std::stoi(SplitLine(file));
+    }
+    catch (const std::exception &e)
+    {
+        medianFilterType = Full;
+    }
+    try
+    {
+        medianFilterSize = std::stoi(SplitLine(file));
+    }
+    catch (const std::exception &e)
+    {
+        medianFilterSize = S3x3;
+    }
+
+    if (medianFilterType == CustomM)
+    {
+        // read the filter from file
+        std::string sub3x3 = SplitLine(file);
+        std::string sub5x5 = SplitLine(file);
+        std::string sub7x7 = SplitLine(file);
+        ParseCustomFilter(sub3x3, 3);
+        ParseCustomFilter(sub5x5, 5);
+        ParseCustomFilter(sub7x7, 7);
+    }
+    else
+    {
+        // skip becouse predefined
+        std::string tmp;
+        getline(file, tmp, CONFIG_FILE_DELIM_A);
+        getline(file, tmp, CONFIG_FILE_DELIM_A);
+        getline(file, tmp, CONFIG_FILE_DELIM_A);
+        SetPreDefinedFilters();
+    }
 }
 
 void MedianFilter::ChangeFilter(bool tmp3x3[3][3], bool tmp5x5[5][5], bool tmp7x7[7][7])
@@ -172,5 +239,100 @@ void MedianFilter::DrawInputArray()
             ImGui::PopID();
         }
         ImGui::EndTable();
+    }
+}
+
+void MedianFilter::SetPreDefinedFilters()
+{
+    if (medianFilterType == Full)
+    {
+        bool tmp3x3[3][3] = MEDIAN_3x3;
+        bool tmp5x5[5][5] = MEDIAN_5x5;
+        bool tmp7x7[7][7] = MEDIAN_7x7;
+        ChangeFilter(tmp3x3, tmp5x5, tmp7x7);
+    }
+    if (medianFilterType == Cross)
+    {
+        bool tmp3x3[3][3] = MEDIAN_CROSS_3x3;
+        bool tmp5x5[5][5] = MEDIAN_CROSS_5x5;
+        bool tmp7x7[7][7] = MEDIAN_CROSS_7x7;
+        ChangeFilter(tmp3x3, tmp5x5, tmp7x7);
+    }
+}
+
+void MedianFilter::ParseCustomFilter(std::string line, int size)
+{
+    int rowSplitCount = 0;
+    int colSplitCount = 0;
+    for (size_t it = 0; it < line.size(); it++)
+    {
+        if (line[it] == CONFIG_ROW_DELIM_A)
+            rowSplitCount++;
+        if (line[it] == CONFIG_COL_DELIM_A)
+            colSplitCount++;
+    }
+    // invalid line skip
+    if (rowSplitCount != size - 1 || colSplitCount != size * size - size)
+        return;
+
+    for (int i = 0; i < size; i++)
+    {
+        std::string row;
+        // the last does not need this
+        if (i < size - 1)
+        {
+            row = line.substr(0, line.find(CONFIG_ROW_DELIM_A));
+            line = line.substr(line.find(CONFIG_ROW_DELIM_A) + 1);
+        }
+        else
+            row = line;
+
+        for (int j = 0; j < size; j++)
+        {
+            std::string col;
+            if (j < size - 1)
+            {
+                col = row.substr(0, row.find(CONFIG_COL_DELIM_A));
+                row = row.substr(row.find(CONFIG_COL_DELIM_A) + 1);
+            }
+            else
+                col = row;
+            if (size == 3)
+            {
+                try
+                {
+                    medianMask3x3[i][j] = std::stoi(col);
+                }
+                catch (const std::exception &e)
+                {
+                    // default 0
+                    medianMask3x3[i][j] = 0;
+                }
+            }
+            else if (size == 5)
+            {
+                try
+                {
+                    medianMask5x5[i][j] = std::stoi(col);
+                }
+                catch (const std::exception &e)
+                {
+                    // default 0
+                    medianMask5x5[i][j] = 0;
+                }
+            }
+            else
+            {
+                try
+                {
+                    medianMask7x7[i][j] = std::stoi(col);
+                }
+                catch (const std::exception &e)
+                {
+                    // default 0
+                    medianMask7x7[i][j] = 0;
+                }
+            }
+        }
     }
 }

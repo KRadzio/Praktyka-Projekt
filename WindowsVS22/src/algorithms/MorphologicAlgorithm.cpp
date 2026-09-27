@@ -29,6 +29,53 @@ void MorphologicAlgorithm::ResetToDefaults()
             element7x7[r][c] = false;
 }
 
+void MorphologicAlgorithm::Save(std::ofstream &file)
+{
+    file << "elementSize" << algorithmName << CONFIG_SPLIT_CHAR_A << elementSize << std::endl;
+
+    for (int size = 3; size <= 7; size += 2)
+    {
+        file << "element" << size << algorithmName << CONFIG_SPLIT_CHAR_A;
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                if (size == 3)
+                    file << element3x3[i][j];
+                else if (size == 5)
+                    file << element5x5[i][j];
+                else
+                    file << element7x7[i][j];
+                if (j < size - 1)
+                    file << CONFIG_COL_DELIM_A;
+            }
+            if (i < size - 1)
+                file << CONFIG_ROW_DELIM_A;
+        }
+        file << std::endl;
+    }
+}
+
+void MorphologicAlgorithm::Load(std::ifstream &file)
+{
+    try
+    {
+        elementSize = std::stoi(SplitLine(file));
+    }
+    catch (const std::exception &e)
+    {
+        elementSize = S3x3;
+    }
+
+    // read the filter from file
+    std::string sub3x3 = SplitLine(file);
+    std::string sub5x5 = SplitLine(file);
+    std::string sub7x7 = SplitLine(file);
+    ParseElement(sub3x3, 3);
+    ParseElement(sub5x5, 5);
+    ParseElement(sub7x7, 7);
+}
+
 void MorphologicAlgorithm::DrawInputArray()
 {
     if (ImGui::BeginTable("Element strukturalny", elementSize, ImGuiTableFlags_Borders))
@@ -198,4 +245,81 @@ void MorphologicAlgorithm::DilatationFunc(Image *outputImage)
     }
     // copy back to output
     // SaveToOutput(outputImage);
+}
+
+void MorphologicAlgorithm::ParseElement(std::string line, int size)
+{
+    int rowSplitCount = 0;
+    int colSplitCount = 0;
+    for (size_t it = 0; it < line.size(); it++)
+    {
+        if (line[it] == CONFIG_ROW_DELIM_A)
+            rowSplitCount++;
+        if (line[it] == CONFIG_COL_DELIM_A)
+            colSplitCount++;
+    }
+    // invalid line skip
+    if (rowSplitCount != size - 1 || colSplitCount != size * size - size)
+        return;
+
+    for (int i = 0; i < size; i++)
+    {
+        std::string row;
+        // the last does not need this
+        if (i < size - 1)
+        {
+            row = line.substr(0, line.find(CONFIG_ROW_DELIM_A));
+            line = line.substr(line.find(CONFIG_ROW_DELIM_A) + 1);
+        }
+        else
+            row = line;
+
+        for (int j = 0; j < size; j++)
+        {
+            std::string col;
+            if (j < size - 1)
+            {
+                col = row.substr(0, row.find(CONFIG_COL_DELIM_A));
+                row = row.substr(row.find(CONFIG_COL_DELIM_A) + 1);
+            }
+            else
+                col = row;
+            if (size == 3)
+            {
+                try
+                {
+                    element3x3[i][j] = std::stoi(col);
+                }
+                catch (const std::exception &e)
+                {
+                    // default 0
+                    element3x3[i][j] = 0;
+                }
+            }
+            else if (size == 5)
+            {
+                try
+                {
+                    element5x5[i][j] = std::stoi(col);
+                }
+                catch (const std::exception &e)
+                {
+                    // default 0
+                    element5x5[i][j] = 0;
+                }
+            }
+            else
+            {
+                try
+                {
+                    element7x7[i][j] = std::stoi(col);
+                }
+                catch (const std::exception &e)
+                {
+                    // default 0
+                    element7x7[i][j] = 0;
+                }
+            }
+        }
+    }
 }

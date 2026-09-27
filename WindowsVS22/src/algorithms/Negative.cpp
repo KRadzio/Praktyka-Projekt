@@ -1,6 +1,6 @@
 #include "Negative.hpp"
 
-Negative::Negative(){algorithmName = "Negatyw";}
+Negative::Negative() { algorithmName = "Negatyw"; }
 
 void Negative::ParamsMenu()
 {
@@ -32,3 +32,15 @@ void Negative::ResetToDefaults()
 {
     // NO PARAMS TO RESET
 }
+
+// ignore the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void Negative::Save(std::ofstream &file) {} // NOTHING TO DO
+#pragma GCC diagnostic pop
+
+// ignore the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void Negative::Load(std::ifstream &file) {} // NOTHING TO DO
+#pragma GCC diagnostic pop

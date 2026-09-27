@@ -12,6 +12,8 @@ App &App::GetInstance()
 int App::Init()
 {
     setlocale(LC_ALL, "pl_PL.UTF-8");
+    // stof does not work correctly if not set
+    setlocale(LC_NUMERIC, "en_US.UTF-8");
     // SDL Init
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -25,10 +27,41 @@ int App::Init()
         return -1;
     }
 
+    // HERE ADD NEW ALGS TO THE VECTOR
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Negative());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Brighten());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Contrast());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Exponentiation());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Logarithm());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new LeveledHistogram());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Masking());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Mixing());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Binarization());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new LinearFilter());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new MedianFilter());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Erosion());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Dilatation());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Opening());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Closing());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new ContourInner());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new ContourOuter());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Skeletonization());
+    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Hought());
+
+#ifdef LOAD_AND_SAVE
+    // check for config file
+    if (FileSelector::GetInstance().FileExists(CONFIG_FILE))
+        LoadConfigFile();
+    else
+        printf("No config file everything set to default\n");
+    // if not found then everything is set to default
+    // config has window size!
+#endif
+
     mainScale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
     windowFlags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     // create window
-    mainWindow = SDL_CreateWindow("Laboratorium przetwarzanie obrazów", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(WINDOW_WIDTH * mainScale), (int)(WINDOW_HEIGHT * mainScale), windowFlags);
+    mainWindow = SDL_CreateWindow("Laboratorium przetwarzanie obrazów", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(currWidth * mainScale), (int)(currHeight * mainScale), windowFlags);
     if (mainWindow == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -52,11 +85,13 @@ int App::Init()
     // load font
     lato = io->Fonts->AddFontFromFileTTF("./resources/Lato-Regular.ttf");
     if (lato == nullptr)
+    {
+        printf("Could not find ./resources/Lato-Regular.ttf\n");
         return -1;
+    }
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    // ImGui::StyleColorsLight();
 
     // Setup scaling
     style = &ImGui::GetStyle();
@@ -68,27 +103,6 @@ int App::Init()
     ImGui_ImplSDLRenderer2_Init(Renderer::GetInstance().GetRenderer());
 
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-    // HERE ADD NEW ALGS TO THE VECTOR
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Negative());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Brighten());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Contrast());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Exponentiation());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Logarithm());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new LeveledHistogram());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Masking());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Mixing());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Binarization());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new LinearFilter());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new MedianFilter());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Erosion());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Dilatation());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Opening());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Closing());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new ContourInner());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new ContourOuter());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Skeletonization());
-    algorithmsAvailable.emplace(algorithmsAvailable.end(), new Hought());
 
     return 0;
 }
@@ -142,6 +156,10 @@ int App::MainLoop()
             if (!currAlgorithm->CanBeAutoRefreshed())
                 RefreshSkelAndHought();
     }
+
+#ifdef LOAD_AND_SAVE
+    SaveConfigFile();
+#endif
 
     Cleanup();
     return 0;
@@ -248,9 +266,9 @@ void App::DrawMenuBar()
         if (currAlgorithm != nullptr)
             ImGui::MenuItem("Automatyczne odświeżanie", NULL, &autoRefreshPictureEnabled, currAlgorithm->CanBeAutoRefreshed());
         else
-            ImGui::MenuItem("Automatyczne odświeżanie", NULL, &autoRefreshPictureEnabled, false);
+            ImGui::MenuItem("Automatyczne odświeżanie", NULL, &autoRefreshPictureEnabled, true);
 
-        ImGui::MenuItem("Czas odświerzania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
+        ImGui::MenuItem("Czas odświeżania", NULL, &settingsPopupActive, autoRefreshPictureEnabled);
         ImGui::EndMenu();
     }
 
@@ -270,7 +288,7 @@ void App::DrawMenuBar()
     }
 
     if (mainSaveAsMenuActive)
-        if(FileSelector::GetInstance().SaveAsMenu(&outputImage) != 2)
+        if (FileSelector::GetInstance().SaveAsMenu(&outputImage) != 2)
             mainSaveAsMenuActive = false;
 
     // if save is used
@@ -369,25 +387,29 @@ void App::DrawMiddleButtonsWindow(float h)
     if (inProgressPopupActive)
         DrawInProgressPopup();
 
-    ImGui::SeparatorText("Opcje");
-    if (ImGui::Button("Parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    ImGui::SeparatorText("Akcje");
+    if (ImGui::Button("Ustaw parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
         ImGui::OpenPopup("Parametry");
-    if (ImGui::Button("Odśwież obraz wyjściowy", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+
+    if (!outputImage.NoSurface())
     {
-        // can not be opend if thread is running
-        if (!outputImage.NoSurface())
+        if (ImGui::Button("Odśwież obraz wyjściowy", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
         {
-            outputImage.RefreshPixelValuesArrays();
-            outputImage.RefreshTexture();
+            // can not be opend if thread is running
+            if (!outputImage.NoSurface())
+            {
+                outputImage.RefreshPixelValuesArrays();
+                outputImage.RefreshTexture();
+            }
+            else
+                errorPopupAlgActive = true;
         }
-        else
-            errorPopupAlgActive = true;
     }
 
     if (!inputImage.NoSurface())
     {
         ImGui::Separator();
-        ImGui::Text("Zamień obraz na odcienie\nszarości");
+        ImGui::Text("Zamień obraz wejściowy na\nodcienie szarości");
         if (ImGui::Button("Odcień szarości", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
             inputImage.TurnToGrayScale();
     }
@@ -409,24 +431,34 @@ void App::DrawMiddleButtonsWindow(float h)
 
     // can not be opend if thread is running
     ImGui::SeparatorText("Reset");
+    ImGui::Separator();
     if (ImGui::Button("Resetuj wybrany algorytm", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
         // algorithmSelected = None;
         selectedAlgorithmName = "Brak wybranego algorytmu";
         currAlgorithm = nullptr;
-        outputImage.ClearImage();
+        // outputImage.ClearImage();
         resetDonePopupActive = true;
     }
     // can not be opend if thread is running
-    if (ImGui::Button("Resetuj parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    if (currAlgorithm != nullptr)
     {
-        currAlgorithm->ResetToDefaults();
+        if (ImGui::Button("Resetuj parametry obecnie\nwybranego algorytmu", ImVec2(MIDDLE_BUTTON_W, 0)))
+        {
+            currAlgorithm->ResetToDefaults();
+            resetDonePopupActive = true;
+        }
+    }
+    if (ImGui::Button("Resetuj wszystkie parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    {
+        ResetParameters();
         resetDonePopupActive = true;
     }
 
-    if(ImGui::Button("Resetuj wszystkie parametry", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
+    if (ImGui::Button("Resetuj auto odświeżanie", ImVec2(MIDDLE_BUTTON_W, MIDDLE_BUTTON_H)))
     {
-        ResetParameters();
+        autoRefreshPictureEnabled = false;
+        refreshIntervalValue = DEFAULT_REFRESH_INTERVAL;
         resetDonePopupActive = true;
     }
 
@@ -531,7 +563,7 @@ void App::DrawSettingsPopup()
     {
         ImGui::OpenPopup("Ustawienia", ImGuiPopupFlags_NoReopen);
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT + 40));
+        ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH_M, POPUP_HEIGHT_M + 40));
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("Ustawienia", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
         {
@@ -553,7 +585,7 @@ void App::DrawMiddleErrorPopup()
 {
     ImGui::OpenPopup("BLĄD", ImGuiPopupFlags_NoReopen);
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowSize(ImVec2(0, POPUP_HEIGHT));
+    ImGui::SetNextWindowSize(ImVec2(0, POPUP_HEIGHT_M));
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("BLĄD", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
     {
@@ -583,7 +615,7 @@ void App::DrawInProgressPopup()
 {
     // the algorithm thread is running
     ImGui::OpenPopup("Przetwarzanie obrazu");
-    ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT));
+    ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH_M, POPUP_HEIGHT_M));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("Przetwarzanie obrazu"))
@@ -668,7 +700,7 @@ void App::DrawResetDonePopup()
 {
     // reset done
     ImGui::OpenPopup("INFORMACJA");
-    ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH, POPUP_HEIGHT));
+    ImGui::SetNextWindowSize(ImVec2(POPUP_WIDTH_M, POPUP_HEIGHT_M));
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("INFORMACJA"))
@@ -744,4 +776,110 @@ void App::RefreshSkelAndHought()
     }
 
     Mutex::GetInstance().Unlock();
+}
+
+void App::LoadConfigFile()
+{
+    std::ifstream file(CONFIG_FILE);
+    std::string line;
+    std::string sub;
+
+    // [APP_SECTION] skip
+    getline(file, line, CONFIG_FILE_DELIM);
+    // auto refresh
+    getline(file, line, CONFIG_FILE_DELIM);
+    sub = line.substr(line.find(CONFIG_SPLIT_CHAR) + 1);
+
+    try
+    {
+        autoRefreshPictureEnabled = std::stoi(sub);
+    }
+    catch (const std::exception &e)
+    {
+        autoRefreshPictureEnabled = false;
+    }
+
+    // refresh interval
+    getline(file, line, CONFIG_FILE_DELIM);
+    sub = line.substr(line.find(CONFIG_SPLIT_CHAR) + 1);
+    try
+    {
+        refreshIntervalValue = std::stof(sub);
+    }
+    catch (const std::exception &e)
+    {
+        refreshIntervalValue = DEFAULT_REFRESH_INTERVAL;
+    }
+
+    // selected alg name
+    bool found = false;
+    getline(file, line, CONFIG_FILE_DELIM);
+    sub = line.substr(line.find(CONFIG_SPLIT_CHAR) + 1, line.size());
+    for (auto it : algorithmsAvailable)
+        if (it->GetName() == sub)
+        {
+            selectedAlgorithmName = sub;
+            currAlgorithm = it;
+            found = true;
+        }
+    if (!found)
+        selectedAlgorithmName = "Brak wybranego algorytmu";
+
+    // window width and height
+    std::string widthS;
+    std::string heightS;
+    std::string subW;
+    std::string subH;
+    getline(file, widthS, CONFIG_FILE_DELIM);
+    getline(file, heightS, CONFIG_FILE_DELIM);
+
+    subW = widthS.substr(widthS.find(CONFIG_SPLIT_CHAR) + 1, widthS.size());
+    subH = heightS.substr(heightS.find(CONFIG_SPLIT_CHAR) + 1, heightS.size());
+
+    try
+    {
+        currWidth = std::stoi(subW);
+        currHeight = std::stoi(subH);
+    }
+    catch (const std::exception &e)
+    {
+        currWidth = WINDOW_WIDTH;
+        currHeight = WINDOW_HEIGHT;
+    }
+
+    // dir path
+    getline(file, line, CONFIG_FILE_DELIM);
+    sub = line.substr(line.find(CONFIG_SPLIT_CHAR) + 1);
+    FileSelector::GetInstance().SetDirectoryPath(sub);
+
+    // [ALGORITHMS_SECTION] skip
+    getline(file, line, CONFIG_FILE_DELIM);
+
+    for (auto it : algorithmsAvailable)
+        it->Load(file);
+
+    file.close();
+}
+
+void App::SaveConfigFile()
+{
+    std::ofstream file(CONFIG_FILE, std::ios_base::trunc);
+    file << "[APP_SECTION]" << std::endl;
+    file << "autoRefresh" << CONFIG_SPLIT_CHAR << autoRefreshPictureEnabled << std::endl;
+    file << "refreshInterval" << CONFIG_SPLIT_CHAR << refreshIntervalValue << std::endl;
+    file << "selectedAlgorithmName" << CONFIG_SPLIT_CHAR << selectedAlgorithmName << std::endl;
+    file << "windowWidth" << CONFIG_SPLIT_CHAR << currWidth << std::endl;
+    file << "windowHeight" << CONFIG_SPLIT_CHAR << currHeight << std::endl;
+
+#ifdef __linux__
+    file << "lastDirPath" << CONFIG_SPLIT_CHAR << FileSelector::GetInstance().GetCurrDirectoryPath().string() << std::endl;
+#elif _WIN32
+    file << "lastDirPath" << CONFIG_SPLIT_CHAR << FileSelector::GetInstance().GetCurrDirectoryPath().u8string() << std::endl;
+#endif
+    file << "[ALGORITHMS_SECTION]" << std::endl;
+
+    for (auto it : algorithmsAvailable)
+        it->Save(file);
+
+    file.close();
 }
