@@ -57,11 +57,7 @@ void Masking::ResetToDefaults()
 
 void Masking::Save(std::ofstream &file)
 {
-#ifdef __linux__
     file << "maskPath" << CONFIG_SPLIT_CHAR_A << mask.GetImagePath().string() << std::endl;
-#elif _WIN32
-    file << "maskPath" << CONFIG_SPLIT_CHAR_A << mask.GetImagePath().u8string() << std::endl;
-#endif
 }
 
 void Masking::Load(std::ifstream &file)

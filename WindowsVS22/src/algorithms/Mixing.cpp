@@ -59,11 +59,7 @@ void Mixing::ResetToDefaults()
 void Mixing::Save(std::ofstream &file)
 {
     file << "mixingRatio" << CONFIG_SPLIT_CHAR_A << mixRatio << std::endl;
-#ifdef __linux__
     file << "mixingImagePath" << CONFIG_SPLIT_CHAR_A << image2.GetImagePath().string() << std::endl;
-#elif _WIN32
-    file << "mixingImagePath" << CONFIG_SPLIT_CHAR_A << image2.GetImagePath().u8string() << std::endl;
-#endif
 }
 
 void Mixing::Load(std::ifstream &file)

@@ -870,12 +870,8 @@ void App::SaveConfigFile()
     file << "selectedAlgorithmName" << CONFIG_SPLIT_CHAR << selectedAlgorithmName << std::endl;
     file << "windowWidth" << CONFIG_SPLIT_CHAR << currWidth << std::endl;
     file << "windowHeight" << CONFIG_SPLIT_CHAR << currHeight << std::endl;
-
-#ifdef __linux__
     file << "lastDirPath" << CONFIG_SPLIT_CHAR << FileSelector::GetInstance().GetCurrDirectoryPath().string() << std::endl;
-#elif _WIN32
-    file << "lastDirPath" << CONFIG_SPLIT_CHAR << FileSelector::GetInstance().GetCurrDirectoryPath().u8string() << std::endl;
-#endif
+
     file << "[ALGORITHMS_SECTION]" << std::endl;
 
     for (auto it : algorithmsAvailable)
