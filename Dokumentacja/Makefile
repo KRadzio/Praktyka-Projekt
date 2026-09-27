@@ -5,5 +5,7 @@ LATEXCOM=xelatex
 
 all: $(PDFS)
 
+# twice for refs
 %.pdf:%.tex
+	$(LATEXCOM) $<
 	$(LATEXCOM) $<
